@@ -59,6 +59,13 @@ export async function POST(req: NextRequest) {
       email: newUser.email,
       role: newUser.role,
     });
+    return NextResponse.json(
+      {
+        message: "User created successfully",
+        token,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.log("error", error);
     return NextResponse.json(

@@ -1,32 +1,18 @@
-import { GalleryVerticalEnd } from "lucide-react";
-
-import RegisterForm from "@/components/registerForm";
-
-export default function LoginPage() {
+import { LoginForm } from "@/components/login-form";
+import Image from "next/image";
+import React from "react";
+import logo from "../../../public/assets/inventory-management-icon-monochrome-simple-600w-2361436289.webp";
+const page = () => {
   return (
-    <div className="grid min-h-svh lg:grid-cols-2">
-      <div className="flex flex-col gap-4 p-6 md:p-10">
-        <div className="flex justify-center gap-2 md:justify-start">
-          <a href="#" className="flex items-center gap-2 font-medium">
-            <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
-              <GalleryVerticalEnd className="size-4" />
-            </div>
-            Acme Inc.
-          </a>
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br px-4 ">
+      <div className="flex flex-col justify-center items-center shadow-2xs bg-amber-50">
+        <Image src={logo} alt="icone" width={150} height={100} />
+        <div className=" shadow-lg rounded-xl p-8 w-full max-w-md">
+          <LoginForm />
         </div>
-        <div className="flex flex-1 items-center justify-center">
-          <div className="w-full max-w-xs">
-            <RegisterForm />
-          </div>
-        </div>
-      </div>
-      <div className="bg-muted relative hidden lg:block">
-        <img
-          src="/placeholder.svg"
-          alt="Image"
-          className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-        />
       </div>
     </div>
   );
-}
+};
+
+export default page;

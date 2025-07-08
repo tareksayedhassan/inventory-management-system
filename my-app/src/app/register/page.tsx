@@ -3,7 +3,6 @@ import RegisterForm from "@/components/registerForm";
 import Image from "next/image";
 import React from "react";
 import Work from "../../../public/assets/Work.png";
-
 const page = () => {
   return (
     <div className="h-screen grid grid-cols-1 md:grid-cols-2 overflow-hidden">
