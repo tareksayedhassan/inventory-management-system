@@ -5,7 +5,7 @@ import logo from "../../../public/assets/inventory-management-icon-monochrome-si
 
 const page = () => {
   return (
-    <div className="flex justify-center items-center min-h-screen  px-4">
+    <div className="flex justify-center items-center min-h-screen h-screen px-4 overflow-hidden">
       <div className="flex flex-col items-center gap-6 shadow-xl bg-white/80 rounded-xl p-10 w-full max-w-md border border-black">
         <Image
           src={logo}

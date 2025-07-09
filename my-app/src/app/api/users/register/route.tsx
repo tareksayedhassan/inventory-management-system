@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { registervalidate } from "@/utils/ValidationSchemas";
 import prisma from "@/utils/db";
 import bcrypt from "bcryptjs";
-import { Role } from "@/generated/prisma";
 import generateJWT from "@/utils/generateJWT";
+import { Role } from "@prisma/client";
 
 interface User {
   name: string;
@@ -44,13 +44,14 @@ export async function POST(req: NextRequest) {
 
   try {
     const hashedPassword = await bcrypt.hash(data.password, 10);
+    const role = data.role?.toUpperCase() === "ADMIN" ? Role.ADMIN : Role.USER;
 
     const newUser = await prisma.user.create({
       data: {
         name: data.name,
         email: data.email,
         password: hashedPassword,
-        role: data.role === "admin" ? Role.admin : Role.user,
+        role: role,
       },
     });
 

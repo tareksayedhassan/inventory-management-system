@@ -2,14 +2,14 @@ import { JwtPayload } from "jwt-decode";
 
 export interface CustomJwtPayload extends JwtPayload {
   userId: string;
-  role: "admin" | "user";
+  role: "ADMIN" | "USER";
 }
 
 export type DecodedToken = {
   name: string;
   email?: string;
   id?: number;
-  role?: "user" | "admin";
+  role?: "ADMIN" | "USER";
   avatar?: string;
   createdAt?: string;
 };

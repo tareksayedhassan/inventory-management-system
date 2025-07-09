@@ -50,7 +50,7 @@ function LoginForm({ className, ...props }: React.ComponentProps<"form">) {
 
       const token = res.data.token;
       const decoded = jwtDecode(token) as JwtPayload;
-      if (decoded.role == "admin") {
+      if (decoded.role == "ADMIN") {
         router.push("dashboard");
       } else {
         router.push("/");

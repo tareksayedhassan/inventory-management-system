@@ -11,10 +11,10 @@ import Link from "next/link";
 const DropsDown = () => {
   return (
     <Accordion type="multiple" className="w-full text-right" dir="rtl">
-      <AccordionItem value="general-settings">
-        <AccordionTrigger>الضبط العام</AccordionTrigger>
+      <AccordionItem value="general-Company">
+        <AccordionTrigger> . إعدادات الشركات</AccordionTrigger>
         <AccordionContent className="pr-4 flex flex-col gap-1 text-sm">
-          <Link href="#">حسابي</Link>
+          <Link href="/dashboard/Company">قائمة الشركات</Link>
           <Link href="#">الفوترة</Link>
           <Link href="#">الفريق</Link>
           <Link href="#">الاشتراك</Link>
@@ -30,7 +30,7 @@ const DropsDown = () => {
         </AccordionContent>
       </AccordionItem>
 
-      <AccordionItem value="warehouse-settings">
+      <AccordionItem value="warehouse-Company">
         <AccordionTrigger>ضبط المخازن</AccordionTrigger>
         <AccordionContent className="pr-4 flex flex-col gap-1 text-sm">
           <Link href="#">المخازن</Link>

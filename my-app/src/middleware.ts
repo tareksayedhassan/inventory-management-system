@@ -14,7 +14,7 @@ export function middleware(req: NextRequest) {
 
     try {
       const decoded: CustomJwtPayload = jwtDecode(token);
-      if (decoded.role !== "admin") {
+      if (decoded.role !== "ADMIN") {
         return NextResponse.redirect(new URL("/", req.url));
       }
     } catch (err) {
@@ -32,7 +32,7 @@ export function middleware(req: NextRequest) {
 
     try {
       const decoded: CustomJwtPayload = jwtDecode(token);
-      if (decoded.role !== "admin") {
+      if (decoded.role !== "ADMIN") {
         return NextResponse.json({ message: "Forbidden" }, { status: 403 });
       }
     } catch (err) {

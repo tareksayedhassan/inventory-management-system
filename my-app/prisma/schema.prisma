@@ -1,13 +1,14 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 enum Role {
-  user
-  admin
+  USER
+  ADMIN
 }
+
+enum CompStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -19,11 +20,32 @@ datasource db {
 
 model User {
   id         Int        @id @default(autoincrement())
-  name       String?
-  email      String?    @unique
-  password   String?
-  role       Role       @default(user)
+  name       String
+  email      String     @unique
+  password   String
+  role       Role       @default(USER)
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
   avatar     String     @default("default.jpg")
+
+  added_Company     Company[] @relation("AddedBy")
+  updated_Company   Company[] @relation("UpdatedBy")
+}
+
+model Company {
+  id             Int        @id @default(autoincrement())
+  photo          String     @default("default.jpg")
+  status         CompStatus @default(ACTIVE)
+  general_alert  String
+  address        String
+  phone          String
+  company_code   String
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  added_by_id    Int
+  updated_by_id  Int
+
+  added_by       User @relation("AddedBy", fields: [added_by_id], references: [id])
+  updated_by     User @relation("UpdatedBy", fields: [updated_by_id], references: [id])
 }

@@ -55,14 +55,11 @@ const SideBar = () => {
         <p className="text-sm text-gray-500">{decoded?.role || ""}</p>
       </div>
 
-      {/* العنوان */}
       <span className="text-sm font-semibold text-gray-400 mb-4 block text-center">
         التنقل
       </span>
 
-      {/* روابط السايد بار */}
       <div className="flex flex-col gap-2">
-        {/* رابط لوحة التحكم */}
         <Link
           href="/dashboard"
           className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
@@ -71,10 +68,8 @@ const SideBar = () => {
           <MdOutlineDashboard className="text-xl" />
         </Link>
 
-        {/* باقي القوائم */}
         <DropsDown />
 
-        {/* تسجيل الخروج */}
         <button
           onClick={logOut}
           className="mt-6 px-3 py-2 rounded-md text-red-500 hover:bg-red-50 hover:text-red-600 transition duration-200 text-right"
