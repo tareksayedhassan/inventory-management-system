@@ -1,49 +1,56 @@
 "use client";
 
-import Link from "next/link";
-import React from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ModeToggle } from "@/components/customUi/Darkmode";
 import Cookie from "cookie-universal";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+import { JwtPayload } from "jsonwebtoken";
+import { jwtDecode } from "jwt-decode";
+import Image from "next/image";
+import { useEffect, useState } from "react";
 
 const TopBar = () => {
-  const cookie = Cookie();
-  const token = cookie.get("Bearer");
-  const decoded = token;
-  const avatar = decoded.avatar;
+  const [user, setUser] = useState<JwtPayload | null>(null);
+
+  useEffect(() => {
+    const cookie = Cookie();
+    const token = cookie.get("Bearer");
+
+    if (token) {
+      try {
+        const decoded = jwtDecode<JwtPayload>(token);
+        setUser(decoded);
+      } catch (error) {
+        console.error("Invalid token:", error);
+      }
+    } else {
+      console.log("No token found");
+    }
+  }, []);
 
   return (
-    <div className="flex items-center gap-4">
-      <Link href="/dashboard" className="text-sm font-medium">
-        Dashboard
-      </Link>
+    <div
+      className="flex items-center justify-between px-4 shadow bg-white/80"
+      style={{
+        height: "70px",
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+      }}
+    >
+      <div className="flex items-center gap-2"></div>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Avatar className="cursor-pointer">
-            <AvatarImage src={avatar || "/uploads/default.jpg"} />
-            <AvatarFallback>CN</AvatarFallback>
-          </Avatar>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>My Account</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem>Profile</DropdownMenuItem>
-          <DropdownMenuItem>Billing</DropdownMenuItem>
-          <DropdownMenuItem>Team</DropdownMenuItem>
-          <DropdownMenuItem>Subscription</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      <ModeToggle />
+      <div className="flex items-center gap-2 text-end flex-wrap">
+        <h3 className="m-0 text-sm md:text-xl font-semibold whitespace-nowrap">
+          نظام اداره مخازن شركات الجرحي
+        </h3>
+        <Image
+          src="/assets/logo.png!w700wp"
+          height={40}
+          width={40}
+          alt="logo"
+          className="object-contain"
+        />
+      </div>
     </div>
   );
 };

@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-
+body {
+  font-family: "Tajawal", sans-serif;
+}
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -79,37 +81,47 @@
 }
 
 .dark {
-  --background: oklch(0.13 0.028 261.692);
-  --foreground: oklch(0.985 0.002 247.839);
-  --card: oklch(0.21 0.034 264.665);
-  --card-foreground: oklch(0.985 0.002 247.839);
-  --popover: oklch(0.21 0.034 264.665);
-  --popover-foreground: oklch(0.985 0.002 247.839);
-  --primary: oklch(0.928 0.006 264.531);
-  --primary-foreground: oklch(0.21 0.034 264.665);
-  --secondary: oklch(0.278 0.033 256.848);
-  --secondary-foreground: oklch(0.985 0.002 247.839);
-  --muted: oklch(0.278 0.033 256.848);
-  --muted-foreground: oklch(0.707 0.022 261.325);
-  --accent: oklch(0.278 0.033 256.848);
-  --accent-foreground: oklch(0.985 0.002 247.839);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.21 0.034 264.665);
-  --sidebar-foreground: oklch(0.985 0.002 247.839);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0.002 247.839);
-  --sidebar-accent: oklch(0.278 0.033 256.848);
-  --sidebar-accent-foreground: oklch(0.985 0.002 247.839);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+  --background: oklch(
+    0.15 0.02 260
+  ); /* Dark gray-blue like Facebook's background */
+  --foreground: oklch(0.92 0.01 260); /* Light gray for text */
+  --card: oklch(0.18 0.02 260); /* Slightly lighter than background */
+  --card-foreground: oklch(0.92 0.01 260); /* Matches foreground */
+  --popover: oklch(0.18 0.02 260); /* Matches card for popovers */
+  --popover-foreground: oklch(0.92 0.01 260); /* Matches foreground */
+  --primary: oklch(0.55 0.15 260); /* Vibrant blue for buttons/links */
+  --primary-foreground: oklch(0.95 0.01 260); /* Near-white for contrast */
+  --secondary: oklch(
+    0.25 0.02 260
+  ); /* Muted gray-blue for secondary elements */
+  --secondary-foreground: oklch(0.92 0.01 260); /* Matches foreground */
+  --muted: oklch(0.25 0.02 260); /* Muted gray-blue for subtle backgrounds */
+  --muted-foreground: oklch(0.7 0.02 260); /* Lighter gray for muted text */
+  --accent: oklch(0.3 0.03 260); /* Slightly brighter gray-blue for accents */
+  --accent-foreground: oklch(0.92 0.01 260); /* Matches foreman */
+  --destructive: oklch(
+    0.6 0 0.19 22
+  ); /* Red for destructive actions, close to Facebook's error color */
+  --border: oklch(
+    0.25 0.02 260 / 0.2
+  ); /* Subtle gray-blue border with opacity */
+  --input: oklch(0.25 0.02 260 / 0.3); /* Slightly more opaque for inputs */
+  --ring: oklch(0.55 0.15 260); /* Matches primary for focus rings */
+  --chart-1: oklch(0.55 0.15 260); /* Blue for charts */
+  --chart-2: oklch(0.5 0.12 270); /* Slightly different blue shade */
+  --chart-3: oklch(0.45 0.1 280); /* Another blue variation */
+  --chart-4: oklch(0.6 0.14 250); /* Lighter blue */
+  --chart-5: oklch(0.65 0.16 260); /* Brighter blue */
+  --sidebar: oklch(0.18 0.02 260); /* Slightly lighter than main background */
+  --sidebar-foreground: oklch(0.92 0.01 260); /* Matches foreground */
+  --sidebar-primary: oklch(0.55 0.15 260); /* Matches primary */
+  --sidebar-primary-foreground: oklch(
+    0.95 0.01 260
+  ); /* Matches primary-foreground */
+  --sidebar-accent: oklch(0.3 0.03 260); /* Matches accent */
+  --sidebar-accent-foreground: oklch(0.92 0.01 260); /* Matches foreground */
+  --sidebar-border: oklch(0.25 0.02 260 / 0.2); /* Matches border */
+  --sidebar-ring: oklch(0.55 0.15 260); /* Matches ring */
 }
 
 @layer base {
@@ -120,6 +132,7 @@
     @apply bg-background text-foreground;
   }
 }
+
 @layer base {
   :root {
     --sidebar: oklch(0.985 0 0);
@@ -133,13 +146,19 @@
   }
 
   .dark {
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.439 0 0);
+    --sidebar: oklch(0.18 0.02 260); /* Matches dark mode sidebar */
+    --sidebar-foreground: oklch(
+      0.92 0.01 260
+    ); /* Matches dark mode foreground */
+    --sidebar-primary: oklch(0.55 0.15 260); /* Matches dark mode primary */
+    --sidebar-primary-foreground: oklch(
+      0.95 0.01 260
+    ); /* Matches dark mode primary-foreground */
+    --sidebar-accent: oklch(0.3 0.03 260); /* Matches dark mode accent */
+    --sidebar-accent-foreground: oklch(
+      0.92 0.01 260
+    ); /* Matches dark mode foreground */
+    --sidebar-border: oklch(0.25 0.02 260 / 0.2); /* Matches dark mode border */
+    --sidebar-ring: oklch(0.55 0.15 260); /* Matches dark mode ring */
   }
 }
