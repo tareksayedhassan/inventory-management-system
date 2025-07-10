@@ -1,7 +1,7 @@
 export type Compny = {
   id: number;
   photo: string;
-  status: string; // أو CompStatus لو معرف enum
+  status: string;
   general_alert: string;
   address: string;
   phone: string;

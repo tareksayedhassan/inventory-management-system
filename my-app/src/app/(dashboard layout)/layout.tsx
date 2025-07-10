@@ -11,44 +11,40 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div style={{ backgroundColor: "#f9f9f9" }}>
-      <div
-        style={{ height: "100vh", display: "flex", flexDirection: "column" }}
-      >
-        <TopBar />
-        <div style={{ display: "flex", flex: 1 }}>
-          {/* Main content first */}
-          <main
-            className="main-content"
+    <div className="min-h-screen flex flex-col bg-[#f9f9f9] overflow-x-hidden">
+      <TopBar />
+      <div style={{ display: "flex", flex: 1 }}>
+        <main
+          className="main-content"
+          style={{
+            flex: 1,
+            padding: "2rem 1rem",
+            paddingTop: "70px",
+            backgroundColor: "#f9f9f9",
+            overflowX: "hidden", // إضافة هنا
+          }}
+        >
+          <div
             style={{
-              flex: 1,
-              padding: "2rem",
-              backgroundColor: "#f9f9f9",
+              width: "100%",
+              maxWidth: "1200px",
+              margin: "0 auto",
+              overflowX: "hidden", // إضافة هنا
             }}
           >
-            <div
-              style={{
-                width: "100%",
-                maxWidth: "1200px",
-                marginTop: "4rem",
-              }}
-            >
-              {children}
-            </div>
-          </main>
-
-          {/* Desktop Sidebar on the right */}
-          <div className="hidden xl:flex items-center gap-8">
-            <div style={{ width: "200px", flexShrink: 0 }}>
-              <SideBar />
-            </div>
+            {children}
           </div>
-
-          {/* Mobile Sidebar on the right */}
-          <div className="xl:hidden">
-            <div style={{ flexShrink: 0 }}>
-              <MobileSideBar />
-            </div>
+        </main>
+        {/* Desktop Sidebar */}
+        <div className="hidden xl:flex items-center gap-8">
+          <div style={{ width: "200px", flexShrink: 0 }}>
+            <SideBar />
+          </div>
+        </div>
+        {/* Mobile Sidebar */}
+        <div className="xl:hidden">
+          <div style={{ flexShrink: 0 }}>
+            <MobileSideBar />
           </div>
         </div>
       </div>

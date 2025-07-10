@@ -7,3 +7,5 @@ export const LOGIN = "users/login";
 //  compoines
 
 export const Company = "companies";
+export const DELETE_CMPANY = "companies";
+export const EDIT_COMPANY = "companies";

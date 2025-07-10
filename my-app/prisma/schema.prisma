@@ -19,33 +19,50 @@ datasource db {
 }
 
 model User {
-  id         Int        @id @default(autoincrement())
-  name       String
-  email      String     @unique
-  password   String
-  role       Role       @default(USER)
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  avatar     String     @default("default.jpg")
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  added_Company     Company[] @relation("AddedBy")
-  updated_Company   Company[] @relation("UpdatedBy")
+  image Image? @relation("UserImage")
+
+  added_Company   Company[] @relation("AddedBy")
+  updated_Company Company[] @relation("UpdatedBy")
 }
 
 model Company {
-  id             Int        @id @default(autoincrement())
-  photo          String     @default("default.jpg")
-  status         CompStatus @default(ACTIVE)
-  general_alert  String
-  address        String
-  phone          String
-  company_code   String
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  id            Int        @id @default(autoincrement())
+  photo         String     @default("default.jpg")
+  status        CompStatus @default(ACTIVE)
+  general_alert String
+  address       String
+  phone         String
+  company_code  String
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
-  added_by_id    Int
-  updated_by_id  Int
+  added_by_id   Int
+  updated_by_id Int
 
-  added_by       User @relation("AddedBy", fields: [added_by_id], references: [id])
-  updated_by     User @relation("UpdatedBy", fields: [updated_by_id], references: [id])
+  added_by   User @relation("AddedBy", fields: [added_by_id], references: [id])
+  updated_by User @relation("UpdatedBy", fields: [updated_by_id], references: [id])
+
+  image Image? @relation("CompanyImage")
+}
+
+model Image {
+  id  Int    @id @default(autoincrement())
+  url String
+
+  userId Int?  @unique
+  user   User? @relation("UserImage", fields: [userId], references: [id], onDelete: Cascade)
+
+  companyId Int?     @unique
+  company   Company? @relation("CompanyImage", fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([userId])
 }
