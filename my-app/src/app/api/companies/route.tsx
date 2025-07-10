@@ -50,22 +50,22 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// add new company
-
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const {
-      photo,
-      status,
-      general_alert,
-      address,
-      phone,
-      company_code,
-      added_by_id,
-      updaeted_by_id,
-    } = body;
-    const addSetting = await prisma.company.create({
+    const formData = await req.formData();
+
+    const photoFile = formData.get("file") as File | null;
+    const photo = photoFile ? photoFile.name : "default.jpg";
+
+    const status = formData.get("status") as CompStatus;
+    const general_alert = formData.get("general_alert") as string;
+    const address = formData.get("address") as string;
+    const phone = formData.get("phone") as string;
+    const company_code = formData.get("company_code") as string;
+    const added_by_id = parseInt(formData.get("added_by_id") as string);
+    const updated_by_id = parseInt(formData.get("updated_by_id") as string);
+
+    const newCompany = await prisma.company.create({
       data: {
         photo,
         status,
@@ -74,29 +74,22 @@ export async function POST(req: NextRequest) {
         phone,
         company_code,
         added_by: {
-          connect: {
-            id: added_by_id,
-          },
+          connect: { id: added_by_id },
         },
         updated_by: {
-          connect: {
-            id: updaeted_by_id,
-          },
+          connect: { id: updated_by_id },
         },
       },
     });
 
     return NextResponse.json(
-      {
-        message: "company added successfully",
-        data: addSetting,
-      },
+      { message: "Company added successfully", data: newCompany },
       { status: 201 }
     );
   } catch (error) {
-    console.error(error);
+    console.error("Create company error:", error);
     return NextResponse.json(
-      { message: "Internal server error" },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }

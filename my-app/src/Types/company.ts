@@ -1,6 +1,6 @@
 export type Compny = {
   id: number;
-  photo: string;
+  photo?: string;
   status: string;
   general_alert: string;
   address: string;
@@ -10,4 +10,10 @@ export type Compny = {
   updated_by_id: number;
   createdAt: String;
   updatedAt: String;
+  added_by?: {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+  };
 };

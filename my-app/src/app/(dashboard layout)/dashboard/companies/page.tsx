@@ -28,6 +28,7 @@ import Pagention from "@/components/customUi/pagention";
 import axios from "axios";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import Loading from "@/components/customUi/loading";
 const Page = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -38,6 +39,8 @@ const Page = () => {
     `${BASE_URL}/${Company}?page=${currentPage}&pageSize=${rowsPerPage}&search=${search}`,
     fetcher
   );
+  if (isLoading) return <div>{<Loading />}</div>;
+
   const company: Compny[] = data?.data || [];
   const router = useRouter();
   const totalItems = data?.total || 0;
@@ -61,6 +64,12 @@ const Page = () => {
   const editCompany = (id: number) => {
     router.push(`/dashboard/companies/${id}`);
   };
+  const getImageUrl = (photo: string | undefined) => {
+    if (!photo) return "/uploads/default.jpg";
+    return `/uploads/${photo}`;
+  };
+
+  console.log(data);
   return (
     <div dir="rtl" className="p-4 overflow-hidden">
       <div>
@@ -119,10 +128,10 @@ const Page = () => {
                     <div className="w-12 h-12 rounded-full overflow-hidden border">
                       <Image
                         src={`/uploads/${item.photo || "default.jpg"}`}
-                        alt="logo"
-                        height={48}
-                        width={48}
-                        className="object-cover"
+                        alt={item.general_alert || "company avatar"}
+                        width={70}
+                        height={50}
+                        style={{ borderRadius: "4px", objectFit: "cover" }}
                       />
                     </div>
                   </TableCell>
@@ -146,7 +155,13 @@ const Page = () => {
                   <TableCell>
                     {new Date(item.updatedAt.toString()).toLocaleDateString()}
                   </TableCell>
-                  <TableCell>{item.added_by_id}</TableCell>
+                  <TableCell>
+                    <p>{item.added_by?.name || "غير معروف"}</p>
+                    <p className="text-gray-500 text-sm">
+                      {item.added_by?.role || ""}
+                    </p>
+                  </TableCell>
+
                   <TableCell>{item.updated_by_id}</TableCell>
                   <TableCell>
                     <div className="flex justify-center items-center">
@@ -231,7 +246,10 @@ const Page = () => {
                 <span className="font-semibold text-gray-600">
                   أضيف بواسطة:
                 </span>
-                <div>{item.added_by_id}</div>
+                <p>{item.added_by?.name || "غير معروف"}</p>
+                <p className="text-gray-500 text-sm">
+                  {item.added_by?.role || ""}
+                </p>{" "}
               </div>
               <div>
                 <span className="font-semibold text-gray-600">

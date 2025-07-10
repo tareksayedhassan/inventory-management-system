@@ -19,36 +19,36 @@ import useSWR from "swr";
 import { fetcher } from "@/apiCaild/fetcher";
 import { BASE_URL, Company } from "@/apiCaild/API";
 import { toast } from "sonner";
+import Loading from "@/components/customUi/loading";
+import Image from "next/image";
 
 const EditCompanyForm = () => {
   const { id } = useParams();
 
   const router = useRouter();
-  const {
-    data: company,
-    error,
-    isLoading,
-    mutate,
-  } = useSWR<Compny>(`${BASE_URL}/${Company}/${id}`, fetcher);
 
-  // Initialize react-hook-form
+  const { data, error, isLoading, mutate } = useSWR(
+    `${BASE_URL}/${Company}/${id}`,
+    fetcher
+  );
+  const company: Compny = data?.data || {};
+
   const { register, handleSubmit, setValue, reset } = useForm<Compny>();
 
-  // Set default values once data is loaded
+  console.log(company);
   useEffect(() => {
-    if (company) {
-      reset(company); // Fill the form with data
+    if (company && company.id) {
+      reset(company);
     }
   }, [company, reset]);
 
-  // Loading / error state
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <div>{<Loading />}</div>;
   if (error || !company) return <div>Error loading company data.</div>;
-  const onSubmit = async (data: Compny) => {
+  const onSubmit = async (company: Compny) => {
     try {
       const formData = new FormData();
 
-      const photoFile = (data.photo as unknown as FileList)[0];
+      const photoFile = (company.photo as unknown as FileList)[0];
       if (photoFile) {
         formData.append("file", photoFile);
         formData.append("type", "company");
@@ -60,13 +60,13 @@ const EditCompanyForm = () => {
         });
 
         const uploadData = await uploadRes.json();
-        data.photo = uploadData.fileName;
+        company.photo = uploadData.fileName;
       }
 
       const response = await fetch(`${BASE_URL}/${Company}/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(company),
       });
 
       if (!response.ok) throw new Error("Failed to update company");
@@ -86,25 +86,9 @@ const EditCompanyForm = () => {
       className="space-y-6 p-4 max-w-xl mx-auto"
     >
       <div>
-        <Label htmlFor="photo">Company Logo</Label>
-        <input
-          id="photo"
-          type="file"
-          accept="image/*"
-          {...register("photo")}
-          className="block w-full text-sm text-gray-500
-      file:mr-4 file:py-2 file:px-4
-      file:rounded file:border-0
-      file:text-sm file:font-semibold
-      file:bg-blue-50 file:text-blue-700
-      hover:file:bg-blue-100"
-        />
-      </div>
-
-      <div>
         <Label htmlFor="status">Status</Label>
         <Select
-          defaultValue={company.status}
+          defaultValue={data.status}
           onValueChange={(value) => setValue("status", value)}
         >
           <SelectTrigger>
@@ -136,6 +120,27 @@ const EditCompanyForm = () => {
       <div>
         <Label htmlFor="company_code">Company Code</Label>
         <Input id="company_code" {...register("company_code")} />
+      </div>
+      <div>
+        <Label htmlFor="photo">Company Logo</Label>
+        <input
+          id="photo"
+          type="file"
+          accept="image/*"
+          {...register("photo")}
+          className="block w-full text-sm text-gray-500
+      file:mr-4 file:py-2 file:px-4
+      file:rounded file:border-0
+      file:text-sm file:font-semibold
+      file:bg-blue-50 file:text-blue-700
+      hover:file:bg-blue-100"
+        />
+        <Image
+          src={`/uploads/${company.photo || "default.jpg"}`}
+          alt="Company Logo"
+          width={80}
+          height={80}
+        />
       </div>
 
       <Button type="submit">Save Changes</Button>
