@@ -16,7 +16,7 @@ const DropsDown = () => {
         <AccordionContent className="pr-4 flex flex-col gap-1 text-sm">
           <Link href="/dashboard/companies">قائمة الشركات</Link>
           <Link href="/dashboard/companies/addCompany">اضافه شركه </Link>
-          <Link href="#">الفوترة</Link>
+          <Link href="/dashboard/treasury">الخزائن</Link>
           <Link href="#">الفريق</Link>
           <Link href="#">الاشتراك</Link>
         </AccordionContent>

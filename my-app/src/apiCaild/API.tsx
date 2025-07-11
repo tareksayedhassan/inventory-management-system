@@ -9,3 +9,6 @@ export const LOGIN = "users/login";
 export const Company = "companies";
 export const DELETE_CMPANY = "companies";
 export const EDIT_COMPANY = "companies";
+// Treasury
+
+export const Treasury = "Treasury";

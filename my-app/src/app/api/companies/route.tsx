@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
 import { CompStatus } from "@prisma/client";
+import fs from "fs/promises";
+import path from "path";
+
 // get all company with pagention
 export async function GET(req: NextRequest) {
   try {
@@ -54,42 +57,53 @@ export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
 
-    const photoFile = formData.get("file") as File | null;
-    const photo = photoFile ? photoFile.name : "default.jpg";
+    const file = formData.get("file") as File | null;
 
-    const status = formData.get("status") as CompStatus;
+    let photoFileName = "default.jpg";
+    if (file) {
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = new Uint8Array(arrayBuffer);
+      photoFileName = `${Date.now()}_${file.name}`;
+      const filePath = path.join(
+        process.cwd(),
+        "public/uploads",
+        photoFileName
+      );
+      await fs.writeFile(filePath, buffer);
+    }
+
     const general_alert = formData.get("general_alert") as string;
     const address = formData.get("address") as string;
     const phone = formData.get("phone") as string;
     const company_code = formData.get("company_code") as string;
-    const added_by_id = parseInt(formData.get("added_by_id") as string);
-    const updated_by_id = parseInt(formData.get("updated_by_id") as string);
+    const added_by_id = parseInt(formData.get("added_by_id") as string, 10);
+    const updated_by_id = parseInt(formData.get("updated_by_id") as string, 10);
+    const statusRaw = formData.get("status") as string;
+    const status = Object.values(CompStatus).includes(statusRaw as CompStatus)
+      ? (statusRaw as CompStatus)
+      : undefined;
 
+    if (!status) {
+      return NextResponse.json({ message: "حالة غير صالحة" }, { status: 400 });
+    }
     const newCompany = await prisma.company.create({
       data: {
-        photo,
         status,
         general_alert,
         address,
         phone,
         company_code,
-        added_by: {
-          connect: { id: added_by_id },
-        },
-        updated_by: {
-          connect: { id: updated_by_id },
-        },
+        added_by_id,
+        updated_by_id,
+        photo: photoFileName,
       },
     });
 
+    return NextResponse.json(newCompany, { status: 201 });
+  } catch (error: any) {
+    console.error("Error creating company:", error);
     return NextResponse.json(
-      { message: "Company added successfully", data: newCompany },
-      { status: 201 }
-    );
-  } catch (error) {
-    console.error("Create company error:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
+      { message: "فشل في إضافة الشركة", error },
       { status: 500 }
     );
   }

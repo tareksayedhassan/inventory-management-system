@@ -1,14 +1,3 @@
-enum Role {
-  USER
-  ADMIN
-}
-
-enum CompStatus {
-  ACTIVE
-  INACTIVE
-  PENDING
-}
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -19,18 +8,18 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  password  String
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  image Image? @relation("UserImage")
-
-  added_Company   Company[] @relation("AddedBy")
-  updated_Company Company[] @relation("UpdatedBy")
+  id               Int        @id @default(autoincrement())
+  name             String
+  email            String     @unique
+  password         String
+  role             Role       @default(USER)
+  avatar           String?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  added_Company    Company[]  @relation("AddedBy")
+  updated_Company  Company[]  @relation("UpdatedBy")
+  added_Treasury   Treasury[] @relation("AddedBy")
+  updated_Treasury Treasury[] @relation("UpdatedBy")
 }
 
 model Company {
@@ -43,26 +32,40 @@ model Company {
   company_code  String
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
-
   added_by_id   Int
   updated_by_id Int
+  added_by      User       @relation("AddedBy", fields: [added_by_id], references: [id])
+  updated_by    User       @relation("UpdatedBy", fields: [updated_by_id], references: [id])
 
-  added_by   User @relation("AddedBy", fields: [added_by_id], references: [id])
-  updated_by User @relation("UpdatedBy", fields: [updated_by_id], references: [id])
-
-  image Image? @relation("CompanyImage")
+  @@index([added_by_id], map: "Company_added_by_id_fkey")
+  @@index([updated_by_id], map: "Company_updated_by_id_fkey")
 }
 
-model Image {
-  id  Int    @id @default(autoincrement())
-  url String
+model Treasury {
+  id                           Int      @id @default(autoincrement())
+  name                         String
+  is_master                    Boolean
+  last_exchange_receipt_number Int
+  last_collect_receipt_number  Int
+  createdAt                    DateTime @default(now())
+  updatedAt                    DateTime @updatedAt
+  added_by_id                  Int
+  updated_by_id                Int
+  date                         DateTime @default(now())
+  added_by                     User     @relation("AddedBy", fields: [added_by_id], references: [id])
+  updated_by                   User     @relation("UpdatedBy", fields: [updated_by_id], references: [id])
 
-  userId Int?  @unique
-  user   User? @relation("UserImage", fields: [userId], references: [id], onDelete: Cascade)
+  @@index([added_by_id], map: "Treasury_added_by_id_fkey")
+  @@index([updated_by_id], map: "Treasury_updated_by_id_fkey")
+}
 
-  companyId Int?     @unique
-  company   Company? @relation("CompanyImage", fields: [companyId], references: [id], onDelete: Cascade)
+enum Role {
+  USER
+  ADMIN
+}
 
-  @@index([companyId])
-  @@index([userId])
+enum CompStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
 }

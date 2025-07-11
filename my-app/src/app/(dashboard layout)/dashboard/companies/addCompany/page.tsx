@@ -1,8 +1,7 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -14,13 +13,12 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { Compny } from "@/Types/company";
-import { toast } from "sonner";
 import Image from "next/image";
 import axios from "axios";
 import Cookie from "cookie-universal";
 import { BASE_URL, Company } from "@/apiCaild/API";
-import { jwtDecode, JwtPayload } from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
+import { toast } from "sonner";
 import { DecodedToken } from "@/Types/CustomJWTDecoded";
 
 const AddCompany = () => {
@@ -29,65 +27,63 @@ const AddCompany = () => {
   const token = cookie.get("Bearer");
 
   let userId: number | undefined = undefined;
-
   if (token) {
     const decoded = jwtDecode<DecodedToken>(token);
     userId = decoded.id;
   }
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors },
-  } = useForm<Compny>();
+  const [status, setStatus] = useState("");
+  const [generalAlert, setGeneralAlert] = useState("");
+  const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState("");
+  const [companyCode, setCompanyCode] = useState("");
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const onSubmit = async (data: Compny) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+
     try {
       const formData = new FormData();
-      const photoFile = (data.photo as unknown as FileList)?.[0];
 
       if (photoFile) {
         formData.append("file", photoFile);
       }
 
-      formData.append("status", data.status);
-      formData.append("general_alert", data.general_alert);
-      formData.append("address", data.address);
-      formData.append("phone", data.phone);
-      formData.append("company_code", data.company_code);
-      formData.append("added_by_id", userId!.toString());
-      formData.append("updated_by_id", userId!.toString());
+      formData.append("status", status);
+      formData.append("general_alert", generalAlert);
+      formData.append("address", address);
+      formData.append("phone", phone);
+      formData.append("company_code", companyCode);
+      formData.append("added_by_id", String(userId));
+      formData.append("updated_by_id", String(userId));
 
       const res = await axios.post(`${BASE_URL}/${Company}`, formData, {
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
         },
       });
 
       if (res.status === 201) {
-        toast.success("Company created successfully");
+        toast.success("company added sucssuflly");
         router.push("/dashboard/companies");
       } else {
-        toast.error("Failed to create company");
+        toast.error("error added company ");
       }
     } catch (error: any) {
-      toast.error(`Error: ${error.message}`);
+      toast.error(`error: ${error?.response?.data?.message || error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const selectedFile = watch("photo") as unknown as FileList;
-
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="space-y-6 p-4 max-w-xl mx-auto"
-    >
+    <form onSubmit={handleSubmit} className="space-y-6 p-4 max-w-xl mx-auto">
       <div>
         <Label htmlFor="status">الحالة</Label>
-        <Select onValueChange={(value) => setValue("status", value as any)}>
+        <Select onValueChange={(val) => setStatus(val)}>
           <SelectTrigger>
             <SelectValue placeholder="اختر الحالة" />
           </SelectTrigger>
@@ -100,42 +96,43 @@ const AddCompany = () => {
       </div>
 
       <div>
-        <Label htmlFor="general_alert">الإشعار العام</Label>
-        <Textarea id="general_alert" {...register("general_alert")} />
+        <Label>الإشعار العام</Label>
+        <Textarea
+          value={generalAlert}
+          onChange={(e) => setGeneralAlert(e.target.value)}
+        />
       </div>
 
       <div>
-        <Label htmlFor="address">العنوان</Label>
-        <Input id="address" {...register("address")} />
+        <Label>العنوان</Label>
+        <Input value={address} onChange={(e) => setAddress(e.target.value)} />
       </div>
 
       <div>
-        <Label htmlFor="phone">رقم الهاتف</Label>
-        <Input id="phone" {...register("phone")} />
+        <Label>رقم الهاتف</Label>
+        <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
       </div>
 
       <div>
-        <Label htmlFor="company_code">كود الشركة</Label>
-        <Input id="company_code" {...register("company_code")} />
+        <Label>كود الشركة</Label>
+        <Input
+          value={companyCode}
+          onChange={(e) => setCompanyCode(e.target.value)}
+        />
       </div>
 
       <div>
-        <Label htmlFor="photo">شعار الشركة</Label>
-        <input
-          id="photo"
+        <Label>شعار الشركة</Label>
+        <Input
           type="file"
           accept="image/*"
-          {...register("photo")}
-          className="block w-full text-sm text-gray-500
-          file:mr-4 file:py-2 file:px-4
-          file:rounded file:border-0
-          file:text-sm file:font-semibold
-          file:bg-blue-50 file:text-blue-700
-          hover:file:bg-blue-100"
+          onChange={(e) => {
+            if (e.target.files) setPhotoFile(e.target.files[0]);
+          }}
         />
-        {selectedFile?.[0] && (
+        {photoFile && (
           <Image
-            src={URL.createObjectURL(selectedFile[0])}
+            src={URL.createObjectURL(photoFile)}
             alt="preview"
             width={80}
             height={80}
@@ -144,7 +141,9 @@ const AddCompany = () => {
         )}
       </div>
 
-      <Button type="submit">إضافة الشركة</Button>
+      <Button type="submit" disabled={loading}>
+        {loading ? "جاري الإضافة..." : "إضافة الشركة"}
+      </Button>
     </form>
   );
 };

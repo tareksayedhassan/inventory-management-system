@@ -71,10 +71,11 @@ const Page = () => {
 
   console.log(data);
   return (
-    <div dir="rtl" className="p-4 overflow-hidden">
-      <div>
-        <div className="hidden xl:flex items-center gap-8">
-          <Table className="border  rounded-lg overflow-hidden">
+    <div dir="rtl" className="p-4">
+      {/* Desktop Table */}
+      <div className="hidden xl:flex items-center gap-8 overflow-x-auto">
+        <div className="min-w-[1100px]">
+          <Table className="border rounded-lg">
             <TableCaption className="mb-4 font-semibold text-lg text-gray-500">
               قائمة الشركات
             </TableCaption>
@@ -89,28 +90,28 @@ const Page = () => {
                 <TableHead className="font-bold text-gray-800">
                   الحاله
                 </TableHead>
-                <TableHead className="text-right font-bold text-gray-800">
+                <TableHead className="font-bold text-gray-800">
                   رقم الشركه
                 </TableHead>
-                <TableHead className="text-right font-bold text-gray-800">
+                <TableHead className="font-bold text-gray-800 max-w-[160px] truncate">
                   عنوان الشركه
                 </TableHead>
-                <TableHead className="text-right font-bold text-gray-800">
+                <TableHead className="font-bold text-gray-800 max-w-[160px] truncate">
                   الاشعارات
                 </TableHead>
-                <TableHead className="text-right font-bold text-gray-800">
+                <TableHead className="font-bold text-gray-800">
                   تاريخ الانشاء
                 </TableHead>
-                <TableHead className="text-right font-bold text-gray-800">
+                <TableHead className="font-bold text-gray-800">
                   تاريخ التحديث
                 </TableHead>
-                <TableHead className="text-right font-bold text-gray-800">
+                <TableHead className="font-bold text-gray-800 max-w-[140px] truncate">
                   اضيف بواسطه
                 </TableHead>
-                <TableHead className="text-right font-bold text-gray-800">
+                <TableHead className="font-bold text-gray-800">
                   تم التحديث بواسطه
                 </TableHead>
-                <TableHead className="text-right font-bold text-gray-800">
+                <TableHead className="font-bold text-gray-800">
                   التعديل والحذف
                 </TableHead>
               </TableRow>
@@ -121,60 +122,76 @@ const Page = () => {
                   key={key}
                   className="hover:bg-gray-50 transition duration-200 mr-3.5"
                 >
-                  <TableCell className="font-medium">
+                  <TableCell className="w-[90px] font-medium">
                     {item.company_code}
                   </TableCell>
-                  <TableCell className="font-medium">
+
+                  <TableCell>
                     <div className="w-12 h-12 rounded-full overflow-hidden border">
                       <Image
                         src={`/uploads/${item.photo || "default.jpg"}`}
                         alt={item.general_alert || "company avatar"}
-                        width={70}
-                        height={50}
-                        style={{ borderRadius: "4px", objectFit: "cover" }}
+                        width={96}
+                        height={96}
+                        className="w-full h-full object-cover"
+                        quality={100}
+                        priority
+                        unoptimized
                       />
                     </div>
                   </TableCell>
-                  <TableCell>{item.status}</TableCell>
-                  <TableCell>{item.phone}</TableCell>
+
+                  <TableCell className="w-[80px]">{item.status}</TableCell>
+                  <TableCell className="w-[120px]">{item.phone}</TableCell>
+
                   <TableCell
-                    className="max-w-[160px] truncate"
+                    className="max-w-[140px] truncate"
                     title={item.address}
                   >
                     {item.address}
                   </TableCell>
+
                   <TableCell
-                    className="max-w-[160px] truncate"
+                    className="max-w-[140px] truncate"
                     title={item.general_alert}
                   >
                     {item.general_alert}
                   </TableCell>
-                  <TableCell>
+
+                  <TableCell className="w-[110px]">
                     {new Date(item.createdAt.toString()).toLocaleDateString()}
                   </TableCell>
-                  <TableCell>
+
+                  <TableCell className="w-[110px]">
                     {new Date(item.updatedAt.toString()).toLocaleDateString()}
                   </TableCell>
-                  <TableCell>
+
+                  <TableCell
+                    className="max-w-[140px] truncate"
+                    title={item.added_by?.name}
+                  >
                     <p>{item.added_by?.name || "غير معروف"}</p>
                     <p className="text-gray-500 text-sm">
                       {item.added_by?.role || ""}
                     </p>
                   </TableCell>
 
-                  <TableCell>{item.updated_by_id}</TableCell>
-                  <TableCell>
-                    <div className="flex justify-center items-center">
+                  <TableCell className="w-[100px] truncate">
+                    {item.updated_by_id}
+                  </TableCell>
+
+                  <TableCell className="w-[160px]">
+                    <div className="flex justify-center items-center gap-2">
                       <Button
                         variant="secondary"
-                        className="bg-red-300 cursor-pointer"
+                        className="bg-red-300 cursor-pointer px-2 py-1 text-sm"
                         onClick={() => DeleteRecord(item.id)}
                       >
                         الحذف
                       </Button>
                       <Button
                         variant="secondary"
-                        className="bg-yellow-100 cursor-pointer"
+                        className="bg-yellow-100 cursor-pointer px-2 py-1 text-sm"
                         onClick={() => editCompany(item.id)}
                       >
                         التعديل
@@ -186,16 +203,19 @@ const Page = () => {
             </TableBody>
           </Table>
         </div>
-        <div className="hidden xl:flex items-center justify-center gap-8">
-          <Pagention
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            rowsPerPage={rowsPerPage}
-            totalItems={totalItems}
-          />
-        </div>
       </div>
-      {/* mobile card */}
+
+      {/* Pagination */}
+      <div className="hidden xl:flex items-center justify-center gap-8">
+        <Pagention
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          rowsPerPage={rowsPerPage}
+          totalItems={totalItems}
+        />
+      </div>
+
+      {/* Mobile Cards */}
       <div className="xl:hidden grid gap-4 overflow-x-hidden">
         {company.map((item, key) => (
           <Card
@@ -249,7 +269,7 @@ const Page = () => {
                 <p>{item.added_by?.name || "غير معروف"}</p>
                 <p className="text-gray-500 text-sm">
                   {item.added_by?.role || ""}
-                </p>{" "}
+                </p>
               </div>
               <div>
                 <span className="font-semibold text-gray-600">
@@ -281,7 +301,7 @@ const Page = () => {
             </CardFooter>
           </Card>
         ))}
-        <div className="xl:hidden ">
+        <div className="xl:hidden">
           <Pagention
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
