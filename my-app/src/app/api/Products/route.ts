@@ -48,14 +48,12 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
 
     const code = formData.get("code") as string;
     const name = formData.get("name") as string;
-    const category = formData.get("category") as string;
     const unit = formData.get("unit") as string;
     const buyPrice = parseFloat(formData.get("buyPrice") as string);
     const sellPrice = parseFloat(formData.get("sellPrice") as string);
@@ -63,25 +61,49 @@ export async function POST(req: NextRequest) {
     const minStock = parseInt(formData.get("minStock") as string, 10);
     const note = formData.get("note") as string;
 
-    const treasuryId = parseInt(formData.get("treasuryId") as string, 10); // 👈 ID الخزنة
+    const treasuryId = parseInt(formData.get("treasuryId") as string, 10);
     const added_by_id = parseInt(formData.get("added_by_id") as string, 10);
     const updated_by_id = parseInt(formData.get("updated_by_id") as string, 10);
-
     const categoryId = parseInt(formData.get("categoryId") as string, 10);
+
+    if (
+      !code ||
+      !name ||
+      !unit ||
+      isNaN(buyPrice) ||
+      isNaN(sellPrice) ||
+      isNaN(stock) ||
+      isNaN(minStock) ||
+      !note ||
+      isNaN(treasuryId) ||
+      isNaN(added_by_id) ||
+      isNaN(updated_by_id) ||
+      isNaN(categoryId)
+    ) {
+      return NextResponse.json(
+        { message: "Some fields are missing or invalid." },
+        { status: 400 }
+      );
+    }
+
     const newProduct = await prisma.product.create({
       data: {
         code,
         name,
-        category: {
-          connect: { id: categoryId },
-        },
         unit,
         buyPrice,
         sellPrice,
         minStock,
         note,
-        added_by: { connect: { id: added_by_id } },
-        updated_by: { connect: { id: updated_by_id } },
+        category: {
+          connect: { id: categoryId },
+        },
+        added_by: {
+          connect: { id: added_by_id },
+        },
+        updated_by: {
+          connect: { id: updated_by_id },
+        },
       },
     });
 
@@ -94,13 +116,13 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(
-      { message: "تمت إضافة الصنف بنجاح" },
+      { message: "Product created successfully." },
       { status: 201 }
     );
   } catch (error: any) {
     console.error("Error creating product:", error);
     return NextResponse.json(
-      { message: "حدث خطأ أثناء إضافة الصنف", error },
+      { message: "An error occurred while creating the product.", error },
       { status: 500 }
     );
   }

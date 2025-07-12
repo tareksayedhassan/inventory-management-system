@@ -59,19 +59,17 @@ export async function DELETE(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
-  const id = parseInt(params.id, 10);
-  const body = await req.json();
+  const id = parseInt(context.params.id, 10);
 
   try {
-    const updateData: any = {};
-
-    if (body.name !== undefined) updateData.name = body.name;
+    const formData = await req.formData();
+    const name = formData.get("name") as string;
 
     const updatedcategory = await prisma.category.update({
       where: { id },
-      data: updateData,
+      data: { name },
     });
 
     return NextResponse.json({ data: updatedcategory }, { status: 200 });

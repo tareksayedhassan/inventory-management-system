@@ -118,5 +118,5 @@ model ProductTreasury {
   stock     Int      @default(0)
   updatedAt DateTime @updatedAt
 
-  @@unique([productId, treasuryId]) // عشان ما يتكررش نفس الصنف في نفس الخزنة
+  @@unique([productId, treasuryId])
 }

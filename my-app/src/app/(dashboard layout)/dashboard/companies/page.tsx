@@ -29,7 +29,6 @@ import axios from "axios";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Loading from "@/components/customUi/loading";
-import Link from "next/link";
 import { Input } from "@/components/ui/input";
 const Page = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -94,6 +93,7 @@ const Page = () => {
         </div>
       </div>
       {/* Desktop Table */}
+
       <div className="hidden xl:flex items-center gap-8 overflow-x-auto">
         <div className="min-w-[1100px]">
           <Table className="border rounded-lg">

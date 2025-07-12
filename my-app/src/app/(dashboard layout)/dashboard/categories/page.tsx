@@ -78,7 +78,6 @@ const Page = () => {
 
   return (
     <div dir="rtl" className="p-4 overflow-scroll">
-      {/* رأس الجدول: زر إضافة + البحث */}
       <div className="flex flex-col xl:flex-row justify-between items-center gap-4 mb-4">
         <Link href={"/dashboard/categories/add"}>
           <Button
@@ -99,48 +98,57 @@ const Page = () => {
           />
         </div>
       </div>
-      <div className="w-full overflow-x-auto rounded-lg shadow">
-        <div className="min-w-full">
-          <Table className="w-full border rounded-lg text-sm">
+      <div className="hidden xl:flex items-center justify-center overflow-x-auto p-4">
+        <div className="min-w-[1100px] w-full">
+          <Table className="w-full border border-gray-200 rounded-xl text-sm shadow-sm">
+            <TableCaption className="mb-4 font-bold text-lg text-gray-500 text-center px-4 pt-4">
+              قائمة الشركات
+            </TableCaption>
+
             <TableHeader className="bg-gray-100">
               <TableRow>
-                <TableHead className="w-[50px] text-center font-bold">
-                  #
-                </TableHead>
-                <TableHead className="font-bold text-right">
+                <TableHead className="text-right font-semibold text-gray-800 w-[200px]">
                   اسم القسم
                 </TableHead>
-                <TableHead className="w-[140px] text-center font-bold">
-                  تاريخ الإضافة
+                <TableHead className="text-center font-semibold text-gray-800 w-[160px]">
+                  تاريخ الإنشاء
                 </TableHead>
-                <TableHead className="w-[140px] text-center font-bold">
+                <TableHead className="text-center font-semibold text-gray-800 w-[160px]">
                   تاريخ التحديث
                 </TableHead>
-                <TableHead className="w-[140px] text-center font-bold">
+                <TableHead className="text-center font-semibold text-gray-800 w-[180px]">
                   الإجراءات
                 </TableHead>
               </TableRow>
             </TableHeader>
 
             <TableBody>
-              {category.map((item, index) => (
-                <TableRow key={item.id} className="hover:bg-gray-50">
-                  <TableCell className="text-center font-medium">
-                    {index + 1}
+              {category.map((item, key) => (
+                <TableRow
+                  key={key}
+                  className="hover:bg-gray-50 transition-colors duration-200"
+                >
+                  <TableCell
+                    className="text-right text-gray-800 max-w-[200px] truncate"
+                    title={item.name}
+                  >
+                    {item.name}
                   </TableCell>
-                  <TableCell className="text-right">{item.name}</TableCell>
-                  <TableCell className="text-center">
+
+                  <TableCell className="text-center text-gray-700">
                     {new Date(item.createdAt).toLocaleDateString()}
                   </TableCell>
-                  <TableCell className="text-center">
+
+                  <TableCell className="text-center text-gray-700">
                     {new Date(item.updatedAt).toLocaleDateString()}
                   </TableCell>
+
                   <TableCell className="text-center">
                     <div className="flex justify-center gap-2">
                       <Button
                         variant="destructive"
                         size="sm"
-                        className="text-xs px-3"
+                        className="text-xs px-3 py-1"
                         onClick={() => DeleteProduct(item.id)}
                       >
                         حذف
@@ -148,7 +156,7 @@ const Page = () => {
                       <Button
                         variant="secondary"
                         size="sm"
-                        className="bg-yellow-100 text-black hover:bg-yellow-200 text-xs px-3"
+                        className="bg-yellow-100 text-black hover:bg-yellow-200 text-xs px-3 py-1"
                         onClick={() => editProduct(item.id)}
                       >
                         تعديل
@@ -158,16 +166,21 @@ const Page = () => {
                 </TableRow>
               ))}
             </TableBody>
-
-            <TableCaption className="mt-4 font-semibold text-gray-500">
-              قائمة أقسام الأصناف الموجودة
-            </TableCaption>
           </Table>
         </div>
       </div>
 
+      {/* Pagination */}
+      <div className="hidden xl:flex items-center justify-center gap-8">
+        <Pagention
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          rowsPerPage={rowsPerPage}
+          totalItems={totalItems}
+        />
+      </div>
       {/* Mobile Cards */}
-      <div className="xl:hidden grid gap-4 p-4">
+      <div className="xl:hidden grid gap-4 overflow-x-hidden">
         {category.map((item, key) => (
           <Card
             key={key}

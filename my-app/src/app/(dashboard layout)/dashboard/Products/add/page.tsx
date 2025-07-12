@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import axios from "axios";
 import Cookie from "cookie-universal";
-import { BASE_URL, Products } from "@/apiCaild/API";
+import { BASE_URL, Products, Treasury } from "@/apiCaild/API";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "sonner";
 import { DecodedToken } from "@/Types/CustomJWTDecoded";
@@ -17,16 +17,15 @@ interface ICategory {
   name: string;
 }
 
+interface ITreasury {
+  id: number;
+  name: string;
+}
+
 const AddProduct = () => {
   const router = useRouter();
   const cookie = Cookie();
   const token = cookie.get("Bearer");
-
-  let userId: number | undefined = undefined;
-  if (token) {
-    const decoded = jwtDecode<DecodedToken>(token);
-    userId = decoded.id;
-  }
 
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
@@ -37,11 +36,23 @@ const AddProduct = () => {
   const [stock, setStock] = useState("");
   const [note, setNote] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [treasuryId, setTreasuryId] = useState("");
 
   const [categories, setCategories] = useState<ICategory[]>([]);
+  const [treasuries, setTreasuries] = useState<ITreasury[]>([]);
   const [loading, setLoading] = useState(false);
+  const [userId, setUserId] = useState<number | null>(null);
 
   useEffect(() => {
+    if (token) {
+      const decoded = jwtDecode<DecodedToken>(token);
+      if (typeof decoded.id === "number") {
+        setUserId(decoded.id);
+      } else {
+        toast.error("User ID is invalid.");
+      }
+    }
+
     const fetchCategories = async () => {
       try {
         const res = await axios.get(`${BASE_URL}/categories`, {
@@ -49,43 +60,59 @@ const AddProduct = () => {
         });
         setCategories(res.data.data);
       } catch (error) {
-        toast.error("فشل تحميل الأقسام");
+        toast.error("Error get Categories");
+      }
+    };
+
+    const fetchTreasuries = async () => {
+      try {
+        const res = await axios.get(`${BASE_URL}/${Treasury}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setTreasuries(res.data.data);
+      } catch (error) {
+        toast.error("Error get Treasury");
       }
     };
 
     fetchCategories();
-  }, []);
+    fetchTreasuries();
+  }, [token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!userId) {
+      toast.error("Invild User Id");
+      return;
+    }
+
     setLoading(true);
 
+    const formData = new FormData();
+    formData.append("code", code);
+    formData.append("name", name);
+    formData.append("unit", unit);
+    formData.append("buyPrice", buyPrice);
+    formData.append("sellPrice", sellPrice);
+    formData.append("stock", stock);
+    formData.append("minStock", minStock);
+    formData.append("note", note);
+    formData.append("added_by_id", userId.toString());
+    formData.append("updated_by_id", userId.toString());
+    formData.append("categoryId", Number(categoryId).toString());
+    formData.append("treasuryId", Number(treasuryId).toString());
+
     try {
-      const res = await axios.post(
-        `${BASE_URL}/${Products}`,
-        {
-          code,
-          name,
-          unit,
-          buyPrice: parseFloat(buyPrice),
-          sellPrice: parseFloat(sellPrice),
-          stock: parseInt(stock),
-          minStock: parseInt(minStock),
-          note,
-          categoryId: parseInt(categoryId),
-          added_by_id: userId,
-          updated_by_id: userId,
+      const res = await axios.post(`${BASE_URL}/${Products}`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      });
 
       if (res.status === 201) {
-        toast.success("تمت إضافة المنتج بنجاح");
-        router.push("/dashboard/products");
+        toast.success("Added products Successufly");
+        router.push("/dashboard/Products");
       } else {
         toast.error("حدث خطأ أثناء الإضافة");
       }
@@ -136,7 +163,6 @@ const AddProduct = () => {
               required
             />
           </div>
-
           <div>
             <Label>سعر البيع</Label>
             <Input
@@ -157,7 +183,6 @@ const AddProduct = () => {
               onChange={(e) => setMinStock(e.target.value)}
             />
           </div>
-
           <div>
             <Label>الرصيد</Label>
             <Input
@@ -180,6 +205,23 @@ const AddProduct = () => {
             {categories.map((cat) => (
               <option key={cat.id} value={cat.id}>
                 {cat.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <Label>الخزنة</Label>
+          <select
+            value={treasuryId}
+            onChange={(e) => setTreasuryId(e.target.value)}
+            required
+            className="w-full border rounded px-3 py-2"
+          >
+            <option value="">اختر خزنة</option>
+            {treasuries.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
               </option>
             ))}
           </select>

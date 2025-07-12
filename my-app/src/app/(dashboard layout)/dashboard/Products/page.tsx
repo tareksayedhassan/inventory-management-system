@@ -39,7 +39,12 @@ interface IProduct {
   note?: string;
   createdAt: Date;
   updatedAt: Date;
-  added_by_id: number;
+  added_by?: {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+  };
   updated_by_id: number;
 }
 
@@ -91,45 +96,55 @@ const Page = () => {
 
   return (
     <div dir="rtl" className="p-4">
-      <div className="hidden xl:block">
-        <Table className="border rounded-lg">
+      <div className="hidden xl:block overflow-x-auto w-full">
+        <Table className="border rounded-lg min-w-[1050px]">
           <TableHeader className="bg-gray-100">
             <TableRow>
               <TableHead className="w-[40px] text-center font-bold text-gray-800">
-                رقم التسلسل
+                #
               </TableHead>
-              <TableHead className="font-bold text-gray-800">
-                كود الصنف
+              <TableHead className="w-[90px] font-bold text-gray-800">
+                كود
               </TableHead>
-              <TableHead className="font-bold text-gray-800">
-                اسم الصنف
+              <TableHead className="w-[120px] font-bold text-gray-800">
+                الاسم
               </TableHead>
-              <TableHead className="font-bold text-gray-800">الفئة</TableHead>
-              <TableHead className="font-bold text-gray-800">الوحدة</TableHead>
-              <TableHead className="font-bold text-gray-800">
-                سعر الشراء
+              <TableHead className="w-[100px] font-bold text-gray-800">
+                الفئة
               </TableHead>
-              <TableHead className="font-bold text-gray-800">
-                سعر البيع
+              <TableHead className="w-[70px] font-bold text-gray-800">
+                الوحدة
               </TableHead>
-              <TableHead className="font-bold text-gray-800">
+              <TableHead className="w-[90px] font-bold text-gray-800">
+                س.الشراء
+              </TableHead>
+              <TableHead className="w-[90px] font-bold text-gray-800">
+                س.البيع
+              </TableHead>
+              <TableHead className="w-[80px] font-bold text-gray-800">
                 الحد الأدنى
               </TableHead>
-              <TableHead className="font-bold text-gray-800">الرصيد</TableHead>
-              <TableHead className="font-bold text-gray-800">ملاحظات</TableHead>
-              <TableHead className="font-bold text-gray-800">
-                تاريخ الإضافة
+              <TableHead className="w-[70px] font-bold text-gray-800">
+                الرصيد
               </TableHead>
-              <TableHead className="font-bold text-gray-800">
-                تاريخ التحديث
+              <TableHead className="w-[130px] font-bold text-gray-800">
+                ملاحظات
               </TableHead>
-              <TableHead className="font-bold text-gray-800">
-                أضيف بواسطة
+              <TableHead className="w-[110px] font-bold text-gray-800">
+                إضافة
               </TableHead>
-              <TableHead className="font-bold text-gray-800">
-                تم التحديث بواسطة
+              <TableHead className="w-[110px] font-bold text-gray-800">
+                تحديث
               </TableHead>
-              <TableHead className="font-bold text-gray-800">التحكم</TableHead>
+              <TableHead className="w-[100px] font-bold text-gray-800">
+                أضيف بـ
+              </TableHead>
+              <TableHead className="w-[100px] font-bold text-gray-800">
+                تم التحديث بـ
+              </TableHead>
+              <TableHead className="w-[110px] font-bold text-gray-800">
+                تحكم
+              </TableHead>
             </TableRow>
           </TableHeader>
 
@@ -152,7 +167,15 @@ const Page = () => {
                 <TableCell>
                   {new Date(item.updatedAt).toLocaleDateString()}
                 </TableCell>
-                <TableCell>{item.added_by_id}</TableCell>
+                <TableCell
+                  className="max-w-[140px] truncate"
+                  title={item.added_by?.name}
+                >
+                  <p>{item.added_by?.name || "غير معروف"}</p>
+                  <p className="text-gray-500 text-sm">
+                    {item.added_by?.role || ""}
+                  </p>
+                </TableCell>{" "}
                 <TableCell>{item.updated_by_id}</TableCell>
                 <TableCell>
                   <div className="flex gap-2">
@@ -181,6 +204,7 @@ const Page = () => {
           </TableCaption>
         </Table>
       </div>
+
       {/* Mobile Cards */}
       <div className="xl:hidden grid gap-4 p-4">
         {Product.map((item, key) => (
@@ -248,7 +272,11 @@ const Page = () => {
                 <span className="font-semibold text-gray-600">
                   أضيف بواسطة:
                 </span>
-                <div>{item.added_by_id}</div>
+
+                <p>{item.added_by?.name || "غير معروف"}</p>
+                <p className="text-gray-500 text-sm">
+                  {item.added_by?.role || ""}
+                </p>
               </div>
               <div className="col-span-2">
                 <span className="font-semibold text-gray-600">
