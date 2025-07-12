@@ -16,9 +16,8 @@ export async function GET(req: NextRequest) {
     const addressFilter =
       searchQuery.trim() !== ""
         ? {
-            address: {
+            Name: {
               contains: searchQuery,
-              mode: "insensitive",
             },
           }
         : {};
@@ -75,7 +74,7 @@ export async function POST(req: NextRequest) {
     const general_alert = formData.get("general_alert") as string;
     const address = formData.get("address") as string;
     const phone = formData.get("phone") as string;
-    const company_code = formData.get("company_code") as string;
+    const Name = formData.get("Name") as string;
     const added_by_id = parseInt(formData.get("added_by_id") as string, 10);
     const updated_by_id = parseInt(formData.get("updated_by_id") as string, 10);
     const statusRaw = formData.get("status") as string;
@@ -92,7 +91,7 @@ export async function POST(req: NextRequest) {
         general_alert,
         address,
         phone,
-        company_code,
+        Name,
         added_by_id,
         updated_by_id,
         photo: photoFileName,

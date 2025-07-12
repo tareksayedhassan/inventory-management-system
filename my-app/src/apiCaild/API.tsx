@@ -12,3 +12,11 @@ export const EDIT_COMPANY = "companies";
 // Treasury
 
 export const Treasury = "Treasury";
+
+// products
+
+export const Products = "Products";
+
+// category
+
+export const Categories = "categories";

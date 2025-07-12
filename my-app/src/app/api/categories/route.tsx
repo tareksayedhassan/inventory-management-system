@@ -18,22 +18,18 @@ export async function GET(req: NextRequest) {
             },
           }
         : {};
-    const total = await prisma.treasury.count({ where: addressFilter });
+    const total = await prisma.category.count({ where: addressFilter });
 
-    const Treasury = await prisma.treasury.findMany({
+    const Categories = await prisma.category.findMany({
       where: addressFilter,
       skip: (page - 1) * pageSize,
       take: pageSize,
       orderBy: { createdAt: "desc" },
-      include: {
-        added_by: true,
-        updated_by: true,
-      },
     });
 
     return NextResponse.json(
       {
-        data: Treasury,
+        data: Categories,
         total,
         totalPages: Math.ceil(total / pageSize),
         currentPage: page,
@@ -41,7 +37,7 @@ export async function GET(req: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error fetching Treasury:", error);
+    console.error("Error fetching Categories:", error);
     return NextResponse.json(
       { message: "Something went wrong" },
       { status: 500 }
@@ -53,34 +49,18 @@ export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
     const name = formData.get("name") as string;
-    const is_master = formData.get("is_master") === "true";
-    const last_exchange_receipt_number = parseInt(
-      formData.get("last_exchange_receipt_number") as string,
-      10
-    );
-    const last_collect_receipt_number = parseInt(
-      formData.get("last_collect_receipt_number") as string,
-      10
-    );
-    const added_by_id = parseInt(formData.get("added_by_id") as string, 10);
-    const updated_by_id = parseInt(formData.get("updated_by_id") as string, 10);
 
-    const newTreasury = await prisma.treasury.create({
+    const newCategory = await prisma.category.create({
       data: {
         name,
-        is_master,
-        last_exchange_receipt_number,
-        last_collect_receipt_number,
-        added_by: { connect: { id: added_by_id } },
-        updated_by: { connect: { id: updated_by_id } },
       },
     });
 
-    return NextResponse.json(newTreasury, { status: 201 });
+    return NextResponse.json(newCategory, { status: 201 });
   } catch (error: any) {
-    console.error("Error creating treasury:", error);
+    console.error("Error creating Category:", error);
     return NextResponse.json(
-      { message: "Error Added Treasury", error },
+      { message: "Error Added Category", error },
       { status: 500 }
     );
   }

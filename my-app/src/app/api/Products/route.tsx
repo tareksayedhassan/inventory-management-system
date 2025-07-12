@@ -18,9 +18,9 @@ export async function GET(req: NextRequest) {
             },
           }
         : {};
-    const total = await prisma.treasury.count({ where: addressFilter });
+    const total = await prisma.product.count({ where: addressFilter });
 
-    const Treasury = await prisma.treasury.findMany({
+    const Product = await prisma.product.findMany({
       where: addressFilter,
       skip: (page - 1) * pageSize,
       take: pageSize,
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(
       {
-        data: Treasury,
+        data: Product,
         total,
         totalPages: Math.ceil(total / pageSize),
         currentPage: page,
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error fetching Treasury:", error);
+    console.error("Error fetching Product:", error);
     return NextResponse.json(
       { message: "Something went wrong" },
       { status: 500 }
@@ -52,35 +52,55 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
+
+    const code = formData.get("code") as string;
     const name = formData.get("name") as string;
-    const is_master = formData.get("is_master") === "true";
-    const last_exchange_receipt_number = parseInt(
-      formData.get("last_exchange_receipt_number") as string,
-      10
-    );
-    const last_collect_receipt_number = parseInt(
-      formData.get("last_collect_receipt_number") as string,
-      10
-    );
+    const category = formData.get("category") as string;
+    const unit = formData.get("unit") as string;
+    const buyPrice = parseFloat(formData.get("buyPrice") as string);
+    const sellPrice = parseFloat(formData.get("sellPrice") as string);
+    const stock = parseInt(formData.get("stock") as string, 10);
+    const minStock = parseInt(formData.get("minStock") as string, 10);
+    const note = formData.get("note") as string;
+
+    const treasuryId = parseInt(formData.get("treasuryId") as string, 10); // 👈 ID الخزنة
     const added_by_id = parseInt(formData.get("added_by_id") as string, 10);
     const updated_by_id = parseInt(formData.get("updated_by_id") as string, 10);
 
-    const newTreasury = await prisma.treasury.create({
+    const categoryId = parseInt(formData.get("categoryId") as string, 10);
+    const newProduct = await prisma.product.create({
       data: {
+        code,
         name,
-        is_master,
-        last_exchange_receipt_number,
-        last_collect_receipt_number,
+        category: {
+          connect: { id: categoryId },
+        },
+        unit,
+        buyPrice,
+        sellPrice,
+        minStock,
+        note,
         added_by: { connect: { id: added_by_id } },
         updated_by: { connect: { id: updated_by_id } },
       },
     });
 
-    return NextResponse.json(newTreasury, { status: 201 });
-  } catch (error: any) {
-    console.error("Error creating treasury:", error);
+    await prisma.productTreasury.create({
+      data: {
+        productId: newProduct.id,
+        treasuryId: treasuryId,
+        stock: stock,
+      },
+    });
+
     return NextResponse.json(
-      { message: "Error Added Treasury", error },
+      { message: "تمت إضافة الصنف بنجاح" },
+      { status: 201 }
+    );
+  } catch (error: any) {
+    console.error("Error creating product:", error);
+    return NextResponse.json(
+      { message: "حدث خطأ أثناء إضافة الصنف", error },
       { status: 500 }
     );
   }

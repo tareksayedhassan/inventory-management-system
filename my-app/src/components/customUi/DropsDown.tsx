@@ -12,7 +12,7 @@ const DropsDown = () => {
   return (
     <Accordion type="multiple" className="w-full text-right" dir="rtl">
       <AccordionItem value="general-Company">
-        <AccordionTrigger> . إعدادات الشركات</AccordionTrigger>
+        <AccordionTrigger> .نظرة عامه </AccordionTrigger>
         <AccordionContent className="pr-4 flex flex-col gap-1 text-sm">
           <Link href="/dashboard/companies">قائمة الشركات</Link>
           <Link href="/dashboard/companies/addCompany">اضافه شركه </Link>
@@ -23,16 +23,16 @@ const DropsDown = () => {
       </AccordionItem>
 
       <AccordionItem value="accounts">
-        <AccordionTrigger>الحسابات والنقدية</AccordionTrigger>
+        <AccordionTrigger>ادارة الاصناف</AccordionTrigger>
         <AccordionContent className="pr-4 flex flex-col gap-1 text-sm">
-          <Link href="#">الملف المالي</Link>
-          <Link href="#">الحركات النقدية</Link>
-          <Link href="#">تقارير المحفظة</Link>
+          <Link href="/dashboard/Products"> عرض الاصناف</Link>
+          <Link href="/dashboard/Products/add"> اضافه صنف جديد</Link>
+          <Link href="/dashboard/categories"> اقسام الاصناف</Link>
         </AccordionContent>
       </AccordionItem>
 
       <AccordionItem value="warehouse-Company">
-        <AccordionTrigger>ضبط المخازن</AccordionTrigger>
+        <AccordionTrigger>المشتريات</AccordionTrigger>
         <AccordionContent className="pr-4 flex flex-col gap-1 text-sm">
           <Link href="#">المخازن</Link>
           <Link href="#">أنواع المخزون</Link>
@@ -40,7 +40,7 @@ const DropsDown = () => {
       </AccordionItem>
 
       <AccordionItem value="stock-movement">
-        <AccordionTrigger>حركات مخزنية</AccordionTrigger>
+        <AccordionTrigger>المبيعات</AccordionTrigger>
         <AccordionContent className="pr-4 flex flex-col gap-1 text-sm">
           <Link href="#">إضافة حركة</Link>
           <Link href="#">تتبع الحركة</Link>
@@ -48,7 +48,7 @@ const DropsDown = () => {
       </AccordionItem>
 
       <AccordionItem value="sales">
-        <AccordionTrigger>حركة المبيعات</AccordionTrigger>
+        <AccordionTrigger>المرتجعات</AccordionTrigger>
         <AccordionContent className="pr-4 flex flex-col gap-1 text-sm">
           <Link href="#">فاتورة بيع</Link>
           <Link href="#">مرتجعات</Link>
@@ -56,7 +56,7 @@ const DropsDown = () => {
       </AccordionItem>
 
       <AccordionItem value="services">
-        <AccordionTrigger>خدمات داخلية وخارجية</AccordionTrigger>
+        <AccordionTrigger>تسويات المخزون</AccordionTrigger>
         <AccordionContent className="pr-4 flex flex-col gap-1 text-sm">
           <Link href="#">الخدمات الداخلية</Link>
           <Link href="#">الخدمات الخارجية</Link>
@@ -64,7 +64,7 @@ const DropsDown = () => {
       </AccordionItem>
 
       <AccordionItem value="cash-shift">
-        <AccordionTrigger>حركة شفت الخزينة</AccordionTrigger>
+        <AccordionTrigger>اداره الخزن</AccordionTrigger>
         <AccordionContent className="pr-4 flex flex-col gap-1 text-sm">
           <Link href="#">بداية الشفت</Link>
           <Link href="#">نهاية الشفت</Link>
@@ -72,26 +72,27 @@ const DropsDown = () => {
       </AccordionItem>
 
       <AccordionItem value="users">
-        <AccordionTrigger>الصلاحيات والمستخدمين</AccordionTrigger>
+        <AccordionTrigger>المصروفات</AccordionTrigger>
         <AccordionContent className="pr-4 flex flex-col gap-1 text-sm">
-          <Link href="#">قائمة المستخدمين</Link>
-          <Link href="#">إدارة الصلاحيات</Link>
+          <Link href="#">اضافه مصروف</Link>
+          <Link href="#">تقارير المصروفات يومي وشهري</Link>
         </AccordionContent>
       </AccordionItem>
 
       <AccordionItem value="reports">
-        <AccordionTrigger>التقارير</AccordionTrigger>
+        <AccordionTrigger>حسابات الموردين</AccordionTrigger>
         <AccordionContent className="pr-4 flex flex-col gap-1 text-sm">
-          <Link href="#">تقرير المخزون</Link>
-          <Link href="#">تقرير المبيعات</Link>
+          <Link href="#"> اضافه مورد</Link>
+          <Link href="#"> فواتير الموردين</Link>
+          <Link href="#"> كشف حساب الموردين</Link>
         </AccordionContent>
       </AccordionItem>
 
       <AccordionItem value="support">
-        <AccordionTrigger>الدعم ومفكرتي</AccordionTrigger>
+        <AccordionTrigger> حسابات العملاء</AccordionTrigger>
         <AccordionContent className="pr-4 flex flex-col gap-1 text-sm">
-          <Link href="#">الدعم الفني</Link>
-          <Link href="#">الملاحظات</Link>
+          <Link href="#"> فواتير العملاء</Link>
+          <Link href="#">كشف حساب العميل</Link>
         </AccordionContent>
       </AccordionItem>
     </Accordion>

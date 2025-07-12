@@ -40,9 +40,6 @@ const TopBar = () => {
       <div className="flex items-center gap-2"></div>
 
       <div className="flex items-center gap-2 text-end flex-wrap">
-        <h3 className="m-0 text-sm md:text-xl font-semibold whitespace-nowrap">
-          نظام اداره مخازن شركات الجرحي
-        </h3>
         <Image
           src="/assets/logo.png!w700wp"
           height={40}
@@ -50,6 +47,9 @@ const TopBar = () => {
           alt="logo"
           className="object-contain"
         />
+        <h3 className="m-0 text-sm md:text-xl font-semibold whitespace-nowrap">
+          توب كوالتي
+        </h3>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -26,6 +26,8 @@ import axios from "axios";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Loading from "@/components/customUi/loading";
+import { Input } from "@/components/ui/input";
+import Link from "next/link";
 interface ITreasury {
   id: number;
   name: string;
@@ -47,8 +49,18 @@ const Page = () => {
   const [search, setSearch] = useState("");
   const cookie = Cookie();
   const token = cookie.get("Bearer");
+  const [searchQuery, setSearchQuery] = useState("");
+  // improve search
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setSearchQuery(search);
+      setCurrentPage(1);
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [search]);
   const { data, error, isLoading, mutate } = useSWR(
-    `${BASE_URL}/${Treasury}?page=${currentPage}&pageSize=${rowsPerPage}&search=${search}`,
+    `${BASE_URL}/${Treasury}?page=${currentPage}&pageSize=${rowsPerPage}&search=${searchQuery}`,
     fetcher
   );
   if (isLoading) return <div>{<Loading />}</div>;
@@ -79,6 +91,25 @@ const Page = () => {
 
   return (
     <div dir="rtl" className="p-4">
+      <div className="flex justify-between items-center mb-2.5">
+        <Link href={"/dashboard/treasury/add"}>
+          <Button
+            variant="secondary"
+            className="cursor-pointer hover:bg-amber-50"
+          >
+            اضافه خزنه
+          </Button>
+        </Link>
+        <div className="w-full max-w-sm">
+          <Input
+            type="search"
+            placeholder="ابحث باسم الخزينه..."
+            className="rounded-lg border border-gray-300 px-4 py-2"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
       <Table className="border rounded-lg">
         <TableHeader className="bg-gray-100">
           <TableRow>

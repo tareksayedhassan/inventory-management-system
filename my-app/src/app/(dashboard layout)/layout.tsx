@@ -21,7 +21,7 @@ export default function DashboardLayout({
             padding: "2rem 1rem",
             paddingTop: "70px",
             backgroundColor: "#f9f9f9",
-            overflowX: "hidden", // إضافة هنا
+            overflowX: "hidden",
           }}
         >
           <div
@@ -29,7 +29,7 @@ export default function DashboardLayout({
               width: "100%",
               maxWidth: "1200px",
               margin: "0 auto",
-              overflowX: "hidden", // إضافة هنا
+              overflowX: "hidden",
             }}
           >
             {children}

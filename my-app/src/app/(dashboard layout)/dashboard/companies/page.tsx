@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -29,12 +29,27 @@ import axios from "axios";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Loading from "@/components/customUi/loading";
+import Link from "next/link";
+import { Input } from "@/components/ui/input";
 const Page = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [search, setSearch] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  // improve search
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setSearchQuery(search);
+      setCurrentPage(1);
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [search]);
   const cookie = Cookie();
+  const router = useRouter();
+
   const token = cookie.get("Bearer");
+
   const { data, error, isLoading, mutate } = useSWR(
     `${BASE_URL}/${Company}?page=${currentPage}&pageSize=${rowsPerPage}&search=${search}`,
     fetcher
@@ -42,7 +57,6 @@ const Page = () => {
   if (isLoading) return <div>{<Loading />}</div>;
 
   const company: Compny[] = data?.data || [];
-  const router = useRouter();
   const totalItems = data?.total || 0;
   const totalPages = Math.ceil(totalItems / rowsPerPage);
 
@@ -64,14 +78,21 @@ const Page = () => {
   const editCompany = (id: number) => {
     router.push(`/dashboard/companies/${id}`);
   };
-  const getImageUrl = (photo: string | undefined) => {
-    if (!photo) return "/uploads/default.jpg";
-    return `/uploads/${photo}`;
-  };
 
   console.log(data);
   return (
     <div dir="rtl" className="p-4">
+      <div className="flex justify-between items-center mb-2.5">
+        <div className="w-full max-w-sm">
+          <Input
+            type="search"
+            placeholder="ابحث باسم الشركه ...."
+            className="rounded-lg border border-gray-300 px-4 py-2"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
       {/* Desktop Table */}
       <div className="hidden xl:flex items-center gap-8 overflow-x-auto">
         <div className="min-w-[1100px]">
@@ -82,7 +103,7 @@ const Page = () => {
             <TableHeader className="bg-gray-100">
               <TableRow>
                 <TableHead className="w-[100px] font-bold text-gray-800">
-                  رقم النظام
+                  اسم الشركه
                 </TableHead>
                 <TableHead className="font-bold text-gray-800">
                   الصوره
@@ -122,8 +143,11 @@ const Page = () => {
                   key={key}
                   className="hover:bg-gray-50 transition duration-200 mr-3.5"
                 >
-                  <TableCell className="w-[90px] font-medium">
-                    {item.company_code}
+                  <TableCell
+                    className="max-w-[140px] truncate"
+                    title={item.Name}
+                  >
+                    {item.Name}
                   </TableCell>
 
                   <TableCell>
@@ -229,7 +253,7 @@ const Page = () => {
               </Avatar>
               <div className="min-w-0">
                 <CardTitle className="text-lg font-bold text-gray-800 truncate">
-                  {item.company_code}
+                  {item.Name}
                 </CardTitle>
                 <CardDescription className="text-sm text-gray-500 truncate">
                   {item.address}

@@ -47,26 +47,22 @@ const EditCompanyForm = () => {
   const onSubmit = async (company: Compny) => {
     try {
       const formData = new FormData();
-
       const photoFile = (company.photo as unknown as FileList)[0];
       if (photoFile) {
         formData.append("file", photoFile);
-        formData.append("type", "company");
-        formData.append("companyId", id as string);
-
-        const uploadRes = await fetch(`${BASE_URL}/upload`, {
-          method: "POST",
-          body: formData,
-        });
-
-        const uploadData = await uploadRes.json();
-        company.photo = uploadData.fileName;
       }
+
+      formData.append("type", "company");
+      formData.append("companyId", id as string);
+      formData.append("general_alert", company.general_alert || "");
+      formData.append("address", company.address || "");
+      formData.append("phone", company.phone || "");
+      formData.append("Name", company.Name || "");
+      formData.append("status", company.status || "");
 
       const response = await fetch(`${BASE_URL}/${Company}/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(company),
+        body: formData,
       });
 
       if (!response.ok) throw new Error("Failed to update company");
@@ -79,7 +75,6 @@ const EditCompanyForm = () => {
       toast.error("Error updating company.");
     }
   };
-
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -118,8 +113,8 @@ const EditCompanyForm = () => {
       </div>
 
       <div>
-        <Label htmlFor="company_code">Company Code</Label>
-        <Input id="company_code" {...register("company_code")} />
+        <Label htmlFor="Name">Company Name</Label>
+        <Input id="Name" {...register("Name")} />
       </div>
       <div>
         <Label htmlFor="photo">Company Logo</Label>

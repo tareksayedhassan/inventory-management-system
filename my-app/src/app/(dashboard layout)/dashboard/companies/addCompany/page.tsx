@@ -36,7 +36,7 @@ const AddCompany = () => {
   const [generalAlert, setGeneralAlert] = useState("");
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
-  const [companyCode, setCompanyCode] = useState("");
+  const [Name, setName] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -55,7 +55,7 @@ const AddCompany = () => {
       formData.append("general_alert", generalAlert);
       formData.append("address", address);
       formData.append("phone", phone);
-      formData.append("company_code", companyCode);
+      formData.append("Name", Name);
       formData.append("added_by_id", String(userId));
       formData.append("updated_by_id", String(userId));
 
@@ -94,6 +94,10 @@ const AddCompany = () => {
           </SelectContent>
         </Select>
       </div>
+      <div>
+        <Label>اسم الشركة</Label>
+        <Input value={Name} onChange={(e) => setName(e.target.value)} />
+      </div>
 
       <div>
         <Label>الإشعار العام</Label>
@@ -111,14 +115,6 @@ const AddCompany = () => {
       <div>
         <Label>رقم الهاتف</Label>
         <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
-      </div>
-
-      <div>
-        <Label>كود الشركة</Label>
-        <Input
-          value={companyCode}
-          onChange={(e) => setCompanyCode(e.target.value)}
-        />
       </div>
 
       <div>

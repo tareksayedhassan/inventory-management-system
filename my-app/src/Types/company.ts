@@ -5,7 +5,7 @@ export type Compny = {
   general_alert: string;
   address: string;
   phone: string;
-  company_code: string;
+  Name: string;
   added_by_id: number;
   updated_by_id: number;
   createdAt: String;

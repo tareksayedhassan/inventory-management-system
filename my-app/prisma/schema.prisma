@@ -7,6 +7,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
+enum CompStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
 model User {
   id               Int        @id @default(autoincrement())
   name             String
@@ -20,6 +31,8 @@ model User {
   updated_Company  Company[]  @relation("UpdatedBy")
   added_Treasury   Treasury[] @relation("AddedBy")
   updated_Treasury Treasury[] @relation("UpdatedBy")
+  added_Product    Product[]  @relation("AddedBy")
+  updated_Product  Product[]  @relation("UpdatedBy")
 }
 
 model Company {
@@ -29,7 +42,7 @@ model Company {
   general_alert String
   address       String
   phone         String
-  company_code  String
+  Name          String
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
   added_by_id   Int
@@ -42,30 +55,68 @@ model Company {
 }
 
 model Treasury {
-  id                           Int      @id @default(autoincrement())
+  id                           Int               @id @default(autoincrement())
   name                         String
   is_master                    Boolean
   last_exchange_receipt_number Int
   last_collect_receipt_number  Int
-  createdAt                    DateTime @default(now())
-  updatedAt                    DateTime @updatedAt
+  createdAt                    DateTime          @default(now())
+  updatedAt                    DateTime          @updatedAt
   added_by_id                  Int
   updated_by_id                Int
-  date                         DateTime @default(now())
-  added_by                     User     @relation("AddedBy", fields: [added_by_id], references: [id])
-  updated_by                   User     @relation("UpdatedBy", fields: [updated_by_id], references: [id])
+  date                         DateTime          @default(now())
+  added_by                     User              @relation("AddedBy", fields: [added_by_id], references: [id])
+  updated_by                   User              @relation("UpdatedBy", fields: [updated_by_id], references: [id])
+  productStocks                ProductTreasury[]
 
   @@index([added_by_id], map: "Treasury_added_by_id_fkey")
   @@index([updated_by_id], map: "Treasury_updated_by_id_fkey")
 }
+model Product {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique
+  name      String
+  unit      String
+  buyPrice  Float
+  sellPrice Float
+  stock     Int      @default(0)
+  minStock  Int      @default(0)
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-enum Role {
-  USER
-  ADMIN
+  added_by_id   Int
+  updated_by_id Int
+
+  categoryId Int
+  category   Category @relation(fields: [categoryId], references: [id])
+  productStocks ProductTreasury[]
+  added_by   User @relation("AddedBy", fields: [added_by_id], references: [id])
+  updated_by User @relation("UpdatedBy", fields: [updated_by_id], references: [id])
+
+  @@index([added_by_id], map: "Product_added_by_id_fkey")
+  @@index([updated_by_id], map: "Product_updated_by_id_fkey")
 }
 
-enum CompStatus {
-  ACTIVE
-  INACTIVE
-  PENDING
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  products  Product[] 
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model ProductTreasury {
+  id Int @id @default(autoincrement())
+
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int
+
+  treasury   Treasury @relation(fields: [treasuryId], references: [id])
+  treasuryId Int
+
+  stock     Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, treasuryId]) // عشان ما يتكررش نفس الصنف في نفس الخزنة
 }
