@@ -14,12 +14,13 @@ interface Treasury {
 // get single setting
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
-  const id = parseInt(params.id, 10);
+  const treasuryId = parseInt(context.params.id, 10); // ✅ بدون تكرار id
+
   try {
     const treasury = await prisma.treasury.findUnique({
-      where: { id },
+      where: { id: treasuryId },
     });
 
     if (!treasury) {
@@ -30,6 +31,7 @@ export async function GET(
         { status: 404 }
       );
     }
+
     return NextResponse.json(
       {
         data: treasury,

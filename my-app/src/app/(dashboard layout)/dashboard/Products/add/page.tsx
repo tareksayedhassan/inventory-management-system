@@ -27,7 +27,6 @@ const AddProduct = () => {
   const cookie = Cookie();
   const token = cookie.get("Bearer");
 
-  const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [unit, setUnit] = useState("");
   const [buyPrice, setBuyPrice] = useState("");
@@ -90,7 +89,6 @@ const AddProduct = () => {
     setLoading(true);
 
     const formData = new FormData();
-    formData.append("code", code);
     formData.append("name", name);
     formData.append("unit", unit);
     formData.append("buyPrice", buyPrice);
@@ -126,15 +124,6 @@ const AddProduct = () => {
   return (
     <div className="mt-5 p-4 max-w-xl mx-auto overflow-y-hidden">
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <Label>كود المنتج</Label>
-          <Input
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            required
-          />
-        </div>
-
         <div>
           <Label>اسم المنتج</Label>
           <Input
@@ -184,7 +173,7 @@ const AddProduct = () => {
             />
           </div>
           <div>
-            <Label>الرصيد</Label>
+            <Label>الكميه المضافه الى الخزنه</Label>
             <Input
               type="number"
               value={stock}

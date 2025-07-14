@@ -30,7 +30,7 @@ interface IProduct {
   id: number;
   code: string;
   name: string;
-  category: string;
+  category?: { id: number; name: string };
   unit: string;
   buyPrice: number;
   sellPrice: number;
@@ -69,8 +69,8 @@ const Page = () => {
     fetcher
   );
   if (isLoading) return <div>{<Loading />}</div>;
-  console.log(data);
   const Product: IProduct[] = data?.data || [];
+  console.log(Product);
   const router = useRouter();
   const totalItems = data?.total || 0;
   const totalPages = Math.ceil(totalItems / rowsPerPage);
@@ -103,9 +103,7 @@ const Page = () => {
               <TableHead className="w-[40px] text-center font-bold text-gray-800">
                 #
               </TableHead>
-              <TableHead className="w-[90px] font-bold text-gray-800">
-                كود
-              </TableHead>
+
               <TableHead className="w-[120px] font-bold text-gray-800">
                 الاسم
               </TableHead>
@@ -125,7 +123,7 @@ const Page = () => {
                 الحد الأدنى
               </TableHead>
               <TableHead className="w-[70px] font-bold text-gray-800">
-                الرصيد
+                الكميه المضافه الى الخزنه
               </TableHead>
               <TableHead className="w-[130px] font-bold text-gray-800">
                 ملاحظات
@@ -147,20 +145,36 @@ const Page = () => {
               </TableHead>
             </TableRow>
           </TableHeader>
-
           <TableBody>
             {Product.map((item, index) => (
               <TableRow key={item.code} className="hover:bg-gray-50">
                 <TableCell className="text-center">{index + 1}</TableCell>
-                <TableCell>{item.code}</TableCell>
                 <TableCell>{item.name}</TableCell>
-                <TableCell>{item.category}</TableCell>
+                <TableCell
+                  className="max-w-[140px] truncate"
+                  title={item.category?.name}
+                >
+                  {item.category?.name}
+                </TableCell>
                 <TableCell>{item.unit}</TableCell>
                 <TableCell>{item.buyPrice}</TableCell>
                 <TableCell>{item.sellPrice}</TableCell>
-                <TableCell>{item.minStock}</TableCell>
-                <TableCell>{item.stock}</TableCell>
-                <TableCell>{item.note || "—"}</TableCell>
+                <TableCell className="truncate max-w-[10px] whitespace-nowrap overflow-hidden">
+                  {item.minStock}
+                </TableCell>
+                <TableCell
+                  className="truncate max-w-[150px] whitespace-nowrap overflow-hidden
+"
+                >
+                  {item.stock}
+                </TableCell>
+                <TableCell
+                  title={item.note}
+                  className="truncate max-w-[70px] whitespace-nowrap overflow-hidden
+"
+                >
+                  {item.note || "—"}
+                </TableCell>
                 <TableCell>
                   {new Date(item.createdAt).toLocaleDateString()}
                 </TableCell>
@@ -217,16 +231,13 @@ const Page = () => {
                 <CardTitle className="text-base font-bold text-gray-800">
                   {item.name}
                 </CardTitle>
-                <CardDescription className="text-sm text-gray-500">
-                  كود: {item.code}
-                </CardDescription>
               </div>
             </div>
 
             <CardContent className="grid grid-cols-2 gap-y-3 gap-x-4 text-sm text-gray-700">
               <div>
                 <span className="font-semibold text-gray-600">الفئة:</span>
-                <div>{item.category}</div>
+                <div>{item.category?.name}</div>
               </div>
               <div>
                 <span className="font-semibold text-gray-600">الوحدة:</span>

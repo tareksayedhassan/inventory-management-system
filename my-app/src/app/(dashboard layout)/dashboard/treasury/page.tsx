@@ -89,6 +89,9 @@ const Page = () => {
     router.push(`/dashboard/treasury/${id}`);
   };
 
+  const showTreasury = (id: number) => {
+    router.push(`/dashboard/treasury/${id}/showData`);
+  };
   return (
     <div dir="rtl" className="p-4">
       <div className="flex justify-between items-center mb-2.5">
@@ -110,92 +113,99 @@ const Page = () => {
           />
         </div>
       </div>
-      <Table className="border rounded-lg">
-        <TableHeader className="bg-gray-100">
-          <TableRow>
-            <TableHead className="w-[40px] text-center font-bold text-gray-800">
-              تسلسل
-            </TableHead>
-            <TableHead className="font-bold text-gray-800">
-              اسم الخزنة
-            </TableHead>
-            <TableHead className="font-bold text-gray-800">رئيسية؟</TableHead>
-            <TableHead className="font-bold text-gray-800">
-              آخر إيصال صرف
-            </TableHead>
-            <TableHead className="font-bold text-gray-800">
-              آخر إيصال تحصيل
-            </TableHead>
-            <TableHead className="font-bold text-gray-800">
-              تاريخ الإضافة
-            </TableHead>
-            <TableHead className="font-bold text-gray-800">
-              تاريخ التحديث
-            </TableHead>
-            <TableHead className="font-bold text-gray-800">
-              أضيفت بواسطة
-            </TableHead>
-            <TableHead className="font-bold text-gray-800">
-              تم التحديث بواسطة
-            </TableHead>
-            <TableHead className="font-bold text-gray-800">
-              التعديل والحذف
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-
-        <TableBody>
-          {treasury.map((item, index) => (
-            <TableRow
-              key={index}
-              className="hover:bg-gray-50 transition duration-200"
-            >
-              <TableCell className="text-center">{index + 1}</TableCell>
-              <TableCell>{item.name}</TableCell>
-              <TableCell>{item.is_master ? "نعم" : "لا"}</TableCell>
-              <TableCell>{item.last_exchange_receipt_number}</TableCell>
-              <TableCell>{item.last_collect_receipt_number}</TableCell>
-              <TableCell>
-                {new Date(item.createdAt).toLocaleDateString()}
-              </TableCell>
-              <TableCell>
-                {new Date(item.updatedAt).toLocaleDateString()}
-              </TableCell>
-              <TableCell>
-                <p>{item.added_by?.name || "غير معروف"}</p>
-                <p className="text-gray-500 text-sm">
-                  {item.added_by?.role || ""}
-                </p>
-              </TableCell>
-              <TableCell>{item.updated_by_id || "غير معروف"}</TableCell>
-              <TableCell>
-                <div className="flex justify-center items-center gap-2">
-                  <Button
-                    variant="secondary"
-                    className="bg-red-300 cursor-pointer px-2 py-1 text-sm"
-                    onClick={() => DeleteRecord(item.id)}
-                  >
-                    الحذف
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    className="bg-yellow-100 cursor-pointer px-2 py-1 text-sm"
-                    onClick={() => editCompany(item.id)}
-                  >
-                    التعديل
-                  </Button>
-                </div>
-              </TableCell>
+      <div className="hidden xl:flex items-center gap-8 overflow-x-auto">
+        <Table className="border rounded-lg">
+          <TableHeader className="bg-gray-100">
+            <TableRow>
+              <TableHead className="w-[40px] text-center font-bold text-gray-800">
+                تسلسل
+              </TableHead>
+              <TableHead className="font-bold text-gray-800">
+                اسم الخزنة
+              </TableHead>
+              <TableHead className="font-bold text-gray-800">رئيسية؟</TableHead>
+              <TableHead className="font-bold text-gray-800">
+                آخر إيصال صرف
+              </TableHead>
+              <TableHead className="font-bold text-gray-800">
+                آخر إيصال تحصيل
+              </TableHead>
+              <TableHead className="font-bold text-gray-800">
+                تاريخ الإضافة
+              </TableHead>
+              <TableHead className="font-bold text-gray-800">
+                تاريخ التحديث
+              </TableHead>
+              <TableHead className="font-bold text-gray-800">
+                أضيفت بواسطة
+              </TableHead>
+              <TableHead className="font-bold text-gray-800">
+                تم التحديث بواسطة
+              </TableHead>
+              <TableHead className="font-bold text-gray-800">
+                التعديل والحذف
+              </TableHead>
             </TableRow>
-          ))}
-        </TableBody>
+          </TableHeader>
 
-        {/* ✅ الكابشن تحت الجدول */}
-        <TableCaption className="mt-4 font-semibold text-lg text-gray-500">
-          الخزن المُسجلة
-        </TableCaption>
-      </Table>
+          <TableBody>
+            {treasury.map((item, index) => (
+              <TableRow
+                key={index}
+                className="hover:bg-gray-50 transition duration-200"
+              >
+                <TableCell className="text-center">{index + 1}</TableCell>
+                <TableCell>{item.name}</TableCell>
+                <TableCell>{item.is_master ? "نعم" : "لا"}</TableCell>
+                <TableCell>{item.last_exchange_receipt_number}</TableCell>
+                <TableCell>{item.last_collect_receipt_number}</TableCell>
+                <TableCell>
+                  {new Date(item.createdAt).toLocaleDateString()}
+                </TableCell>
+                <TableCell>
+                  {new Date(item.updatedAt).toLocaleDateString()}
+                </TableCell>
+                <TableCell>
+                  <p>{item.added_by?.name || "غير معروف"}</p>
+                  <p className="text-gray-500 text-sm">
+                    {item.added_by?.role || ""}
+                  </p>
+                </TableCell>
+                <TableCell>{item.updated_by_id || "غير معروف"}</TableCell>
+                <TableCell>
+                  <div className="flex justify-center items-center gap-2">
+                    <Button
+                      variant="secondary"
+                      className="bg-red-300 cursor-pointer px-2 py-1 text-sm"
+                      onClick={() => DeleteRecord(item.id)}
+                    >
+                      الحذف
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      className="bg-yellow-100 cursor-pointer px-2 py-1 text-sm"
+                      onClick={() => editCompany(item.id)}
+                    >
+                      التعديل
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      className="bg-yellow-100 cursor-pointer px-2 py-1 text-sm"
+                      onClick={() => showTreasury(item.id)}
+                    >
+                      بيانات الخزنه
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
 
+          <TableCaption className="mt-4 font-semibold text-lg text-gray-500">
+            الخزن المُسجلة
+          </TableCaption>
+        </Table>
+      </div>
       {/* Pagination */}
       <div className="hidden xl:flex items-center justify-center gap-8">
         <Pagention

@@ -53,9 +53,7 @@ CREATE TABLE `Treasury` (
 -- CreateTable
 CREATE TABLE `Product` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `code` VARCHAR(191) NOT NULL,
     `name` VARCHAR(191) NOT NULL,
-    `category` VARCHAR(191) NULL,
     `unit` VARCHAR(191) NOT NULL,
     `buyPrice` DOUBLE NOT NULL,
     `sellPrice` DOUBLE NOT NULL,
@@ -66,10 +64,33 @@ CREATE TABLE `Product` (
     `updatedAt` DATETIME(3) NOT NULL,
     `added_by_id` INTEGER NOT NULL,
     `updated_by_id` INTEGER NOT NULL,
+    `categoryId` INTEGER NOT NULL,
 
-    UNIQUE INDEX `Product_code_key`(`code`),
     INDEX `Product_added_by_id_fkey`(`added_by_id`),
     INDEX `Product_updated_by_id_fkey`(`updated_by_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Category` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(191) NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `Category_name_key`(`name`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `ProductTreasury` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `productId` INTEGER NOT NULL,
+    `treasuryId` INTEGER NOT NULL,
+    `stock` INTEGER NOT NULL DEFAULT 0,
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `ProductTreasury_productId_treasuryId_key`(`productId`, `treasuryId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -86,7 +107,16 @@ ALTER TABLE `Treasury` ADD CONSTRAINT `Treasury_added_by_id_fkey` FOREIGN KEY (`
 ALTER TABLE `Treasury` ADD CONSTRAINT `Treasury_updated_by_id_fkey` FOREIGN KEY (`updated_by_id`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `Product` ADD CONSTRAINT `Product_categoryId_fkey` FOREIGN KEY (`categoryId`) REFERENCES `Category`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `Product` ADD CONSTRAINT `Product_added_by_id_fkey` FOREIGN KEY (`added_by_id`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Product` ADD CONSTRAINT `Product_updated_by_id_fkey` FOREIGN KEY (`updated_by_id`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ProductTreasury` ADD CONSTRAINT `ProductTreasury_productId_fkey` FOREIGN KEY (`productId`) REFERENCES `Product`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ProductTreasury` ADD CONSTRAINT `ProductTreasury_treasuryId_fkey` FOREIGN KEY (`treasuryId`) REFERENCES `Treasury`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

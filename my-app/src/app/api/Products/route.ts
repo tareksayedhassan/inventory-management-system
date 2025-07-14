@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
       take: pageSize,
       orderBy: { createdAt: "desc" },
       include: {
+        category: true,
         added_by: true,
         updated_by: true,
       },
@@ -52,7 +53,6 @@ export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
 
-    const code = formData.get("code") as string;
     const name = formData.get("name") as string;
     const unit = formData.get("unit") as string;
     const buyPrice = parseFloat(formData.get("buyPrice") as string);
@@ -67,7 +67,6 @@ export async function POST(req: NextRequest) {
     const categoryId = parseInt(formData.get("categoryId") as string, 10);
 
     if (
-      !code ||
       !name ||
       !unit ||
       isNaN(buyPrice) ||
@@ -88,7 +87,6 @@ export async function POST(req: NextRequest) {
 
     const newProduct = await prisma.product.create({
       data: {
-        code,
         name,
         unit,
         buyPrice,

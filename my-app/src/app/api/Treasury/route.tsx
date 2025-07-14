@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
       take: pageSize,
       orderBy: { createdAt: "desc" },
       include: {
+        transactions: true,
         added_by: true,
         updated_by: true,
       },
