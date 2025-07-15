@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Loading from "@/components/customUi/loading";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 const Page = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -53,9 +54,11 @@ const Page = () => {
     `${BASE_URL}/${Company}?page=${currentPage}&pageSize=${rowsPerPage}&search=${search}`,
     fetcher
   );
+
   if (isLoading) return <div>{<Loading />}</div>;
 
   const company: Compny[] = data?.data || [];
+  console.log(company);
   const totalItems = data?.total || 0;
   const totalPages = Math.ceil(totalItems / rowsPerPage);
 
@@ -77,8 +80,23 @@ const Page = () => {
   const editCompany = (id: number) => {
     router.push(`/dashboard/companies/${id}`);
   };
+  const monyOpertions = (id: number) => {
+    router.push(`/dashboard/companies/${id}/addOpertion`);
+  };
 
   console.log(data);
+  const calcCompanyBalance = (transactions: any[]) => {
+    let balance = 0;
+
+    for (const t of transactions) {
+      if (t.type === "DEPOSIT") balance += t.amount;
+      else if (t.type === "WITHDRAWAL") balance -= t.amount;
+      else if (t.type === "RETURN") balance += t.amount; // حسب نوع المرتجع
+    }
+
+    return balance;
+  };
+
   return (
     <div dir="rtl" className="p-4">
       <div className="flex justify-between items-center mb-2.5">
@@ -118,6 +136,9 @@ const Page = () => {
                   عنوان الشركه
                 </TableHead>
                 <TableHead className="font-bold text-gray-800 max-w-[160px] truncate">
+                  مستحقات ماليه
+                </TableHead>
+                <TableHead className="font-bold text-gray-800 max-w-[160px] truncate">
                   الاشعارات
                 </TableHead>
                 <TableHead className="font-bold text-gray-800">
@@ -133,7 +154,7 @@ const Page = () => {
                   تم التحديث بواسطه
                 </TableHead>
                 <TableHead className="font-bold text-gray-800">
-                  التعديل والحذف
+                  اجراءات
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -145,9 +166,9 @@ const Page = () => {
                 >
                   <TableCell
                     className="max-w-[140px] truncate"
-                    title={item.Name}
+                    title={item.name}
                   >
-                    {item.Name}
+                    {item.name}
                   </TableCell>
 
                   <TableCell>
@@ -173,6 +194,28 @@ const Page = () => {
                     title={item.address}
                   >
                     {item.address}
+                  </TableCell>
+                  <TableCell className="max-w-[140px] truncate">
+                    {item.transactions && (
+                      <Badge
+                        variant="outline"
+                        className={`text-white font-medium rounded-full px-3 py-1 ${
+                          calcCompanyBalance(item.transactions) > 0
+                            ? "bg-green-600"
+                            : calcCompanyBalance(item.transactions) < 0
+                            ? "bg-red-600"
+                            : "bg-gray-500"
+                        }`}
+                      >
+                        {calcCompanyBalance(item.transactions) > 0
+                          ? `دائن: ${calcCompanyBalance(item.transactions)}`
+                          : calcCompanyBalance(item.transactions) < 0
+                          ? `مدين: ${Math.abs(
+                              calcCompanyBalance(item.transactions)
+                            )}`
+                          : "لا يوجد عمليات"}
+                      </Badge>
+                    )}
                   </TableCell>
 
                   <TableCell
@@ -220,6 +263,13 @@ const Page = () => {
                       >
                         التعديل
                       </Button>
+                      <Button
+                        variant="secondary"
+                        className="bg-green-300 cursor-pointer px-2 py-1 text-sm"
+                        onClick={() => monyOpertions(item.id)}
+                      >
+                        عمليات ماليه
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -253,7 +303,7 @@ const Page = () => {
               </Avatar>
               <div className="min-w-0">
                 <CardTitle className="text-lg font-bold text-gray-800 truncate">
-                  {item.Name}
+                  {item.name}
                 </CardTitle>
                 <CardDescription className="text-sm text-gray-500 truncate">
                   {item.address}
@@ -301,6 +351,32 @@ const Page = () => {
                 </span>
                 <div>{item.updated_by_id}</div>
               </div>
+              <div>
+                <div>
+                  <span className="font-semibold text-gray-600">
+                    مستحقات مالية:
+                  </span>
+                  <div className="mt-1">
+                    <Badge
+                      className={`text-white font-medium rounded-full px-3 py-1 ${
+                        calcCompanyBalance(item.transactions) > 0
+                          ? "bg-green-600"
+                          : calcCompanyBalance(item.transactions) < 0
+                          ? "bg-red-600"
+                          : "bg-gray-500"
+                      }`}
+                    >
+                      {calcCompanyBalance(item.transactions) > 0
+                        ? `دائن: ${calcCompanyBalance(item.transactions)}`
+                        : calcCompanyBalance(item.transactions) < 0
+                        ? `مدين: ${Math.abs(
+                            calcCompanyBalance(item.transactions)
+                          )}`
+                        : "لا يوجد عمليات"}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
             </CardContent>
 
             <CardFooter className="flex justify-between items-center gap-2 flex-wrap">
@@ -320,6 +396,13 @@ const Page = () => {
                   className="bg-yellow-100 text-black flex-1"
                 >
                   التعديل
+                </Button>
+                <Button
+                  variant="secondary"
+                  className="bg-green-300 cursor-pointer px-2 py-1 text-sm"
+                  onClick={() => monyOpertions(item.id)}
+                >
+                  عمليات ماليه
                 </Button>
               </div>
             </CardFooter>

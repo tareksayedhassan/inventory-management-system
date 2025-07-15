@@ -5,15 +5,16 @@ export type Compny = {
   general_alert: string;
   address: string;
   phone: string;
-  Name: string;
+  name: string;
   added_by_id: number;
   updated_by_id: number;
-  createdAt: String;
-  updatedAt: String;
+  createdAt: string;
+  updatedAt: string;
   added_by?: {
     id: number;
     name: string;
     email: string;
     role: string;
   };
+  transactions: [];
 };

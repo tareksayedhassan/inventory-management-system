@@ -16,21 +16,30 @@ export async function GET(req: NextRequest) {
     const addressFilter =
       searchQuery.trim() !== ""
         ? {
-            Name: {
+            name: {
               contains: searchQuery,
             },
           }
         : {};
     const total = await prisma.company.count({ where: addressFilter });
-
     const company = await prisma.company.findMany({
       where: addressFilter,
       skip: (page - 1) * pageSize,
       take: pageSize,
-      orderBy: { createdAt: "desc" },
+      orderBy: {
+        createdAt: "desc",
+      },
       include: {
         added_by: true,
         updated_by: true,
+        transactions: {
+          orderBy: {
+            createdAt: "desc",
+          },
+          include: {
+            treasury: true,
+          },
+        },
       },
     });
 
@@ -72,9 +81,11 @@ export async function POST(req: NextRequest) {
     }
 
     const general_alert = formData.get("general_alert") as string;
+    const balanceRaw = formData.get("balance");
+    const balance = balanceRaw ? parseFloat(balanceRaw as string) : undefined;
     const address = formData.get("address") as string;
     const phone = formData.get("phone") as string;
-    const Name = formData.get("Name") as string;
+    const name = formData.get("name") as string;
     const added_by_id = parseInt(formData.get("added_by_id") as string, 10);
     const updated_by_id = parseInt(formData.get("updated_by_id") as string, 10);
     const statusRaw = formData.get("status") as string;
@@ -87,14 +98,16 @@ export async function POST(req: NextRequest) {
     }
     const newCompany = await prisma.company.create({
       data: {
+        balance,
         status,
         general_alert,
         address,
         phone,
-        Name,
+        name,
         added_by_id,
         updated_by_id,
         photo: photoFileName,
+        ...(balance !== undefined && { balance }),
       },
     });
 

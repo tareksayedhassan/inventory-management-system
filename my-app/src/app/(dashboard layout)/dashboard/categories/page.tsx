@@ -46,6 +46,7 @@ const Page = () => {
 
     return () => clearTimeout(timeout);
   }, [search]);
+
   const { data, error, isLoading, mutate } = useSWR(
     `${BASE_URL}/${Categories}?page=${currentPage}&pageSize=${rowsPerPage}&search=${searchQuery}`,
     fetcher

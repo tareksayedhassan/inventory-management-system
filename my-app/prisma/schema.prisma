@@ -17,6 +17,11 @@ enum CompStatus {
   INACTIVE
   PENDING
 }
+enum TransactionType {
+  DEPOSIT     
+  WITHDRAWAL  
+  RETURN      
+}
 
 model User {
   id               Int        @id @default(autoincrement())
@@ -36,23 +41,43 @@ model User {
 }
 
 model Company {
-  id            Int        @id @default(autoincrement())
-  photo         String     @default("default.jpg")
-  status        CompStatus @default(ACTIVE)
+  id            Int                   @id @default(autoincrement())
+  photo         String                @default("default.jpg")
+  status        CompStatus            @default(ACTIVE)
   general_alert String
   address       String
   phone         String
-  Name          String
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  balance       Float?
+  name          String?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
   added_by_id   Int
   updated_by_id Int
-  added_by      User       @relation("AddedBy", fields: [added_by_id], references: [id])
-  updated_by    User       @relation("UpdatedBy", fields: [updated_by_id], references: [id])
+  added_by      User                  @relation("AddedBy", fields: [added_by_id], references: [id])
+  updated_by    User                  @relation("UpdatedBy", fields: [updated_by_id], references: [id])
+  transactions  CompanyTransaction[]  
 
   @@index([added_by_id], map: "Company_added_by_id_fkey")
   @@index([updated_by_id], map: "Company_updated_by_id_fkey")
 }
+model CompanyTransaction {
+  id          Int              @id @default(autoincrement())
+  type        TransactionType 
+  amount      Float           
+  description String?          
+  companyId   Int             
+  treasuryId  Int          
+
+  createdAt   DateTime         @default(now())
+
+  company     Company          @relation(fields: [companyId], references: [id]) 
+  treasury    Treasury         @relation(fields: [treasuryId], references: [id]) 
+
+  @@index([companyId])
+  @@index([treasuryId])
+}
+
+
 model Treasury {
   id                           Int               @id @default(autoincrement())
   name                         String
@@ -65,6 +90,8 @@ model Treasury {
   date                         DateTime          @default(now())
   added_by_id                  Int
   updated_by_id                Int
+  companyTransactions CompanyTransaction[]
+
   added_by                     User              @relation("AddedBy", fields: [added_by_id], references: [id])
   updated_by                   User              @relation("UpdatedBy", fields: [updated_by_id], references: [id])
   productStocks                ProductTreasury[]

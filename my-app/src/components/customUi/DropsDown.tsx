@@ -12,10 +12,12 @@ const DropsDown = () => {
   return (
     <Accordion type="multiple" className="w-full text-right" dir="rtl">
       <AccordionItem value="general-Company">
-        <AccordionTrigger> .نظرة عامه </AccordionTrigger>
+        <AccordionTrigger> عملاء / موردين</AccordionTrigger>
         <AccordionContent className="pr-4 flex flex-col gap-1 text-sm">
-          <Link href="/dashboard/companies">قائمة الشركات</Link>
-          <Link href="/dashboard/companies/addCompany">اضافه شركه </Link>
+          <Link href="/dashboard/companies">قائمة عملاء / موردين </Link>
+          <Link href="/dashboard/companies/addCompany">
+            اضافه عملاء/ موردين{" "}
+          </Link>
           <Link href="/dashboard/treasury">الخزائن</Link>
           <Link href="#">الفريق</Link>
           <Link href="#">الاشتراك</Link>

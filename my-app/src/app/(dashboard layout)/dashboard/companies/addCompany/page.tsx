@@ -55,7 +55,7 @@ const AddCompany = () => {
       formData.append("general_alert", generalAlert);
       formData.append("address", address);
       formData.append("phone", phone);
-      formData.append("Name", Name);
+      formData.append("name", Name);
       formData.append("added_by_id", String(userId));
       formData.append("updated_by_id", String(userId));
 
