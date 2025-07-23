@@ -5,6 +5,7 @@ import { JwtPayload } from "jsonwebtoken";
 import { jwtDecode } from "jwt-decode";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import NotificationBell from "@/components/customUi/noitifaction";
 
 const TopBar = () => {
   const [user, setUser] = useState<JwtPayload | null>(null);
@@ -39,14 +40,18 @@ const TopBar = () => {
     >
       <div className="flex items-center gap-2"></div>
 
-      <div className="flex items-center gap-2 text-end flex-wrap">
-        <Image
-          src="/assets/logo.png!w700wp"
-          height={40}
-          width={40}
-          alt="logo"
-          className="object-contain"
-        />
+      <div className="flex items-center gap-4 text-end flex-wrap">
+        <div className="flex items-center gap-14">
+          <NotificationBell />
+          <Image
+            src="/assets/logo.png!w700wp"
+            height={40}
+            width={40}
+            alt="logo"
+            style={{ height: "auto" }}
+            className="object-contain"
+          />
+        </div>
         <h3 className="m-0 text-sm md:text-xl font-semibold whitespace-nowrap">
           توب كوالتي
         </h3>

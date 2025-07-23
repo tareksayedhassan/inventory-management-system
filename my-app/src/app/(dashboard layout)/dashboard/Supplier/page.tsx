@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import useSWR from "swr";
-import { BASE_URL, Company, DELETE_CMPANY } from "@/apiCaild/API";
+import { BASE_URL, Supplier } from "@/apiCaild/API";
 import { fetcher } from "@/apiCaild/fetcher";
 import { Compny } from "@/Types/company";
 import Image from "next/image";
@@ -31,6 +31,7 @@ import { useRouter } from "next/navigation";
 import Loading from "@/components/customUi/loading";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 const Page = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -51,7 +52,7 @@ const Page = () => {
   const token = cookie.get("Bearer");
 
   const { data, error, isLoading, mutate } = useSWR(
-    `${BASE_URL}/${Company}?page=${currentPage}&pageSize=${rowsPerPage}&search=${search}`,
+    `${BASE_URL}/${Supplier}?page=${currentPage}&pageSize=${rowsPerPage}&search=${search}`,
     fetcher
   );
 
@@ -64,24 +65,24 @@ const Page = () => {
 
   const DeleteRecord = async (id: number) => {
     try {
-      await axios.delete(`${BASE_URL}/${DELETE_CMPANY}/${id}`, {
+      await axios.delete(`${BASE_URL}/${Supplier}/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       mutate();
-      toast.info("company deleted successfully");
+      toast.info("Supplier deleted successfully");
     } catch (error) {
-      toast.error("Faild to delete Company");
+      toast.error("Faild to delete Supplier");
     }
   };
 
   const editCompany = (id: number) => {
-    router.push(`/dashboard/companies/${id}`);
+    router.push(`/dashboard/Supplier/${id}`);
   };
   const monyOpertions = (id: number) => {
-    router.push(`/dashboard/companies/${id}/addOpertion`);
+    router.push(`/dashboard/Supplier/${id}/addOpertion`);
   };
 
   console.log(data);
@@ -99,11 +100,20 @@ const Page = () => {
 
   return (
     <div dir="rtl" className="p-4">
-      <div className="flex justify-between items-center mb-2.5">
+      <div className="flex flex-col xl:flex-row justify-between items-center gap-4 mb-4">
+        <Link href={"/dashboard/Supplier/addSupplier"}>
+          <Button
+            variant="secondary"
+            className="hover:bg-amber-100 w-full xl:w-auto"
+          >
+            اضافه مورد
+          </Button>
+        </Link>
+
         <div className="w-full max-w-sm">
           <Input
             type="search"
-            placeholder="ابحث باسم الشركه ...."
+            placeholder="ابحث باسم المورد..."
             className="rounded-lg border border-gray-300 px-4 py-2"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -116,12 +126,12 @@ const Page = () => {
         <div className="min-w-[1100px]">
           <Table className="border rounded-lg">
             <TableCaption className="mb-4 font-semibold text-lg text-gray-500">
-              قائمة الشركات
+              قائمة الموردين
             </TableCaption>
             <TableHeader className="bg-gray-100">
               <TableRow>
                 <TableHead className="w-[100px] font-bold text-gray-800">
-                  اسم الشركه
+                  اسم المورد
                 </TableHead>
                 <TableHead className="font-bold text-gray-800">
                   الصوره
@@ -130,10 +140,10 @@ const Page = () => {
                   الحاله
                 </TableHead>
                 <TableHead className="font-bold text-gray-800">
-                  رقم الشركه
+                  رقم المورد
                 </TableHead>
                 <TableHead className="font-bold text-gray-800 max-w-[160px] truncate">
-                  عنوان الشركه
+                  عنوان المورد
                 </TableHead>
                 <TableHead className="font-bold text-gray-800 max-w-[160px] truncate">
                   مستحقات ماليه

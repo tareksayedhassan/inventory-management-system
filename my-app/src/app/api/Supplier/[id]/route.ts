@@ -23,7 +23,7 @@ export async function GET(
 ) {
   const id = parseInt(params.id, 10);
   try {
-    const setting = await prisma.company.findUnique({
+    const setting = await prisma.supplier.findUnique({
       where: { id },
     });
 
@@ -54,7 +54,7 @@ export async function DELETE(
 ) {
   const id = parseInt(params.id, 10);
   try {
-    await prisma.company.delete({
+    await prisma.supplier.delete({
       where: { id },
     });
 
@@ -104,7 +104,7 @@ export async function PATCH(
       updateData.photo = filename;
     }
 
-    const updatedCompany = await prisma.company.update({
+    const updatedCompany = await prisma.supplier.update({
       where: { id },
       data: updateData,
     });

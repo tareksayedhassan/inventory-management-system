@@ -16,7 +16,7 @@ import {
 import Image from "next/image";
 import axios from "axios";
 import Cookie from "cookie-universal";
-import { BASE_URL, Company } from "@/apiCaild/API";
+import { BASE_URL, Supplier } from "@/apiCaild/API";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "sonner";
 import { DecodedToken } from "@/Types/CustomJWTDecoded";
@@ -59,7 +59,7 @@ const AddCompany = () => {
       formData.append("added_by_id", String(userId));
       formData.append("updated_by_id", String(userId));
 
-      const res = await axios.post(`${BASE_URL}/${Company}`, formData, {
+      const res = await axios.post(`${BASE_URL}/${Supplier}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`,
@@ -67,10 +67,10 @@ const AddCompany = () => {
       });
 
       if (res.status === 201) {
-        toast.success("company added sucssuflly");
-        router.push("/dashboard/companies");
+        toast.success("Supplier added sucssuflly");
+        router.push("/dashboard/Supplier");
       } else {
-        toast.error("error added company ");
+        toast.error("error added Supplier ");
       }
     } catch (error: any) {
       toast.error(`error: ${error?.response?.data?.message || error.message}`);
@@ -95,7 +95,7 @@ const AddCompany = () => {
         </Select>
       </div>
       <div>
-        <Label>اسم الشركة</Label>
+        <Label>اسم المورد </Label>
         <Input value={Name} onChange={(e) => setName(e.target.value)} />
       </div>
 

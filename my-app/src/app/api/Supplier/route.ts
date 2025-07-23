@@ -4,7 +4,7 @@ import { CompStatus } from "@prisma/client";
 import fs from "fs/promises";
 import path from "path";
 
-// get all company with pagention
+// GET all suppliers with pagination
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     const pageSize = parseInt(searchParams.get("pageSize") || "5");
     const searchQuery = searchParams.get("search") || "";
 
-    const addressFilter =
+    const filters =
       searchQuery.trim() !== ""
         ? {
             name: {
@@ -21,31 +21,26 @@ export async function GET(req: NextRequest) {
             },
           }
         : {};
-    const total = await prisma.company.count({ where: addressFilter });
-    const company = await prisma.company.findMany({
-      where: addressFilter,
+
+    const total = await prisma.supplier.count({ where: filters });
+    const suppliers = await prisma.supplier.findMany({
+      where: filters,
       skip: (page - 1) * pageSize,
       take: pageSize,
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: { createdAt: "desc" },
       include: {
-        added_by: true,
-        updated_by: true,
+        added_by: { select: { name: true } },
+        updated_by: { select: { name: true } },
         transactions: {
-          orderBy: {
-            createdAt: "desc",
-          },
-          include: {
-            treasury: true,
-          },
+          orderBy: { createdAt: "desc" },
+          include: { treasury: { select: { name: true, balance: true } } },
         },
       },
     });
 
     return NextResponse.json(
       {
-        data: company,
+        data: suppliers,
         total,
         totalPages: Math.ceil(total / pageSize),
         currentPage: page,
@@ -53,18 +48,16 @@ export async function GET(req: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error fetching company:", error);
+    console.error("Error fetching suppliers:", error);
     return NextResponse.json(
-      { message: "Something went wrong" },
+      { message: "فشل في جلب الموردين" },
       { status: 500 }
     );
   }
 }
-
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
-
     const file = formData.get("file") as File | null;
 
     let photoFileName = "default.jpg";
@@ -81,13 +74,13 @@ export async function POST(req: NextRequest) {
     }
 
     const general_alert = formData.get("general_alert") as string;
-    const balanceRaw = formData.get("balance");
-    const balance = balanceRaw ? parseFloat(balanceRaw as string) : undefined;
     const address = formData.get("address") as string;
     const phone = formData.get("phone") as string;
     const name = formData.get("name") as string;
     const added_by_id = parseInt(formData.get("added_by_id") as string, 10);
     const updated_by_id = parseInt(formData.get("updated_by_id") as string, 10);
+    const treasuryIdFromForm = formData.get("treasuryId");
+
     const statusRaw = formData.get("status") as string;
     const status = Object.values(CompStatus).includes(statusRaw as CompStatus)
       ? (statusRaw as CompStatus)
@@ -96,9 +89,10 @@ export async function POST(req: NextRequest) {
     if (!status) {
       return NextResponse.json({ message: "حالة غير صالحة" }, { status: 400 });
     }
-    const newCompany = await prisma.company.create({
+
+    // إنشاء المورد
+    const newSupplier = await prisma.supplier.create({
       data: {
-        balance,
         status,
         general_alert,
         address,
@@ -107,15 +101,45 @@ export async function POST(req: NextRequest) {
         added_by_id,
         updated_by_id,
         photo: photoFileName,
-        ...(balance !== undefined && { balance }),
       },
     });
 
-    return NextResponse.json(newCompany, { status: 201 });
-  } catch (error: any) {
-    console.error("Error creating company:", error);
+    const user = await prisma.user.findUnique({
+      where: { id: added_by_id },
+      select: { name: true },
+    });
+
+    const userName = user?.name || "مستخدم غير معروف";
+
+    const now = new Date();
+    const dateStr = now.toLocaleDateString("ar-EG", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+    const timeStr = now.toLocaleTimeString("ar-EG", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const message = `تم إضافة مورد جديد "${name}" (هاتف: ${
+      phone || "غير متوفر"
+    }) بواسطة ${userName}`;
+
+    await prisma.notification.create({
+      data: {
+        message,
+        userId: added_by_id || null,
+        treasuryId: treasuryIdFromForm
+          ? parseInt(treasuryIdFromForm as string, 10)
+          : null,
+      },
+    });
+
+    return NextResponse.json(newSupplier, { status: 201 });
+  } catch (error) {
+    console.error("Error creating supplier:", error);
     return NextResponse.json(
-      { message: "فشل في إضافة الشركة", error },
+      { message: "فشل في إضافة المورد", error },
       { status: 500 }
     );
   }

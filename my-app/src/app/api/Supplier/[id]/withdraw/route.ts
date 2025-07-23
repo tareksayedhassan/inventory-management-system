@@ -1,47 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
 
-// سحب مبلغ من الخزنة لشركة
+// سحب مبلغ من الخزنة لمورد (Supplier)
 export async function POST(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await context.params;
-    const companyId = parseInt(id, 10);
+    const supplierId = parseInt(id, 10);
     const { amount, description, treasuryId } = await req.json();
-    console.log({ companyId, treasuryId, amount, description });
 
-    if (!companyId || isNaN(companyId)) {
+    if (!supplierId || isNaN(supplierId)) {
       return NextResponse.json(
-        { message: "Invalid company ID" },
+        { message: "Invalid supplier ID" },
         { status: 400 }
       );
     }
-
     if (!treasuryId || isNaN(treasuryId)) {
       return NextResponse.json(
         { message: "Invalid treasury ID" },
         { status: 400 }
       );
     }
-
     if (isNaN(amount) || amount <= 0) {
       return NextResponse.json({ message: "Invalid amount" }, { status: 400 });
     }
 
-    // تأكد إن الرصيد كافي
+    // تأكد إن الخزنة موجودة ورصيدها كافي
     const treasury = await prisma.treasury.findUnique({
       where: { id: treasuryId },
     });
-
     if (!treasury) {
       return NextResponse.json(
         { message: "Treasury not found" },
         { status: 404 }
       );
     }
-
     if (treasury.balance < amount) {
       return NextResponse.json(
         { message: "Insufficient balance in treasury" },
@@ -49,22 +44,42 @@ export async function POST(
       );
     }
 
-    // المعاملة + تقليل الرصيد
-    await prisma.$transaction([
-      prisma.companyTransaction.create({
+    // نفذ العملية
+    await prisma.$transaction(async (tx) => {
+      // أنشئ معاملة جديدة
+      await tx.transaction.create({
         data: {
           type: "WITHDRAWAL",
           amount,
           description,
+          supplierId,
           treasuryId,
-          companyId,
         },
-      }),
-      prisma.treasury.update({
+      });
+
+      // حدث الخزنة
+      await tx.treasury.update({
         where: { id: treasuryId },
         data: { balance: { decrement: amount } },
-      }),
-    ]);
+      });
+
+      // حدث رصيد المورد
+      const supplier = await tx.supplier.findUnique({
+        where: { id: supplierId },
+      });
+      if (!supplier) throw new Error("Supplier not found");
+
+      await tx.supplier.update({
+        where: { id: supplierId },
+        data: {
+          creditBalance: (supplier.creditBalance ?? 0) + amount,
+          netBalance:
+            (supplier.creditBalance ?? 0) +
+            amount -
+            (supplier.debitBalance ?? 0),
+        },
+      });
+    });
 
     return NextResponse.json(
       { message: "Withdrawal successful" },

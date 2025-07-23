@@ -14,10 +14,8 @@ const DropsDown = () => {
       <AccordionItem value="general-Company">
         <AccordionTrigger> عملاء / موردين</AccordionTrigger>
         <AccordionContent className="pr-4 flex flex-col gap-1 text-sm">
-          <Link href="/dashboard/companies">قائمة عملاء / موردين </Link>
-          <Link href="/dashboard/companies/addCompany">
-            اضافه عملاء/ موردين{" "}
-          </Link>
+          <Link href="/dashboard/Supplier">قائمه الموردين </Link>
+          <Link href="/dashboard/companies">قائمة العملاء</Link>
           <Link href="/dashboard/treasury">الخزائن</Link>
           <Link href="#">الفريق</Link>
           <Link href="#">الاشتراك</Link>

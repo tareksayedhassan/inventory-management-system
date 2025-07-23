@@ -3,10 +3,12 @@ import { Tajawal } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/provider/ThemeProvider";
+
 const tajawal = Tajawal({
   variable: "--font-geist-tajawal",
   subsets: ["arabic", "latin"],
-  weight: ["200", "300", "500", "900", "400", "700"],
+  weight: ["200", "300", "400", "500", "700", "900"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -21,30 +23,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar">
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap"
-          rel="stylesheet"
+      <body className={`${tajawal.variable} antialiased`}>
+        {children}
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            style: {
+              fontSize: "17px",
+              padding: "14px 20px",
+            },
+          }}
         />
-      </head>
-      <body className={`${tajawal.variable} ${tajawal.variable} antialiased`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              style: {
-                fontSize: "17px",
-                padding: "14px 20px",
-              },
-            }}
-          />
-        </ThemeProvider>
       </body>
     </html>
   );

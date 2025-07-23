@@ -1,0 +1,160 @@
+// client/src/components/TopBar.tsx
+"use client";
+
+import Cookie from "cookie-universal";
+import { JwtPayload } from "jsonwebtoken";
+import { jwtDecode } from "jwt-decode";
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import useSWR from "swr";
+import {
+  checkPermissionStateAndAct,
+  notificationUnsupported,
+  registerAndSubscribe,
+} from "@/lib/Push";
+import { Bell } from "lucide-react"; // أيقونة جرس من مكتبة lucide-react
+import { BASE_URL, notifi } from "@/apiCaild/API";
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
+const TopBar = () => {
+  const [user, setUser] = useState<JwtPayload | null>(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [subscription, setSubscription] = useState<PushSubscription | null>(
+    null
+  );
+  const [unsupported, setUnsupported] = useState(false);
+
+  // جلب userId من الـ JWT token
+  useEffect(() => {
+    const cookie = Cookie();
+    const token = cookie.get("Bearer");
+
+    if (token) {
+      try {
+        const decoded = jwtDecode<JwtPayload & { id: number }>(token);
+        setUser(decoded);
+      } catch (error) {
+        console.error("Invalid token:", error);
+      }
+    } else {
+      console.log("No token found");
+    }
+  }, []);
+
+  // التحقق من دعم الإشعارات وتسجيل Service Worker
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const isUnsupported = notificationUnsupported();
+    setUnsupported(isUnsupported);
+    if (!isUnsupported) {
+      checkPermissionStateAndAct(user.id, setSubscription);
+    }
+  }, [user]);
+
+  // جلب الإشعارات باستخدام SWR
+  const treasuryId = 1; // افتراضي، يمكنك تمريره كـ prop أو من الـ context
+  const { data: notifications, mutate } = useSWR(
+    user ? `${BASE_URL}/${notifi}/${treasuryId}` : null,
+    fetcher,
+    { refreshInterval: 10000 } // تحديث كل 10 ثواني
+  );
+
+  // تفعيل الإشعارات
+  const handleEnableNotifications = () => {
+    if (user?.id) {
+      registerAndSubscribe(user.id, setSubscription);
+    }
+  };
+
+  return (
+    <div
+      className="flex items-center justify-between px-4 shadow bg-white/80"
+      style={{
+        height: "70px",
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+      }}
+    >
+      <div className="flex items-center gap-2">
+        {/* أيقونة الإشعارات */}
+        <div className="relative">
+          <button
+            onClick={() => setShowNotifications(!showNotifications)}
+            className="p-2 relative"
+          >
+            <Bell className="w-6 h-6" />
+            {notifications?.length > 0 && (
+              <span className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs">
+                {notifications.length}
+              </span>
+            )}
+          </button>
+          {/* قائمة الإشعارات المنسدلة */}
+          {showNotifications && (
+            <div className="absolute top-12 right-0 bg-white shadow-lg rounded-lg w-80 max-h-96 overflow-y-auto z-50">
+              <div className="p-4">
+                <h4 className="text-lg font-semibold mb-2">الإشعارات</h4>
+                {!subscription && !unsupported && (
+                  <button
+                    onClick={handleEnableNotifications}
+                    className="bg-blue-500 text-white p-2 rounded mb-2 w-full"
+                  >
+                    تفعيل الإشعارات
+                  </button>
+                )}
+                {unsupported && (
+                  <p className="text-red-500">
+                    الإشعارات غير مدعومة في هذا المتصفح
+                  </p>
+                )}
+                {subscription && notifications?.length > 0 ? (
+                  notifications.map((notification: any) => (
+                    <div
+                      key={notification.id}
+                      className="p-2 border-b hover:bg-gray-100 cursor-pointer"
+                      onClick={() =>
+                        (window.location.href = `/treasury/${treasuryId}`)
+                      }
+                    >
+                      <p className="text-sm">{notification.message}</p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(notification.createdAt).toLocaleString(
+                          "ar-EG"
+                        )}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500">لا توجد إشعارات</p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 text-end flex-wrap">
+        <Image
+          src="/assets/logo.png!w700wp"
+          height={40}
+          width={40}
+          alt="logo"
+          className="object-contain"
+        />
+        <h3 className="m-0 text-sm md:text-xl font-semibold whitespace-nowrap">
+          توب كوالتي
+        </h3>
+        {user && (
+          <span className="text-sm">مرحبًا، {user.name || "المستخدم"}</span>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default TopBar;
