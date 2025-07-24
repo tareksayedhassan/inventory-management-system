@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { BASE_URL, notifi } from "@/apiCaild/API";
 import { fetcher } from "@/apiCaild/fetcher";
 import useSWR from "swr";
+import Link from "next/link";
 
 function formatDate(dateString: string) {
   const date = new Date(dateString);
@@ -21,11 +22,12 @@ export default function NotificationBell() {
   const SWR_NOTIFICATIONS_KEY = `${BASE_URL}/${notifi}`;
 
   const { data, error, isLoading } = useSWR(SWR_NOTIFICATIONS_KEY, fetcher, {
-    refreshInterval: 5000, // يحدث البيانات كل 5 ثواني
+    refreshInterval: 5000,
     revalidateOnFocus: true,
   });
 
   const notifications = Array.isArray(data) ? data : [];
+  console.log(notifications);
 
   const toggleDropdown = () => setIsOpen((prev) => !prev);
   const closeDropdown = () => setIsOpen(false);
@@ -74,21 +76,19 @@ export default function NotificationBell() {
                   !error &&
                   notifications.length > 0 &&
                   notifications.map((notif) => (
-                    <li
-                      key={notif.id}
-                      className="p-4 hover:bg-gray-100 transition cursor-pointer text-right"
-                    >
-                      <p
-                        className="text-gray-800 text-sm font-medium leading-relaxed"
-                        style={{ direction: "rtl", unicodeBidi: "plaintext" }}
-                      >
-                        {notif.message}
-                      </p>
-
-                      <div className="mt-1 text-xs text-gray-500">
-                        {formatDate(notif.createdAt)}
-                      </div>
-                    </li>
+                    <Link key={notif.id} href={notif.redirectUrl || "#"}>
+                      <li className="p-4 hover:bg-gray-100 transition cursor-pointer text-right">
+                        <p
+                          className="text-gray-800 text-sm font-medium leading-relaxed"
+                          style={{ direction: "rtl", unicodeBidi: "plaintext" }}
+                        >
+                          {notif.message}
+                        </p>
+                        <div className="mt-1 text-xs text-gray-500">
+                          {formatDate(notif.createdAt)}
+                        </div>
+                      </li>
+                    </Link>
                   ))}
 
                 {!isLoading && !error && notifications.length === 0 && (

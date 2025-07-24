@@ -1,6 +1,6 @@
 "use client";
 
-import { BASE_URL, Company, Treasury } from "@/apiCaild/API";
+import { BASE_URL, Supplier, Treasury } from "@/apiCaild/API";
 import { fetcher } from "@/apiCaild/fetcher";
 import Loading from "@/components/customUi/loading";
 
@@ -21,7 +21,7 @@ const CompanyPage = () => {
     operationType: "deposit",
     amount: "",
     description: "",
-    treasuryId: "", // ✅ خزنة مرتبطة بالعملية
+    treasuryId: "",
   });
   const [loading, setLoading] = useState(false);
 
@@ -29,7 +29,7 @@ const CompanyPage = () => {
   const id = params?.id as string;
 
   const { data, error, isLoading, mutate } = useSWR(
-    `${BASE_URL}/${Company}/${id}`,
+    `${BASE_URL}/${Supplier}/${id}`,
     fetcher
   );
   useEffect(() => {
@@ -42,82 +42,10 @@ const CompanyPage = () => {
       });
   }, []);
 
-  const company = (data?.data ?? {}) as Compny;
+  const company = data?.data ?? {};
 
   const cookie = Cookie();
   const token = cookie.get("Bearer");
-
-  const handleInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async () => {
-    if (!formData.amount || Number(formData.amount) <= 0) {
-      toast.error("الرجاء إدخال مبلغ صحيح أكبر من صفر");
-      return;
-    }
-
-    if (!token) {
-      toast.error("غير قادر على تنفيذ العملية - التوكن غير موجود");
-      return;
-    }
-
-    setLoading(true);
-    type OperationType = "deposit" | "withdrawal" | "return";
-
-    const endpointMap: Record<OperationType, string> = {
-      deposit: `${BASE_URL}/companies/${id}/deposit`,
-      withdrawal: `${BASE_URL}/companies/${id}/withdraw`,
-      return: `${BASE_URL}/companies/${id}/return`,
-    };
-
-    try {
-      const operationType = formData.operationType as OperationType;
-      const endpoint = endpointMap[operationType];
-      await axios.post(
-        endpoint,
-        {
-          amount: Number(formData.amount),
-          description: formData.description,
-          companyId: company?.id ?? id,
-          treasuryId: Number(formData.treasuryId),
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      toast.success(
-        operationType === "deposit"
-          ? "تم الإيداع بنجاح"
-          : operationType === "withdrawal"
-          ? "تم السحب بنجاح"
-          : "تم المرتجع بنجاح"
-      );
-
-      setFormData({
-        operationType: "deposit",
-        amount: "",
-        description: "",
-        treasuryId: "",
-      });
-      mutate();
-    } catch (error) {
-      toast.error(
-        formData.operationType === "deposit"
-          ? "فشل في عملية الإيداع"
-          : formData.operationType === "withdrawal"
-          ? "فشل في عملية السحب"
-          : "فشل في عملية المرتجع"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (isLoading)
     return (
@@ -127,111 +55,78 @@ const CompanyPage = () => {
     );
   if (error)
     return <div className="container py-8">خطأ في تحميل بيانات الشركة</div>;
+  const InfoItem = ({
+    label,
+    value,
+  }: {
+    label: string;
+    value: string | number;
+  }) => (
+    <div>
+      <span className="block text-sm font-medium text-gray-500 dark:text-neutral-400">
+        {label}
+      </span>
+      <span className="block text-lg text-gray-800 dark:text-neutral-200">
+        {value}
+      </span>
+    </div>
+  );
+
+  const BalanceItem = ({
+    label,
+    value,
+  }: {
+    label: string;
+    value: string | number;
+  }) => (
+    <div className="bg-white dark:bg-neutral-900 border rounded-md p-3 text-center shadow-sm">
+      <span className="block text-sm text-gray-500 dark:text-neutral-400">
+        {label}
+      </span>
+      <span className="block text-lg font-semibold text-gray-800 dark:text-neutral-200">
+        {value || "غير متوفر"}
+      </span>
+    </div>
+  );
 
   return (
     <div className="container py-8" dir="rtl">
       {/* معلومات الشركة */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-neutral-200">
-          بيانات العملاء / الموردين
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-neutral-200 mb-4 border-b pb-2">
+          بيانات المورد
         </h1>
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div>
-            <span className="block text-sm font-medium text-gray-500 dark:text-neutral-500">
-              معرف العميل / المورد
-            </span>
-            <span className="block text-lg text-gray-800 dark:text-neutral-200">
-              {company.id || id}
-            </span>
-          </div>
-          <div>
-            <span className="block text-sm font-medium text-gray-500 dark:text-neutral-500">
-              الاسم
-            </span>
-            <span className="block text-lg text-gray-800 dark:text-neutral-200">
-              {company.name || "غير متوفر"}
-            </span>
-          </div>
-          <div>
-            <span className="block text-sm font-medium text-gray-500 dark:text-neutral-500">
-              رقم الهاتف
-            </span>
-            <span className="block text-lg text-gray-800 dark:text-neutral-200">
-              {company.phone || "غير متوفر"}
-            </span>
-          </div>
-          <div>
-            <span className="block text-sm font-medium text-gray-500 dark:text-neutral-500">
-              العنوان
-            </span>
-            <span className="block text-lg text-gray-800 dark:text-neutral-200">
-              {company.address || "غير متوفر"}
-            </span>
-          </div>
-          <div>
-            <span className="block text-sm font-medium text-gray-500 dark:text-neutral-500">
-              الحالة
-            </span>
-            <span className="block text-lg text-gray-800 dark:text-neutral-200">
-              {company.status || "غير متوفر"}
-            </span>
-          </div>
-          <div>
-            <span className="block text-sm font-medium text-gray-500 dark:text-neutral-500">
-              الإشعار العام
-            </span>
-            <span className="block text-lg text-gray-800 dark:text-neutral-200">
-              {company.general_alert || "غير متوفر"}
-            </span>
-          </div>
-          <div>
-            <span className="block text-sm font-medium text-gray-500 dark:text-neutral-500">
-              مستحقات ماليه
-            </span>
-            <span className="block text-lg text-gray-800 dark:text-neutral-200">
-              {company.transactions || "غير متوفر"}
-            </span>
-          </div>
-          <div>
-            <span className="block text-sm font-medium text-gray-500 dark:text-neutral-500">
-              تاريخ الإنشاء
-            </span>
-            <span className="block text-lg text-gray-800 dark:text-neutral-200">
-              {company.createdAt
+
+        <div className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg shadow-sm p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <InfoItem label=" id المورد " value={company.id || id} />
+          <InfoItem label="الاسم" value={company.name || "غير متوفر"} />
+          <InfoItem label="رقم الهاتف" value={company.phone || "غير متوفر"} />
+          <InfoItem label="العنوان" value={company.address || "غير متوفر"} />
+          <InfoItem label="الحالة" value={company.status || "غير متوفر"} />
+          <InfoItem
+            label="تاريخ الإضافة"
+            value={
+              company.createdAt
                 ? new Date(company.createdAt).toLocaleString("ar-EG")
-                : "غير متوفر"}
-            </span>
-          </div>
-          <div>
-            <span className="block text-sm font-medium text-gray-500 dark:text-neutral-500">
-              تاريخ التحديث
-            </span>
-            <span className="block text-lg text-gray-800 dark:text-neutral-200">
-              {company.updatedAt
-                ? new Date(company.updatedAt).toLocaleString("ar-EG")
-                : "غير متوفر"}
-            </span>
+                : "غير متوفر"
+            }
+          />
+
+          {/* القسم المالي */}
+          <div className="bg-gray-50 dark:bg-neutral-800 rounded-md p-4 col-span-1 md:col-span-2 lg:col-span-3">
+            <h2 className="text-md font-semibold text-blue-700 dark:text-blue-400 mb-3">
+              التفاصيل المالية
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <BalanceItem label="إجمالي المبلغ" value={company.netBalance} />
+              <BalanceItem label="(له) دائن" value={company.debitBalance} />
+              <BalanceItem label="(عليه) مدين" value={company.creditBalance} />
+            </div>
           </div>
         </div>
-
-        {company.photo && (
-          <div className="mt-4">
-            <span className="block text-sm font-medium text-gray-500 dark:text-neutral-500">
-              الصورة
-            </span>
-            <Image
-              src={`/uploads/${company.photo || "default.jpg"}`}
-              width={128}
-              height={128}
-              quality={100}
-              alt={company.name || "صورة الشركة"}
-              className="mt-2 h-32 w-32 object-contain rounded-md bg-gray-100"
-            />
-          </div>
-        )}
       </div>
 
-      {/* الفورم الخاص بالعملية */}
+      {/* الفورم الخاص بالعملية
       <div className="mt-8">
         <h2 className="text-xl font-semibold text-gray-800 dark:text-neutral-200 mb-4">
           إضافة عملية محاسبية
@@ -328,7 +223,7 @@ const CompanyPage = () => {
             </Button>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

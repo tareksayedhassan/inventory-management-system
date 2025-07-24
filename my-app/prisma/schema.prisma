@@ -161,6 +161,7 @@ model Notification {
   transactionId         Int?             // المعاملة من جدول Transaction (لو موجودة)
   treasuryTransactionId Int?             // المعاملة من جدول TreasuryTransaction (لو موجودة)
   productMovementId     Int?             // حركة المنتج من جدول ProductMovement (لو موجودة)
+   redirectUrl  String?
   user                  User?            @relation("TriggeredBy", fields: [userId], references: [id])
   treasury              Treasury?        @relation("TreasuryNotifications", fields: [treasuryId], references: [id])
   transaction           Transaction?     @relation("TransactionNotifications", fields: [transactionId], references: [id])

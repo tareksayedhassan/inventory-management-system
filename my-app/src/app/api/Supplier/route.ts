@@ -111,6 +111,7 @@ export async function POST(req: NextRequest) {
 
     const userName = user?.name || "مستخدم غير معروف";
 
+    const redirectUrl = `/Supplier`;
     const now = new Date();
     const dateStr = now.toLocaleDateString("ar-EG", {
       year: "numeric",
@@ -124,7 +125,6 @@ export async function POST(req: NextRequest) {
     const message = `تم إضافة مورد جديد "${name}" (هاتف: ${
       phone || "غير متوفر"
     }) بواسطة ${userName}`;
-
     await prisma.notification.create({
       data: {
         message,
@@ -132,6 +132,7 @@ export async function POST(req: NextRequest) {
         treasuryId: treasuryIdFromForm
           ? parseInt(treasuryIdFromForm as string, 10)
           : null,
+        redirectUrl,
       },
     });
 

@@ -32,23 +32,23 @@ import Loading from "@/components/customUi/loading";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+
 const Page = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [search, setSearch] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  // improve search
+
   useEffect(() => {
     const timeout = setTimeout(() => {
       setSearchQuery(search);
       setCurrentPage(1);
     }, 500);
-
     return () => clearTimeout(timeout);
   }, [search]);
+
   const cookie = Cookie();
   const router = useRouter();
-
   const token = cookie.get("Bearer");
 
   const { data, error, isLoading, mutate } = useSWR(
@@ -56,60 +56,58 @@ const Page = () => {
     fetcher
   );
 
-  if (isLoading) return <div>{<Loading />}</div>;
+  if (isLoading)
+    return (
+      <div>
+        <Loading />
+      </div>
+    );
 
   const company: Compny[] = data?.data || [];
-  console.log(company);
   const totalItems = data?.total || 0;
   const totalPages = Math.ceil(totalItems / rowsPerPage);
 
   const DeleteRecord = async (id: number) => {
     try {
       await axios.delete(`${BASE_URL}/${Supplier}/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       mutate();
       toast.info("Supplier deleted successfully");
     } catch (error) {
-      toast.error("Faild to delete Supplier");
+      toast.error("Failed to delete Supplier");
     }
   };
 
   const editCompany = (id: number) => {
     router.push(`/dashboard/Supplier/${id}`);
   };
+
   const monyOpertions = (id: number) => {
     router.push(`/dashboard/Supplier/${id}/addOpertion`);
   };
 
-  console.log(data);
   const calcCompanyBalance = (transactions: any[]) => {
     let balance = 0;
-
     for (const t of transactions) {
       if (t.type === "DEPOSIT") balance += t.amount;
       else if (t.type === "WITHDRAWAL") balance -= t.amount;
-      else if (t.type === "RETURN") balance += t.amount; // حسب نوع المرتجع
+      else if (t.type === "RETURN") balance += t.amount;
     }
-
     return balance;
   };
 
   return (
     <div dir="rtl" className="p-4">
       <div className="flex flex-col xl:flex-row justify-between items-center gap-4 mb-4">
-        <Link href={"/dashboard/Supplier/addSupplier"}>
+        <Link href="/dashboard/Supplier/addSupplier">
           <Button
             variant="secondary"
             className="hover:bg-amber-100 w-full xl:w-auto"
           >
-            اضافه مورد
+            إضافة مورد
           </Button>
         </Link>
-
         <div className="w-full max-w-sm">
           <Input
             type="search"
@@ -120,177 +118,166 @@ const Page = () => {
           />
         </div>
       </div>
+
       {/* Desktop Table */}
+      <div className="hidden xl:block overflow-x-auto">
+        <Table className="w-full border rounded-lg">
+          <TableCaption className="mb-4 font-semibold text-lg text-gray-500">
+            قائمة الموردين
+          </TableCaption>
+          <TableHeader className="sticky top-0 bg-gray-100 z-10">
+            <TableRow>
+              <TableHead className="w-[100px] text-right font-bold text-gray-800 text-sm px-2 py-3">
+                اسم المورد
+              </TableHead>
+              <TableHead className="w-[80px] text-right font-bold text-gray-800 text-sm px-2 py-3">
+                الصورة
+              </TableHead>
+              <TableHead className="w-[80px] text-right font-bold text-gray-800 text-sm px-2 py-3">
+                الحالة
+              </TableHead>
+              <TableHead className="w-[100px] text-right font-bold text-gray-800 text-sm px-2 py-3">
+                رقم المورد
+              </TableHead>
+              <TableHead className="w-[120px] text-right font-bold text-gray-800 text-sm px-2 py-3">
+                عنوان المورد
+              </TableHead>
+              <TableHead className="w-[120px] text-right font-bold text-gray-800 text-sm px-2 py-3">
+                مستحقات مالية
+              </TableHead>
+              <TableHead className="w-[120px] text-right font-bold text-gray-800 text-sm px-2 py-3">
+                الإشعارات
+              </TableHead>
+              <TableHead className="w-[100px] text-right font-bold text-gray-800 text-sm px-2 py-3">
+                تاريخ الإنشاء
+              </TableHead>
+              <TableHead className="w-[100px] text-right font-bold text-gray-800 text-sm px-2 py-3">
+                تاريخ التحديث
+              </TableHead>
+              <TableHead className="w-[100px] text-right font-bold text-gray-800 text-sm px-2 py-3">
+                أضيف بواسطة
+              </TableHead>
 
-      <div className="hidden xl:flex items-center gap-8 overflow-x-auto">
-        <div className="min-w-[1100px]">
-          <Table className="border rounded-lg">
-            <TableCaption className="mb-4 font-semibold text-lg text-gray-500">
-              قائمة الموردين
-            </TableCaption>
-            <TableHeader className="bg-gray-100">
-              <TableRow>
-                <TableHead className="w-[100px] font-bold text-gray-800">
-                  اسم المورد
-                </TableHead>
-                <TableHead className="font-bold text-gray-800">
-                  الصوره
-                </TableHead>
-                <TableHead className="font-bold text-gray-800">
-                  الحاله
-                </TableHead>
-                <TableHead className="font-bold text-gray-800">
-                  رقم المورد
-                </TableHead>
-                <TableHead className="font-bold text-gray-800 max-w-[160px] truncate">
-                  عنوان المورد
-                </TableHead>
-                <TableHead className="font-bold text-gray-800 max-w-[160px] truncate">
-                  مستحقات ماليه
-                </TableHead>
-                <TableHead className="font-bold text-gray-800 max-w-[160px] truncate">
-                  الاشعارات
-                </TableHead>
-                <TableHead className="font-bold text-gray-800">
-                  تاريخ الانشاء
-                </TableHead>
-                <TableHead className="font-bold text-gray-800">
-                  تاريخ التحديث
-                </TableHead>
-                <TableHead className="font-bold text-gray-800 max-w-[140px] truncate">
-                  اضيف بواسطه
-                </TableHead>
-                <TableHead className="font-bold text-gray-800">
-                  تم التحديث بواسطه
-                </TableHead>
-                <TableHead className="font-bold text-gray-800">
-                  اجراءات
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {company.map((item, key) => (
-                <TableRow
-                  key={key}
-                  className="hover:bg-gray-50 transition duration-200 mr-3.5"
+              <TableHead className="w-[160px] text-right font-bold text-gray-800 text-sm px-2 py-3">
+                إجراءات
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {company.map((item, key) => (
+              <TableRow
+                key={key}
+                className="hover:bg-gray-50 transition-colors"
+              >
+                <TableCell
+                  className="px-2 py-3 text-sm text-right truncate max-w-[100px]"
+                  title={item.name}
                 >
-                  <TableCell
-                    className="max-w-[140px] truncate"
-                    title={item.name}
-                  >
-                    {item.name}
-                  </TableCell>
-
-                  <TableCell>
-                    <div className="w-12 h-12 rounded-full overflow-hidden border">
-                      <Image
-                        src={`/uploads/${item.photo || "default.jpg"}`}
-                        alt={item.general_alert || "company avatar"}
-                        width={96}
-                        height={96}
-                        className="w-full h-full object-cover"
-                        quality={100}
-                        priority
-                        unoptimized
-                      />
-                    </div>
-                  </TableCell>
-
-                  <TableCell className="w-[80px]">{item.status}</TableCell>
-                  <TableCell className="w-[120px]">{item.phone}</TableCell>
-
-                  <TableCell
-                    className="max-w-[140px] truncate"
-                    title={item.address}
-                  >
-                    {item.address}
-                  </TableCell>
-                  <TableCell className="max-w-[140px] truncate">
-                    {item.transactions && (
-                      <Badge
-                        variant="outline"
-                        className={`text-white font-medium rounded-full px-3 py-1 ${
-                          calcCompanyBalance(item.transactions) > 0
-                            ? "bg-green-600"
-                            : calcCompanyBalance(item.transactions) < 0
-                            ? "bg-red-600"
-                            : "bg-gray-500"
-                        }`}
-                      >
-                        {calcCompanyBalance(item.transactions) > 0
-                          ? `دائن: ${calcCompanyBalance(item.transactions)}`
+                  {item.name}
+                </TableCell>
+                <TableCell className="px-2 py-3 text-sm text-right">
+                  <div className="w-10 h-10 rounded-full overflow-hidden border">
+                    <Image
+                      src={`/uploads/${item.photo || "default.jpg"}`}
+                      alt={item.general_alert || "company avatar"}
+                      width={40}
+                      height={40}
+                      className="w-full h-full object-cover"
+                      quality={100}
+                      priority
+                      unoptimized
+                    />
+                  </div>
+                </TableCell>
+                <TableCell className="px-2 py-3 text-sm text-right">
+                  {item.status}
+                </TableCell>
+                <TableCell className="px-2 py-3 text-sm text-right">
+                  {item.phone}
+                </TableCell>
+                <TableCell
+                  className="px-2 py-3 text-sm text-right truncate max-w-[120px]"
+                  title={item.address}
+                >
+                  {item.address}
+                </TableCell>
+                <TableCell className="px-2 py-3 text-sm text-right">
+                  {item.transactions && (
+                    <Badge
+                      variant="outline"
+                      className={`text-white font-medium rounded-full px-3 py-1 ${
+                        calcCompanyBalance(item.transactions) > 0
+                          ? "bg-green-600"
                           : calcCompanyBalance(item.transactions) < 0
-                          ? `مدين: ${Math.abs(
-                              calcCompanyBalance(item.transactions)
-                            )}`
-                          : "لا يوجد عمليات"}
-                      </Badge>
-                    )}
-                  </TableCell>
+                          ? "bg-red-600"
+                          : "bg-gray-500"
+                      }`}
+                    >
+                      {calcCompanyBalance(item.transactions) > 0
+                        ? `دائن: ${calcCompanyBalance(item.transactions)}`
+                        : calcCompanyBalance(item.transactions) < 0
+                        ? `مدين: ${Math.abs(
+                            calcCompanyBalance(item.transactions)
+                          )}`
+                        : "لا يوجد عمليات"}
+                    </Badge>
+                  )}
+                </TableCell>
+                <TableCell
+                  className="px-2 py-3 text-sm text-right truncate max-w-[120px]"
+                  title={item.general_alert}
+                >
+                  {item.general_alert}
+                </TableCell>
+                <TableCell className="px-2 py-3 text-sm text-right">
+                  {new Date(item.createdAt.toString()).toLocaleDateString()}
+                </TableCell>
+                <TableCell className="px-2 py-3 text-sm text-right">
+                  {new Date(item.updatedAt.toString()).toLocaleDateString()}
+                </TableCell>
+                <TableCell
+                  className="px-2 py-3 text-sm text-right truncate max-w-[100px]"
+                  title={item.added_by?.name}
+                >
+                  <p>{item.added_by?.name || "غير معروف"}</p>
+                  <p className="text-gray-500 text-xs">
+                    {item.added_by?.role || ""}
+                  </p>
+                </TableCell>
 
-                  <TableCell
-                    className="max-w-[140px] truncate"
-                    title={item.general_alert}
-                  >
-                    {item.general_alert}
-                  </TableCell>
-
-                  <TableCell className="w-[110px]">
-                    {new Date(item.createdAt.toString()).toLocaleDateString()}
-                  </TableCell>
-
-                  <TableCell className="w-[110px]">
-                    {new Date(item.updatedAt.toString()).toLocaleDateString()}
-                  </TableCell>
-
-                  <TableCell
-                    className="max-w-[140px] truncate"
-                    title={item.added_by?.name}
-                  >
-                    <p>{item.added_by?.name || "غير معروف"}</p>
-                    <p className="text-gray-500 text-sm">
-                      {item.added_by?.role || ""}
-                    </p>
-                  </TableCell>
-
-                  <TableCell className="w-[100px] truncate">
-                    {item.updated_by_id}
-                  </TableCell>
-
-                  <TableCell className="w-[160px]">
-                    <div className="flex justify-center items-center gap-2">
-                      <Button
-                        variant="secondary"
-                        className="bg-red-300 cursor-pointer px-2 py-1 text-sm"
-                        onClick={() => DeleteRecord(item.id)}
-                      >
-                        الحذف
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        className="bg-yellow-100 cursor-pointer px-2 py-1 text-sm"
-                        onClick={() => editCompany(item.id)}
-                      >
-                        التعديل
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        className="bg-green-300 cursor-pointer px-2 py-1 text-sm"
-                        onClick={() => monyOpertions(item.id)}
-                      >
-                        عمليات ماليه
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+                <TableCell className="px-2 py-3 text-sm text-right">
+                  <div className="flex justify-center items-center gap-2">
+                    <Button
+                      variant="secondary"
+                      className="bg-red-300 hover:bg-red-400 text-xs px-2 py-1"
+                      onClick={() => DeleteRecord(item.id)}
+                    >
+                      الحذف
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      className="bg-yellow-100 hover:bg-yellow-200 text-xs px-2 py-1"
+                      onClick={() => editCompany(item.id)}
+                    >
+                      التعديل
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      className="bg-green-300 hover:bg-green-400 text-xs px-2 py-1"
+                      onClick={() => monyOpertions(item.id)}
+                    >
+                      عمليات مالية
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
 
       {/* Pagination */}
-      <div className="hidden xl:flex items-center justify-center gap-8">
+      <div className="hidden xl:flex items-center justify-center gap-8 mt-4">
         <Pagention
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
@@ -299,7 +286,7 @@ const Page = () => {
         />
       </div>
 
-      {/* Mobile Cards */}
+      {/* Mobile Cards (unchanged) */}
       <div className="xl:hidden grid gap-4 overflow-x-hidden">
         {company.map((item, key) => (
           <Card
@@ -320,7 +307,6 @@ const Page = () => {
                 </CardDescription>
               </div>
             </div>
-
             <CardContent className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm text-gray-700">
               <div>
                 <span className="font-semibold text-gray-600">رقم الشركة:</span>
@@ -355,40 +341,32 @@ const Page = () => {
                   {item.added_by?.role || ""}
                 </p>
               </div>
+              <div></div>
               <div>
                 <span className="font-semibold text-gray-600">
-                  تم تحديثه بواسطة:
+                  مستحقات مالية:
                 </span>
-                <div>{item.updated_by_id}</div>
-              </div>
-              <div>
-                <div>
-                  <span className="font-semibold text-gray-600">
-                    مستحقات مالية:
-                  </span>
-                  <div className="mt-1">
-                    <Badge
-                      className={`text-white font-medium rounded-full px-3 py-1 ${
-                        calcCompanyBalance(item.transactions) > 0
-                          ? "bg-green-600"
-                          : calcCompanyBalance(item.transactions) < 0
-                          ? "bg-red-600"
-                          : "bg-gray-500"
-                      }`}
-                    >
-                      {calcCompanyBalance(item.transactions) > 0
-                        ? `دائن: ${calcCompanyBalance(item.transactions)}`
+                <div className="mt-1">
+                  <Badge
+                    className={`text-white font-medium rounded-full px-3 py-1 ${
+                      calcCompanyBalance(item.transactions) > 0
+                        ? "bg-green-600"
                         : calcCompanyBalance(item.transactions) < 0
-                        ? `مدين: ${Math.abs(
-                            calcCompanyBalance(item.transactions)
-                          )}`
-                        : "لا يوجد عمليات"}
-                    </Badge>
-                  </div>
+                        ? "bg-red-600"
+                        : "bg-gray-500"
+                    }`}
+                  >
+                    {calcCompanyBalance(item.transactions) > 0
+                      ? `دائن: ${calcCompanyBalance(item.transactions)}`
+                      : calcCompanyBalance(item.transactions) < 0
+                      ? `مدين: ${Math.abs(
+                          calcCompanyBalance(item.transactions)
+                        )}`
+                      : "لا يوجد عمليات"}
+                  </Badge>
                 </div>
               </div>
             </CardContent>
-
             <CardFooter className="flex justify-between items-center gap-2 flex-wrap">
               <div className="text-sm text-gray-600 truncate">
                 {item.general_alert}
@@ -404,21 +382,22 @@ const Page = () => {
                 <Button
                   variant="secondary"
                   className="bg-yellow-100 text-black flex-1"
+                  onClick={() => editCompany(item.id)}
                 >
                   التعديل
                 </Button>
                 <Button
                   variant="secondary"
-                  className="bg-green-300 cursor-pointer px-2 py-1 text-sm"
+                  className="bg-green-300 cursor-pointer px-2 py-1 text-sm flex-1"
                   onClick={() => monyOpertions(item.id)}
                 >
-                  عمليات ماليه
+                  عمليات مالية
                 </Button>
               </div>
             </CardFooter>
           </Card>
         ))}
-        <div className="xl:hidden">
+        <div className="xl:hidden mt-4">
           <Pagention
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
