@@ -53,7 +53,11 @@ function RegisterForm({ className, ...props }: React.ComponentProps<"form">) {
       });
 
       const token = res.data.token;
-      cookie.set("Bearer", token);
+
+      cookie.set("Bearer", token, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7,
+      });
       toast.success("user created sucssuflly");
     } catch (err) {
       const error = err as AxiosError;

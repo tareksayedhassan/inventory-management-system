@@ -16,10 +16,11 @@ import Loading from "@/components/customUi/loading";
 
 const EditCategory = () => {
   const [name, setName] = useState("");
-  const [loading, setLoading] = useState(false); // ✅ اتنقلت لفوق بدون شرط
+  const [loading, setLoading] = useState(false);
+
+  const router = useRouter();
 
   const cookie = Cookie();
-  const router = useRouter();
   const token = cookie.get("Bearer");
   const { id } = useParams();
 
@@ -29,14 +30,12 @@ const EditCategory = () => {
   );
   const category = data?.data || {};
 
-  // ✅ دايماً استدعي useEffect فوق الشرط
   useEffect(() => {
     if (category?.name) {
       setName(category.name);
     }
   }, [category]);
 
-  // ✅ استخراج userId بشكل آمن من غير كسر ترتيب hooks
   const userId = useMemo(() => {
     try {
       if (!token) return undefined;

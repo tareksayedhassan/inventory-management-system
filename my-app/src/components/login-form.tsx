@@ -56,7 +56,11 @@ function LoginForm({ className, ...props }: React.ComponentProps<"form">) {
       } else {
         router.push("/");
       }
-      cookie.set("Bearer", token);
+
+      cookie.set("Bearer", token, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7,
+      });
       toast.success("user Login sucssuflly");
     } catch (err) {
       toast.error("Something went wrong, please try again");

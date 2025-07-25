@@ -47,6 +47,9 @@ updated_Treasury Treasury[]       @relation("UpdatedBy")
 added_Product    Product[]        @relation("AddedBy")
 updated_Product  Product[]        @relation("UpdatedBy")
 notifications    Notification[]   @relation("TriggeredBy")
+  eznEdafat  EznEdafa[]  @relation("TriggeredBy")
+   
+
 productMovements ProductMovement[] @relation("TriggeredBy")
 }
 
@@ -68,8 +71,8 @@ updated_by_id Int?
 added_by      User?         @relation("AddedBy", fields: [added_by_id], references: [id])
 updated_by    User?         @relation("UpdatedBy", fields: [updated_by_id], references: [id])
 transactions  Transaction[] @relation("SupplierTransactions")
-
-@@index([added_by_id], map: "Supplier_added_by_id_fkey")
+  eznEdafat     EznEdafa[]    @relation("SupplierEznEdafa")
+ @@index([added_by_id], map: "Supplier_added_by_id_fkey")
 @@index([updated_by_id], map: "Supplier_updated_by_id_fkey")
 }
 
@@ -117,27 +120,26 @@ notifications Notification[] @relation("TransactionNotifications")
 }
 
 model Treasury {
-id                           Int               @id @default(autoincrement())
-name                         String
-is_master                    Boolean
-last_exchange_receipt_number Int
-last_collect_receipt_number  Int
-balance                      Float             @default(0) // رصيد الخزينة
-createdAt                    DateTime          @default(now())
-updatedAt                    DateTime          @updatedAt
-date                         DateTime          @default(now())
-added_by_id                  Int?
-updated_by_id                Int?
-transactions                 Transaction[]
-added_by                     User?             @relation("AddedBy", fields: [added_by_id], references: [id])
-updated_by                   User?             @relation("UpdatedBy", fields: [updated_by_id], references: [id])
-productStocks                ProductTreasury[]
-treasuryTransactions         TreasuryTransaction[]
-notifications                Notification[]    @relation("TreasuryNotifications")
-productMovements             ProductMovement[] @relation("TreasuryProductMovements")
+  id                           Int               @id @default(autoincrement())
+  name                         String
+  is_master                    Boolean
+  last_exchange_receipt_number Int
+  last_collect_receipt_number  Int
+  balance                      Float             @default(0) 
+  createdAt                    DateTime          @default(now())
+  updatedAt                    DateTime          @updatedAt
+  date                         DateTime          @default(now())
+  added_by_id                  Int?
+  updated_by_id                Int?
 
-@@index([added_by_id], map: "Treasury_added_by_id_fkey")
-@@index([updated_by_id], map: "Treasury_updated_by_id_fkey")
+  transactions                 Transaction[]
+  added_by                     User?             @relation("AddedBy", fields: [added_by_id], references: [id])
+  updated_by                   User?             @relation("UpdatedBy", fields: [updated_by_id], references: [id])
+  productStocks                ProductTreasury[]
+  treasuryTransactions         TreasuryTransaction[]
+  notifications                Notification[]    @relation("TreasuryNotifications")
+  productMovements             ProductMovement[] @relation("TreasuryProductMovements")
+  eznEdafat     EznEdafa[]    @relation("TreasuryEznEdafa")
 }
 
 model TreasuryTransaction {
@@ -176,6 +178,7 @@ model Notification {
 }
 model Product {
 id            Int              @id @default(autoincrement())
+productCode   String?
 name          String
 unit          String
 buyPrice      Float
@@ -188,11 +191,15 @@ updatedAt     DateTime         @updatedAt
 added_by_id   Int?
 updated_by_id Int?
 categoryId    Int
+  eznEdafat     EznEdafa[]    @relation("ProductEznEdafa")
+
 category      Category         @relation(fields: [categoryId], references: [id])
 productStocks ProductTreasury[]
 added_by      User?            @relation("AddedBy", fields: [added_by_id], references: [id])
 updated_by    User?            @relation("UpdatedBy", fields: [updated_by_id], references: [id])
 productMovements ProductMovement[] @relation("ProductMovements")
+
+
 
 @@index([added_by_id], map: "Product_added_by_id_fkey")
 @@index([updated_by_id], map: "Product_updated_by_id_fkey")
@@ -235,4 +242,21 @@ notifications Notification[] @relation("ProductMovementNotifications")
 @@index([productId])
 @@index([treasuryId])
 @@index([userId])
+}
+model EznEdafa {
+  id         Int      @id @default(autoincrement())
+  tax        Float    @default(14)
+  amount     Float
+
+  userId     Int?
+  user       User?     @relation("TriggeredBy", fields: [userId], references: [id])
+
+  supplierId Int
+  supplier   Supplier  @relation("SupplierEznEdafa", fields: [supplierId], references: [id])
+
+  productId  Int
+  product    Product   @relation("ProductEznEdafa", fields: [productId], references: [id])
+
+  treasuryId Int
+  treasury   Treasury  @relation("TreasuryEznEdafa", fields: [treasuryId], references: [id])
 }

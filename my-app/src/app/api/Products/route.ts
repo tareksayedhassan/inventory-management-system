@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
 
     const name = formData.get("name") as string;
+    const productCode = formData.get("productCode") as string;
     const unit = formData.get("unit") as string;
     const buyPrice = parseFloat(formData.get("buyPrice") as string);
     const sellPrice = parseFloat(formData.get("sellPrice") as string);
@@ -88,6 +89,7 @@ export async function POST(req: NextRequest) {
     const newProduct = await prisma.product.create({
       data: {
         name,
+        productCode,
         unit,
         buyPrice,
         sellPrice,

@@ -18,3 +18,17 @@ export type Compny = {
   };
   transactions: [];
 };
+export type CompStatus = "ACTIVE" | "INACTIVE" | "PENDING";
+
+export interface Supplier {
+  id: number;
+  photo: string;
+  status: CompStatus;
+  general_alert: string;
+  address: string;
+  phone: string;
+  creditBalance?: number;
+  debitBalance?: number;
+  netBalance?: number;
+  name?: string;
+}

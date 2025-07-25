@@ -27,7 +27,6 @@ export default function NotificationBell() {
   });
 
   const notifications = Array.isArray(data) ? data : [];
-  console.log(notifications);
 
   const toggleDropdown = () => setIsOpen((prev) => !prev);
   const closeDropdown = () => setIsOpen(false);

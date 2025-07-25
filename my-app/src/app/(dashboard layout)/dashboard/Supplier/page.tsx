@@ -249,21 +249,21 @@ const Page = () => {
                   <div className="flex justify-center items-center gap-2">
                     <Button
                       variant="secondary"
-                      className="bg-red-300 hover:bg-red-400 text-xs px-2 py-1"
+                      className="bg-red-300 hover:bg-red-400 text-xs px-2 py-1 cursor-pointer"
                       onClick={() => DeleteRecord(item.id)}
                     >
                       الحذف
                     </Button>
                     <Button
                       variant="secondary"
-                      className="bg-yellow-100 hover:bg-yellow-200 text-xs px-2 py-1"
+                      className="bg-yellow-100 hover:bg-yellow-200 text-xs px-2 py-1 cursor-pointer"
                       onClick={() => editCompany(item.id)}
                     >
                       التعديل
                     </Button>
                     <Button
                       variant="secondary"
-                      className="bg-green-300 hover:bg-green-400 text-xs px-2 py-1"
+                      className="bg-green-300 hover:bg-green-400 text-xs px-2 py-1 cursor-pointer"
                       onClick={() => monyOpertions(item.id)}
                     >
                       عمليات مالية
@@ -374,21 +374,21 @@ const Page = () => {
               <div className="flex gap-2 w-full sm:w-auto">
                 <Button
                   variant="destructive"
-                  className="flex-1"
+                  className="flex-1 cursor-pointer"
                   onClick={() => DeleteRecord(item.id)}
                 >
                   الحذف
                 </Button>
                 <Button
                   variant="secondary"
-                  className="bg-yellow-100 text-black flex-1"
+                  className="bg-yellow-100 text-black flex-1 cursor-pointer"
                   onClick={() => editCompany(item.id)}
                 >
                   التعديل
                 </Button>
                 <Button
                   variant="secondary"
-                  className="bg-green-300 cursor-pointer px-2 py-1 text-sm flex-1"
+                  className="bg-green-300 cursor-pointer px-2 py-1 text-sm flex-1 "
                   onClick={() => monyOpertions(item.id)}
                 >
                   عمليات مالية

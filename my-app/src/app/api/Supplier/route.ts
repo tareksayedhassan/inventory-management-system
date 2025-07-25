@@ -90,7 +90,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "حالة غير صالحة" }, { status: 400 });
     }
 
-    // إنشاء المورد
     const newSupplier = await prisma.supplier.create({
       data: {
         status,

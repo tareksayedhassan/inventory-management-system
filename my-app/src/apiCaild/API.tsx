@@ -21,3 +21,5 @@ export const Categories = "categories";
 export const notifi = "notifications";
 // Supplier
 export const Supplier = "Supplier";
+// EznEdafa
+export const EznEdafa = "EznEdafa";

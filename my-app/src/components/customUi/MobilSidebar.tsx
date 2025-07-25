@@ -1,8 +1,6 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import DropsDown from "./DropsDown";
-import { MdOutlineDashboard } from "react-icons/md";
 import React, { useState } from "react";
 import Link from "next/link";
 import Cookie from "cookie-universal";
@@ -17,7 +15,18 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { JwtPayload } from "jsonwebtoken";
-
+import { MdOutlineDashboard } from "react-icons/md";
+import { FaFileInvoiceDollar } from "react-icons/fa";
+import { IoIosAddCircleOutline } from "react-icons/io";
+import { MdInventory } from "react-icons/md";
+import { FaBox } from "react-icons/fa";
+import { GiReturnArrow } from "react-icons/gi";
+import { FaArrowTrendUp } from "react-icons/fa6";
+import { PiTreasureChestBold } from "react-icons/pi";
+import { FaUserTie } from "react-icons/fa";
+import { FaAddressCard } from "react-icons/fa6";
+import { FaUsersGear } from "react-icons/fa6";
+import { FaChartBar } from "react-icons/fa";
 const MobileSideBar = () => {
   interface MyJwtPayload extends JwtPayload {
     avatar?: string;
@@ -80,20 +89,108 @@ const MobileSideBar = () => {
         </SheetHeader>
 
         <div dir="rtl" className="p-4">
-          <span className="text-sm font-semibold text-gray-400 mb-4 block text-center">
-            التنقل
-          </span>
-
           <div className="flex flex-col gap-2">
             <Link
               href="/dashboard"
-              className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
+              className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
             >
-              <span>لوحة التحكم</span>
               <MdOutlineDashboard className="text-xl" />
+              <span>لوحة التحكم</span>
+            </Link>
+            <Link
+              href="/dashboard/Supplier"
+              className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
+            >
+              <FaUserTie className="text-xl" />
+              <span>الموردين</span>
             </Link>
 
-            <DropsDown />
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
+            >
+              <FaAddressCard className="text-xl" />
+              <span>العملاء</span>
+            </Link>
+
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
+            >
+              <FaUsersGear className="text-xl" />
+              <span>اداره المستخدمين</span>
+            </Link>
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
+            >
+              <FaChartBar className="text-xl" />
+              <span>التقارير</span>
+            </Link>
+
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
+            >
+              <FaFileInvoiceDollar className="text-xl" />
+              <span>فاتورة بيع</span>
+            </Link>
+
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
+            >
+              <IoIosAddCircleOutline className="text-xl" />
+              <span>اذن اضافة</span>
+            </Link>
+
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
+            >
+              <MdInventory className="text-xl" />
+              <span>ادارة المخزون</span>
+            </Link>
+
+            <Link
+              href="/dashboard/Products"
+              className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
+            >
+              <FaBox className="text-xl" />
+              <span>اعداد الاصناف</span>
+            </Link>
+
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
+            >
+              <GiReturnArrow className="text-xl" />
+              <span>مرتجع بيع وشراء</span>
+            </Link>
+
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
+            >
+              <FaArrowTrendUp className="text-xl" />
+              <span>تسويه المخزون</span>
+            </Link>
+
+            <Link
+              href="/dashboard/treasury"
+              className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
+            >
+              <PiTreasureChestBold className="text-xl" />
+              <span>الخزينه</span>
+            </Link>
+
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
+            >
+              <MdOutlineDashboard className="text-xl" />
+              <span>المصروفات</span>
+            </Link>
 
             <button
               onClick={logOut}

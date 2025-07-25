@@ -17,7 +17,7 @@ export async function POST(
     await prisma.$transaction([
       prisma.treasuryTransaction.create({
         data: {
-          type: "deposit",
+          type: "DEPOSIT",
           amount,
           description,
           treasuryId,

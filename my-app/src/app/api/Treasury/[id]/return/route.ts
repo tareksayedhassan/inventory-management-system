@@ -19,7 +19,7 @@ export async function POST(
     await prisma.$transaction([
       prisma.treasuryTransaction.create({
         data: {
-          type: "return",
+          type: "RETURN",
           amount,
           description,
           treasuryId,
