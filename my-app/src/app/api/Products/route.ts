@@ -14,7 +14,6 @@ interface ProductRow {
 }
 
 // get all company with pagention
-
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -31,8 +30,15 @@ export async function GET(req: NextRequest) {
             },
           }
         : {};
+
     const total = await prisma.product.count({ where: addressFilter });
 
+    const totalPrice = await prisma.product.aggregate({
+      where: addressFilter,
+      _sum: {
+        price: true,
+      },
+    });
     const Product = await prisma.product.findMany({
       where: addressFilter,
       skip: (page - 1) * pageSize,
@@ -50,6 +56,7 @@ export async function GET(req: NextRequest) {
         total,
         totalPages: Math.ceil(total / pageSize),
         currentPage: page,
+        totalPrice: totalPrice._sum.price || 0,
       },
       { status: 200 }
     );

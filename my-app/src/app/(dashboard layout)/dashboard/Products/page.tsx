@@ -50,6 +50,7 @@ import { Label } from "@/components/ui/label";
 import useSWR from "swr";
 import Loading from "@/components/customUi/loading";
 import { fetcher } from "@/apiCaild/fetcher";
+import Pagention from "@/components/customUi/pagention";
 
 const Page = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -93,12 +94,28 @@ const Page = () => {
         <Loading />
       </div>
     );
-
   const product = data?.data || [];
-  const total = product.reduce(
-    (acc: number, item: any) => acc + Number(item.price || 0),
-    0
-  );
+  const totalPrice = data?.totalPrice || 0;
+  const totalItems = data?.total || 0;
+
+  const DeleteRecord = async (id: number) => {
+    try {
+      await axios.delete(`${BASE_URL}/${Products}/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      mutate();
+      toast.info("product deleted successfully");
+    } catch (error) {
+      toast.error("Faild to delete product");
+    }
+  };
+
+  // const editCompany = (id: number) => {
+  //   router.push(`/dashboard/treasury/${id}`);
+  // };
 
   const setData = async () => {
     if (!userId) {
@@ -146,21 +163,22 @@ const Page = () => {
   return (
     <div>
       <div dir="rtl" className="p-6 bg-gray-50 min-h-screen">
-        <Card className="shadow-md border rounded-xl p-6 space-y-8 w-full max-w-6xl mx-auto bg-white">
-          <div className="text-right mb-10">
-            <h1 className="inline-block text-3xl font-semibold text-gray-800 border-b-2 border-gray-200 pb-2 w-full">
+        <Card className="shadow-md border rounded-xl p-4 sm:p-6 space-y-8 w-full max-w-6xl mx-auto bg-white">
+          <div className="text-right">
+            <h1 className="inline-block text-2xl sm:text-3xl font-semibold text-gray-800 border-b-2 border-gray-200 pb-2 w-full">
               إضافة وتعديل الأصناف
             </h1>
           </div>
-
-          <CardContent className="md:grid-cols-2 gap-6 text-sm text-gray-700">
-            <div className="p-6">
-              <h1 className="text-2xl font-semibold text-gray-800 mb-6 text-right border-b-2 border-b-gray-200 inline-block">
-                إضافة صنف جديد
-              </h1>
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-wrap gap-4">
-                  <div className="flex-1 min-w-[220px] max-w-[350px]">
+          <div className="mb-4">
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 border-b-2 border-b-gray-200 pb-2 inline-block">
+              إضافة صنف جديد
+            </h2>
+          </div>
+          <CardContent className="grid grid-cols-1 gap-6 text-sm text-gray-700">
+            <div className="p-0 sm:p-4">
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col sm:flex-row flex-wrap gap-4">
+                  <div className="flex-1 min-w-[200px] sm:min-w-[220px] max-w-full sm:max-w-[350px]">
                     <Label className="mb-1 block text-sm font-medium text-gray-700">
                       اسم الصنف
                     </Label>
@@ -172,7 +190,7 @@ const Page = () => {
                     />
                   </div>
 
-                  <div className="flex-1 min-w-[220px] max-w-[350px]">
+                  <div className="flex-1 min-w-[200px] sm:min-w-[220px] max-w-full sm:max-w-[350px]">
                     <Label className="mb-1 block text-sm font-medium text-gray-700">
                       كود الصنف (SKU)
                     </Label>
@@ -183,7 +201,7 @@ const Page = () => {
                     />
                   </div>
 
-                  <div className="flex-1 min-w-[220px] max-w-[350px]">
+                  <div className="flex-1 min-w-[200px] sm:min-w-[220px] max-w-full sm:max-w-[350px]">
                     <Label className="mb-1 block text-sm font-medium text-gray-700">
                       سعر البيع الافتراضي
                     </Label>
@@ -197,8 +215,8 @@ const Page = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-4">
-                  <div className="flex-1 min-w-[220px] max-w-[350px]">
+                <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-end">
+                  <div className="flex-1 min-w-[200px] sm:min-w-[220px] max-w-full sm:max-w-[350px]">
                     <Label className="mb-1 block text-sm font-medium text-gray-700">
                       الكمية
                     </Label>
@@ -211,7 +229,7 @@ const Page = () => {
                     />
                   </div>
 
-                  <div className="flex-1 min-w-[220px] max-w-[350px]">
+                  <div className="flex-1 min-w-[200px] sm:min-w-[220px] max-w-full sm:max-w-[350px]">
                     <Label className="mb-1 block text-sm font-medium text-gray-700">
                       ملاحظات
                     </Label>
@@ -222,46 +240,72 @@ const Page = () => {
                       onChange={(e) => setNote(e.target.value)}
                     />
                   </div>
-                  <Button onClick={() => setData()} disabled={loading}>
-                    {loading ? "جاري الإضافة..." : "اضف الصنف"}
-                  </Button>
+
+                  <div className="w-full sm:w-auto">
+                    <Button
+                      onClick={() => setData()}
+                      disabled={loading}
+                      className="w-full  cursor-pointer text-white font-semibold px-6 py-2 rounded-md shadow-md transition"
+                    >
+                      {loading ? "جاري الإضافة..." : "➕ أضف الصنف"}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
+
             <hr />
-            <div className="col-span-1 md:col-span-2 bg-white p-6 rounded-xl w-full text-right">
-              <h1 className="text-xl font-semibold mb-2 text-gray-800">
-                استيراد من Excel
-              </h1>
-              <span className="text-sm text-gray-600 block mb-4">
+
+            <div className="bg-white p-0 sm:p-6 rounded-xl w-full text-right">
+              <h2 className="text-lg sm:text-xl font-semibold mb-2 text-gray-800">
+                📥 استيراد من Excel
+              </h2>
+              <span className="text-sm text-gray-600 block mb-4 max-w-full">
                 قم بتحميل ملف Excel بصيغة
-                <code className="bg-gray-100 text-gray-800 px-1 rounded">
+                <code className="bg-transparent sm:bg-gray-100 text-gray-800 px-1 rounded">
                   .xlsx
                 </code>
                 ويحتوي على الأعمدة:
-                <br />
-                <code className="bg-gray-100 text-gray-800 px-1 rounded">
-                  name
-                </code>
-                ,
-                <code className="bg-gray-100 text-gray-800 px-1 rounded">
-                  stock
-                </code>
-                ,
-                <code className="bg-gray-100 text-gray-800 px-1 rounded">
-                  note
-                </code>
-                ,
-                <code className="bg-gray-100 text-gray-800 px-1 rounded">
-                  productCode
-                </code>
-                ,
-                <code className="bg-gray-100 text-gray-800 px-1 rounded">
-                  price
-                </code>
+                <span className="block sm:hidden">
+                  <code className="bg-transparent text-gray-800 px-1 rounded block mt-1">
+                    name
+                  </code>
+                  <code className="bg-transparent text-gray-800 px-1 rounded block mt-1">
+                    stock
+                  </code>
+                  <code className="bg-transparent text-gray-800 px-1 rounded block mt-1">
+                    note
+                  </code>
+                  <code className="bg-transparent text-gray-800 px-1 rounded block mt-1">
+                    productCode
+                  </code>
+                  <code className="bg-transparent text-gray-800 px-1 rounded block mt-1">
+                    price
+                  </code>
+                </span>
+                <span className="hidden sm:inline">
+                  <code className="bg-transparent sm:bg-gray-100 text-gray-800 px-1 rounded">
+                    name
+                  </code>
+                  ،
+                  <code className="bg-transparent sm:bg-gray-100 text-gray-800 px-1 rounded">
+                    stock
+                  </code>
+                  ،
+                  <code className="bg-transparent sm:bg-gray-100 text-gray-800 px-1 rounded">
+                    note
+                  </code>
+                  ،
+                  <code className="bg-transparent sm:bg-gray-100 text-gray-800 px-1 rounded">
+                    productCode
+                  </code>
+                  ،
+                  <code className="bg-transparent sm:bg-gray-100 text-gray-800 px-1 rounded">
+                    price
+                  </code>
+                </span>
               </span>
-
-              <div className="border-2 border-gray-300 rounded-lg p-6 text-right hover:border-gray-700 transition w-full">
+              <div className="border-2 border-gray-300 rounded-lg p-4 sm:p-6 text-right hover:border-gray-700 transition w-full overflow-x-auto">
                 <input
                   type="file"
                   accept=".xlsx"
@@ -288,34 +332,87 @@ const Page = () => {
                 إضافة وتعديل الأصناف
               </h1>
             </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[100px]">الاسم</TableHead>
-                  <TableHead>الكود</TableHead>
-                  <TableHead> الكمية</TableHead>
-                  <TableHead className="text-right">الملاحظات</TableHead>
-                  <TableHead className="text-right">اجمالي السعر</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {product.map((pro: any) => (
-                  <TableRow key={pro.name}>
-                    <TableCell className="font-medium">{pro.name}</TableCell>
-                    <TableCell>{pro.productCode}</TableCell>
-                    <TableCell>{pro.stock}</TableCell>
-                    <TableCell>{pro.note}</TableCell>
-                    <TableCell className="text-right">{pro.price}</TableCell>
+            <div className="col-span-1 md:col-span-2 overflow-x-auto">
+              <Table className="w-full border text-center">
+                <TableHeader>
+                  <TableRow className="bg-gray-100">
+                    <TableHead className="min-w-[150px] text-center">
+                      الاسم
+                    </TableHead>
+                    <TableHead className="min-w-[100px] text-center">
+                      الكود
+                    </TableHead>
+                    <TableHead className="min-w-[80px] text-center">
+                      الكمية
+                    </TableHead>
+                    <TableHead className="min-w-[150px] text-center">
+                      الملاحظات
+                    </TableHead>
+                    <TableHead className="min-w-[150px] text-center">
+                      اجمالي السعر
+                    </TableHead>
+                    <TableHead className="min-w-[150px] text-center">
+                      اجراءات حذف وتعديل
+                    </TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-              <TableFooter>
-                <TableRow>
-                  <TableCell colSpan={4}>الإجمالي</TableCell>
-                  <TableCell className="text-right">{total} جنيه</TableCell>
-                </TableRow>
-              </TableFooter>
-            </Table>
+                </TableHeader>
+
+                <TableBody>
+                  {product.map((pro: any, index: number) => (
+                    <TableRow
+                      key={`${pro.name}-${index}`}
+                      className="hover:bg-gray-50"
+                    >
+                      <TableCell className="text-center">{pro.name}</TableCell>
+                      <TableCell className="text-center">
+                        {pro.productCode}
+                      </TableCell>
+                      <TableCell className="text-center">{pro.stock}</TableCell>
+                      <TableCell className="text-center">
+                        {pro.note || "--"}
+                      </TableCell>
+                      <TableCell className="text-center font-medium text-green-700">
+                        {pro.price} ج.م
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex justify-center items-center gap-2">
+                          <Button
+                            variant="secondary"
+                            className="bg-red-300 cursor-pointer px-2 py-1 text-sm"
+                            onClick={() => DeleteRecord(pro.id)}
+                          >
+                            الحذف
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            className="bg-yellow-100 cursor-pointer px-2 py-1 text-sm"
+                          >
+                            التعديل
+                          </Button>
+                        </div>{" "}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+
+                <TableFooter>
+                  <TableRow className="bg-gray-100 font-bold">
+                    <TableCell colSpan={4} className="text-start">
+                      الإجمالي
+                    </TableCell>
+                    <TableCell className="text-center text-blue-600">
+                      {totalPrice} ج.م
+                    </TableCell>
+                  </TableRow>
+                </TableFooter>
+              </Table>
+              <Pagention
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                rowsPerPage={rowsPerPage}
+                totalItems={totalItems}
+              />
+            </div>
           </CardContent>
         </Card>
       </div>
