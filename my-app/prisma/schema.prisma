@@ -135,7 +135,6 @@ model Treasury {
   transactions                 Transaction[]
   added_by                     User?             @relation("AddedBy", fields: [added_by_id], references: [id])
   updated_by                   User?             @relation("UpdatedBy", fields: [updated_by_id], references: [id])
-  productStocks                ProductTreasury[]
   treasuryTransactions         TreasuryTransaction[]
   notifications                Notification[]    @relation("TreasuryNotifications")
   productMovements             ProductMovement[] @relation("TreasuryProductMovements")
@@ -176,25 +175,20 @@ model Notification {
   @@index([treasuryTransactionId])
   @@index([productMovementId])
 }
+
 model Product {
 id            Int              @id @default(autoincrement())
 productCode   String?
 name          String
-unit          String
-buyPrice      Float
-sellPrice     Float
 stock         Int              @default(0)
-minStock      Int              @default(0)
 note          String?
+price         Float
 createdAt     DateTime         @default(now())
 updatedAt     DateTime         @updatedAt
 added_by_id   Int?
 updated_by_id Int?
-categoryId    Int
   eznEdafat     EznEdafa[]    @relation("ProductEznEdafa")
 
-category      Category         @relation(fields: [categoryId], references: [id])
-productStocks ProductTreasury[]
 added_by      User?            @relation("AddedBy", fields: [added_by_id], references: [id])
 updated_by    User?            @relation("UpdatedBy", fields: [updated_by_id], references: [id])
 productMovements ProductMovement[] @relation("ProductMovements")
@@ -203,26 +197,6 @@ productMovements ProductMovement[] @relation("ProductMovements")
 
 @@index([added_by_id], map: "Product_added_by_id_fkey")
 @@index([updated_by_id], map: "Product_updated_by_id_fkey")
-}
-
-model Category {
-id        Int       @id @default(autoincrement())
-name      String    @unique
-products  Product[]
-createdAt DateTime  @default(now())
-updatedAt DateTime  @updatedAt
-}
-
-model ProductTreasury {
-id         Int      @id @default(autoincrement())
-product    Product  @relation(fields: [productId], references: [id])
-productId  Int
-treasury   Treasury @relation(fields: [treasuryId], references: [id])
-treasuryId Int
-stock      Int      @default(0)
-updatedAt  DateTime @updatedAt
-
-@@unique([productId, treasuryId])
 }
 
 model ProductMovement {
@@ -243,6 +217,7 @@ notifications Notification[] @relation("ProductMovementNotifications")
 @@index([treasuryId])
 @@index([userId])
 }
+
 model EznEdafa {
   id         Int      @id @default(autoincrement())
   tax        Float    @default(14)
@@ -256,7 +231,19 @@ model EznEdafa {
 
   productId  Int
   product    Product   @relation("ProductEznEdafa", fields: [productId], references: [id])
-
+stockId Int?
+stock    Stock? @relation(fields: [stockId], references: [id])
   treasuryId Int
   treasury   Treasury  @relation("TreasuryEznEdafa", fields: [treasuryId], references: [id])
+}
+
+model Stock {
+  id         Int      @id @default(autoincrement())
+  name      String
+  stockTax  Int
+  stockNotTax Int
+  totalStock Int
+  totalValue Int
+  eznEdafat EznEdafa[] 
+
 }

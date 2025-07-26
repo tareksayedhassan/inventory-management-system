@@ -28,17 +28,9 @@ const AddProduct = () => {
   const token = cookie.get("Bearer");
 
   const [name, setName] = useState("");
-  const [unit, setUnit] = useState("");
-  const [buyPrice, setBuyPrice] = useState("");
-  const [sellPrice, setSellPrice] = useState("");
-  const [minStock, setMinStock] = useState("");
+  const [Price, setPrice] = useState("");
   const [stock, setStock] = useState("");
   const [note, setNote] = useState("");
-  const [categoryId, setCategoryId] = useState("");
-  const [treasuryId, setTreasuryId] = useState("");
-
-  const [categories, setCategories] = useState<ICategory[]>([]);
-  const [treasuries, setTreasuries] = useState<ITreasury[]>([]);
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<number | null>(null);
 
@@ -51,32 +43,6 @@ const AddProduct = () => {
         toast.error("User ID is invalid.");
       }
     }
-
-    const fetchCategories = async () => {
-      try {
-        const res = await axios.get(`${BASE_URL}/categories`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setCategories(res.data.data);
-      } catch (error) {
-        toast.error("Error get Categories");
-      }
-    };
-
-    const fetchTreasuries = async () => {
-      try {
-        const res = await axios.get(`${BASE_URL}/${Treasury}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setTreasuries(res.data.data);
-      } catch (error) {
-        toast.error("Error get Treasury");
-      }
-    };
-
-    fetchCategories();
-    fetchTreasuries();
-  }, [token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,7 +57,7 @@ const AddProduct = () => {
     const formData = new FormData();
     formData.append("name", name);
     formData.append("unit", unit);
-    formData.append("buyPrice", buyPrice);
+    formData.append("Price", Price);
     formData.append("sellPrice", sellPrice);
     formData.append("stock", stock);
     formData.append("minStock", minStock);

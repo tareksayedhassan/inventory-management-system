@@ -19,12 +19,27 @@ import React, { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { FaSearch } from "react-icons/fa";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+
 // ========== Types ==========
 type Supplier = { id: number; name: string };
 type Product = {
@@ -39,17 +54,18 @@ type Product = {
 const Page = () => {
   const [amount, setAmount] = useState(1);
   const [tax, setTax] = useState(14);
-
   const [treasuries, setTreasuries] = useState<Supplier[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [isTaxChecked, setIsTaxChecked] = useState(false);
+
   const [selectedProducts, setSelectedProducts] = useState<
     (Product & { amount: number; buyPrice: number })[]
   >([]);
-
   const [selectedProductId, setSelectedProductId] = useState<number | null>(
     null
   );
+  const [search, setSearch] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedTreasuryId, setSelectedTreasuryId] = useState<number | null>(
     null
@@ -120,7 +136,7 @@ const Page = () => {
     try {
       const res = await axios.post(`${BASE_URL}/${EznEdafa}`, {
         amount,
-        tax,
+        tax: isTaxChecked ? 14 : 0,
         supplierId: selectedSupplierId,
         productId: selectedProductId,
         treasuryId: selectedTreasuryId,
@@ -132,15 +148,37 @@ const Page = () => {
       toast.error("فشل في إرسال إذن الإضافة.");
       console.error("Error:", err);
     }
+    treasuryWithdrow();
   };
+
+  const treasuryWithdrow = async () => {
+    if (!selectedTreasuryId) {
+      toast.error("برجاء اختيار خزينه لاتمام العمليه");
+      return;
+    }
+    try {
+      await axios.post(
+        `${BASE_URL}/${Treasury}/${selectedTreasuryId}/withdraw`,
+        {
+          amount: finalTotal,
+        }
+      );
+      toast.success("تم تنفيذ عملية السحب من الخزينة بنجاح.");
+    } catch (error) {
+      toast.error("فشل في تنفيذ السحب من الخزينة.");
+      console.error(error);
+    }
+  };
+
   const totalAmountBeforeSubmit = selectedProducts.reduce((acc, item) => {
     const amount = Number(item.amount) || 0;
     const price = Number(item.buyPrice) || 0;
     return acc + amount * price;
   }, 0);
-  const taxx = totalAmountBeforeSubmit * 0.14;
+  const taxx = isTaxChecked ? totalAmountBeforeSubmit * 0.14 : 0;
   const deduction = totalAmountBeforeSubmit * 0.01;
   const finalTotal = totalAmountBeforeSubmit + taxx - deduction;
+
   // ========== Render ==========
   return (
     <div dir="rtl" className="p-6 bg-gray-50 min-h-screen">
@@ -201,54 +239,216 @@ const Page = () => {
             </select>
           </div>
 
-          {/* Discount & Tax */}
-          <div className="flex gap-4 items-center">
-            <div className="flex flex-col">
-              <label className="font-medium text-gray-700 mb-1">
-                نسبة الخصم (%)
-              </label>
-              <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(Number(e.target.value))}
-                className="w-[100px] border rounded p-2"
-              />
-            </div>
-            <div className="flex flex-col">
-              <label className="font-medium text-gray-700 mb-1">
-                نسبة الضريبة (%)
-              </label>
-              <input
-                type="number"
-                value={tax}
-                onChange={(e) => setTax(Number(e.target.value))}
-                className="w-[100px] border rounded p-2"
-              />
-            </div>
-          </div>
-
           {/* Product Select */}
-          <div>
-            <label className="block mb-1 font-medium text-gray-700">
-              اختر الصنف
-            </label>
-            <select
-              value={selectedProductId ?? ""}
-              onChange={(e) => setSelectedProductId(Number(e.target.value))}
-              className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+          <CardContent className="w-full col-span-1 md:col-span-2">
+            <div
+              dir="rtl"
+              className="
+                p-6 
+                bg-gradient-to-br 
+                from-green-50 
+                to-blue-50 
+                rounded-xl 
+                shadow-md 
+                hover:shadow-lg 
+                transition-shadow 
+                duration-300
+                min-h-[120px]
+                flex
+                flex-col
+                items-center
+                justify-center
+              "
             >
-              <option value="" disabled>
-                -- اختر الصنف --
-              </option>
-              {products.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-          </div>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="
+                      bg-green-600 
+                      text-white 
+                      hover:bg-green-700 
+                      transition-colors 
+                      duration-200 
+                      rounded-lg 
+                      px-8 
+                      py-3 
+                      flex 
+                      items-center 
+                      gap-2 
+                      font-semibold
+                      shadow-md
+                      hover:shadow-lg
+                    "
+                  >
+                    إضافة صنف <FaSearch />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent
+                  className="
+                    w-[95vw] 
+                    max-w-[90vw] 
+                    h-[70vh] 
+                    bg-white 
+                    rounded-2xl 
+                    shadow-xl 
+                    p-8 
+                    border 
+                    border-gray-100 
+                    transition-all 
+                    duration-300 
+                    ease-in-out
+                    flex 
+                    flex-col
+                    bg-gradient-to-br 
+                    from-gray-50 
+                    to-green-50
+                  "
+                >
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-2xl font-bold text-gray-800 mb-4 text-center">
+                      اختيار الأصناف
+                    </AlertDialogTitle>
+                    <div className="w-full max-w-lg mx-auto mb-6">
+                      <Input
+                        type="search"
+                        placeholder="ابحث باسم الصنف..."
+                        className="
+                          rounded-lg 
+                          border 
+                          border-gray-200 
+                          px-4 
+                          py-3 
+                          w-full 
+                          focus:ring-2 
+                          focus:ring-green-400 
+                          focus:outline-none 
+                          text-gray-700
+                          transition-all 
+                          duration-200
+                          bg-white
+                          shadow-sm
+                          hover:shadow-md
+                        "
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                      />
+                    </div>
+                  </AlertDialogHeader>
 
-          {/* Product Info */}
+                  <AlertDialogDescription className="flex-1 overflow-auto">
+                    <div className="w-full">
+                      <Table className="w-full text-center border border-gray-100 rounded-lg bg-white shadow-sm">
+                        <TableHeader>
+                          <TableRow className="bg-gray-50 text-gray-700 font-semibold">
+                            <TableHead className="w-1/4 text-center border py-3">
+                              تكلفة الشراء
+                            </TableHead>
+                            <TableHead className="w-1/4 text-center border py-3">
+                              الكمية
+                            </TableHead>
+                            <TableHead className="w-2/4 text-center border py-3">
+                              اسم الصنف
+                            </TableHead>
+                            <TableHead className="w-1/4 text-center border py-3">
+                              كود الصنف
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {products
+                            .filter((item) =>
+                              item.name
+                                .toLowerCase()
+                                .includes(search.toLowerCase())
+                            )
+                            .map((item, key) => (
+                              <TableRow
+                                key={key}
+                                className="
+                                  hover:bg-green-100 
+                                  transition-colors 
+                                  duration-200 
+                                  cursor-pointer
+                                "
+                                onClick={() => setSelectedProductId(item.id)}
+                              >
+                                <TableCell className="text-center border py-3">
+                                  {item.buyPrice.toFixed(2)} ج.م
+                                </TableCell>
+                                <TableCell className="text-center border py-3">
+                                  {item.unit}
+                                </TableCell>
+                                <TableCell className="text-center border py-3">
+                                  {item.name}
+                                </TableCell>
+                                <TableCell className="text-center border py-3">
+                                  {item.code}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </AlertDialogDescription>
+
+                  <AlertDialogFooter className="mt-6 flex justify-end gap-4">
+                    <AlertDialogCancel
+                      className="
+                        bg-gray-200 
+                        text-gray-700 
+                        hover:bg-gray-300 
+                        transition-colors 
+                        duration-200 
+                        rounded-lg 
+                        px-6 
+                        py-2
+                        shadow-md
+                        hover:shadow-lg
+                      "
+                    >
+                      إلغاء
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      className="
+                        bg-green-600 
+                        text-white 
+                        hover:bg-green-700 
+                        transition-colors 
+                        duration-200 
+                        rounded-lg 
+                        px-6 
+                        py-2
+                        shadow-md
+                        hover:shadow-lg
+                      "
+                      onClick={() => {
+                        if (selectedProductId) {
+                          const product = products.find(
+                            (p) => p.id === selectedProductId
+                          );
+                          if (product) {
+                            setSelectedProducts([
+                              ...selectedProducts,
+                              {
+                                ...product,
+                                amount: 1,
+                                buyPrice: product.buyPrice,
+                              },
+                            ]);
+                            toast.success("تم إضافة الصنف بنجاح.");
+                          }
+                        }
+                      }}
+                    >
+                      متابعة
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </CardContent>
+
           {selectedProduct && (
             <>
               <div>
@@ -297,25 +497,7 @@ const Page = () => {
               </div>
             </>
           )}
-          <div className="col-span-1 md:col-span-2">
-            <Button
-              className="bg-green-600 hover:bg-green-700 text-white"
-              onClick={() => {
-                if (!selectedProduct) return toast.error("اختر صنف أولاً");
-
-                setSelectedProducts([
-                  ...selectedProducts,
-                  {
-                    ...selectedProduct,
-                    amount: 1,
-                    buyPrice: selectedProduct.buyPrice || 0,
-                  },
-                ]);
-              }}
-            >
-              إضافة الصنف
-            </Button>
-          </div>
+          <div className="col-span-1 md:col-span-2"></div>
 
           <div className="col-span-1 md:col-span-2 overflow-x-auto">
             <Table className="w-full border text-center">
@@ -385,27 +567,43 @@ const Page = () => {
               </TableBody>
             </Table>
           </div>
-          <div className="w-full max-w-2xl bg-gray-50 border border-gray-300 rounded-lg shadow-sm p-6 space-y-4 text-gray-800">
-            <div className="flex justify-between">
-              <span className="font-medium">الإجمالي قبل الخصم والضريبة:</span>
-              <span>{totalAmountBeforeSubmit.toFixed(2)} ج.م</span>
+          <div className="w-full max-w-2xl bg-gray-50 border border-gray-300 rounded-2xl shadow-md p-6 text-gray-800 space-y-6">
+            {/* Checkbox */}
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="tax"
+                checked={isTaxChecked}
+                onCheckedChange={(value) => setIsTaxChecked(!!value)}
+              />
+              <Label
+                htmlFor="tax"
+                className="text-sm font-medium text-gray-700"
+              >
+                تطبيق ضريبة 14%
+              </Label>
+            </div>
+            <hr />
+
+            {/* Summary Grid */}
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="font-medium text-gray-700">
+                الإجمالي قبل الخصم والضريبة:
+              </div>
+              <div className="text-right">
+                {totalAmountBeforeSubmit.toFixed(2)} ج.م
+              </div>
+
+              <div className="font-medium text-gray-700">الضريبة (14%) :</div>
+              <div className="text-right">{taxx.toFixed(2)} ج.م</div>
+
+              <div className="font-medium text-gray-700">خصم المنبع (1%) :</div>
+              <div className="text-right">{deduction.toFixed(2)} ج.م</div>
             </div>
 
             <hr className="border-gray-300" />
 
-            <div className="flex justify-between">
-              <span className="font-medium">الضريبة (14%):</span>
-              <span>{taxx.toFixed(2)} ج.م</span>
-            </div>
-
-            <div className="flex justify-between">
-              <span className="font-medium">خصم المنبع (1%):</span>
-              <span>{deduction.toFixed(2)} ج.م</span>
-            </div>
-
-            <hr className="border-gray-300" />
-
-            <div className="flex justify-between text-green-700 font-semibold text-lg">
+            {/* Final Total */}
+            <div className="flex justify-between items-center text-green-700 font-semibold text-base">
               <span>الإجمالي النهائي للكارت:</span>
               <span>{finalTotal.toFixed(2)} ج.م</span>
             </div>
@@ -414,10 +612,10 @@ const Page = () => {
 
         <CardFooter className="flex justify-end">
           <Button
-            onClick={handleSubmit}
             className="bg-green-600 hover:bg-green-700 text-white"
+            onClick={() => handleSubmit()}
           >
-            حفظ الإضافة
+            حفظ الفاتوره
           </Button>
         </CardFooter>
       </Card>

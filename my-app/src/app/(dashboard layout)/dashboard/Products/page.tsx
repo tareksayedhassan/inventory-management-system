@@ -1,17 +1,16 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
   TableCaption,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import useSWR from "swr";
-import { BASE_URL, Products } from "@/apiCaild/API";
-import { fetcher } from "@/apiCaild/fetcher";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,312 +19,305 @@ import {
   CardFooter,
   CardTitle,
 } from "@/components/ui/card";
-import Cookie from "cookie-universal";
-import Pagention from "@/components/customUi/pagention";
-import axios from "axios";
+import {
+  BASE_URL,
+  EznEdafa,
+  Products,
+  Supplier as SupplierEndpoint,
+  Treasury,
+} from "@/apiCaild/API";
+import { DecodedToken } from "@/Types/CustomJWTDecoded";
+import { IoIosAddCircleOutline } from "react-icons/io";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { jwtDecode } from "jwt-decode";
+import Cookie from "cookie-universal";
+import axios from "axios";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { FaSearch } from "react-icons/fa";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import useSWR from "swr";
 import Loading from "@/components/customUi/loading";
-interface IProduct {
-  id: number;
-  code: string;
-  name: string;
-  category?: { id: number; name: string };
-  unit: string;
-  buyPrice: number;
-  sellPrice: number;
-  stock: number;
-  minStock: number;
-  note?: string;
-  createdAt: Date;
-  updatedAt: Date;
-  added_by?: {
-    id: number;
-    name: string;
-    email: string;
-    role: string;
-  };
-  updated_by_id: number;
-}
+import { fetcher } from "@/apiCaild/fetcher";
 
 const Page = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [search, setSearch] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const [name, setName] = useState("");
+  const [Price, setPrice] = useState("");
+  const [stock, setStock] = useState("");
+  const [note, setNote] = useState("");
+  const [productCode, setproductCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [userId, setUserId] = useState<number | null>(null);
   const cookie = Cookie();
   const token = cookie.get("Bearer");
-  const [searchQuery, setSearchQuery] = useState("");
-  // improve search
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setSearchQuery(search);
-      setCurrentPage(1);
-    }, 500);
 
-    return () => clearTimeout(timeout);
-  }, [search]);
+  useEffect(() => {
+    if (token) {
+      const decoded = jwtDecode<DecodedToken>(token);
+      console.log(decoded);
+
+      if (typeof decoded.id === "number") {
+        console.log(decoded.id);
+
+        setUserId(decoded.id);
+      } else {
+        toast.error("User ID is invalid.");
+      }
+    }
+  }, [token]);
+
   const { data, error, isLoading, mutate } = useSWR(
-    `${BASE_URL}/${Products}?page=${currentPage}&pageSize=${rowsPerPage}&search=${searchQuery}`,
+    `${BASE_URL}/${Products}?page=${currentPage}&pageSize=${rowsPerPage}&search=${search}`,
     fetcher
   );
-  if (isLoading) return <div>{<Loading />}</div>;
-  const Product: IProduct[] = data?.data || [];
-  console.log(Product);
-  const router = useRouter();
-  const totalItems = data?.total || 0;
-  const totalPages = Math.ceil(totalItems / rowsPerPage);
 
-  const DeleteProduct = async (id: number) => {
+  if (isLoading)
+    return (
+      <div>
+        <Loading />
+      </div>
+    );
+
+  const product = data?.data || [];
+  const total = product.reduce(
+    (acc: number, item: any) => acc + Number(item.price || 0),
+    0
+  );
+
+  const setData = async () => {
+    if (!userId) {
+      toast.error("Invalid User Id");
+      return;
+    }
+
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("price", Price);
+    formData.append("stock", stock);
+    formData.append("note", note);
+    formData.append("productCode", productCode);
+
+    formData.append("added_by_id", userId.toString());
+    formData.append("updated_by_id", userId.toString());
+
     try {
-      await axios.delete(`${BASE_URL}/${Products}/${id}`, {
-        method: "DELETE",
+      const res = await axios.post(`${BASE_URL}/${Products}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      mutate();
-      toast.info("company deleted successfully");
-    } catch (error) {
-      toast.error("Faild to delete Company");
+
+      if (res.status === 201) {
+        toast.success("تمت إضافة الصنف بنجاح");
+        mutate();
+        setName("");
+        setPrice("");
+        setStock("");
+        setNote("");
+        setproductCode("");
+      } else {
+        toast.error("حدث خطأ أثناء الإضافة");
+      }
+    } catch (error: any) {
+      toast.error(`خطأ: ${error?.response?.data?.message || error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const editProduct = (id: number) => {
-    router.push(`/dashboard/products/${id}`);
-  };
-
   return (
-    <div dir="rtl" className="p-4">
-      <div className="hidden xl:block overflow-x-auto w-full">
-        <Table className="border rounded-lg min-w-[1050px]">
-          <TableHeader className="bg-gray-100">
-            <TableRow>
-              <TableHead className="w-[40px] text-center font-bold text-gray-800">
-                #
-              </TableHead>
+    <div>
+      <div dir="rtl" className="p-6 bg-gray-50 min-h-screen">
+        <Card className="shadow-md border rounded-xl p-6 space-y-8 w-full max-w-6xl mx-auto bg-white">
+          <div className="text-right mb-10">
+            <h1 className="inline-block text-3xl font-semibold text-gray-800 border-b-2 border-gray-200 pb-2 w-full">
+              إضافة وتعديل الأصناف
+            </h1>
+          </div>
 
-              <TableHead className="w-[120px] font-bold text-gray-800">
-                الاسم
-              </TableHead>
-              <TableHead className="w-[100px] font-bold text-gray-800">
-                الفئة
-              </TableHead>
-              <TableHead className="w-[70px] font-bold text-gray-800">
-                الوحدة
-              </TableHead>
-              <TableHead className="w-[90px] font-bold text-gray-800">
-                س.الشراء
-              </TableHead>
-              <TableHead className="w-[90px] font-bold text-gray-800">
-                س.البيع
-              </TableHead>
-              <TableHead className="w-[80px] font-bold text-gray-800">
-                الحد الأدنى
-              </TableHead>
-              <TableHead className="w-[70px] font-bold text-gray-800">
-                الكميه المضافه الى الخزنه
-              </TableHead>
-              <TableHead className="w-[130px] font-bold text-gray-800">
-                ملاحظات
-              </TableHead>
-              <TableHead className="w-[110px] font-bold text-gray-800">
-                إضافة
-              </TableHead>
-              <TableHead className="w-[110px] font-bold text-gray-800">
-                تحديث
-              </TableHead>
-              <TableHead className="w-[100px] font-bold text-gray-800">
-                أضيف بـ
-              </TableHead>
-              <TableHead className="w-[100px] font-bold text-gray-800">
-                تم التحديث بـ
-              </TableHead>
-              <TableHead className="w-[110px] font-bold text-gray-800">
-                تحكم
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Product.map((item, index) => (
-              <TableRow key={item.code} className="hover:bg-gray-50">
-                <TableCell className="text-center">{index + 1}</TableCell>
-                <TableCell>{item.name}</TableCell>
-                <TableCell
-                  className="max-w-[140px] truncate"
-                  title={item.category?.name}
-                >
-                  {item.category?.name}
-                </TableCell>
-                <TableCell>{item.unit}</TableCell>
-                <TableCell>{item.buyPrice}</TableCell>
-                <TableCell>{item.sellPrice}</TableCell>
-                <TableCell className="truncate max-w-[10px] whitespace-nowrap overflow-hidden">
-                  {item.minStock}
-                </TableCell>
-                <TableCell
-                  className="truncate max-w-[150px] whitespace-nowrap overflow-hidden
-"
-                >
-                  {item.stock}
-                </TableCell>
-                <TableCell
-                  title={item.note}
-                  className="truncate max-w-[70px] whitespace-nowrap overflow-hidden
-"
-                >
-                  {item.note || "—"}
-                </TableCell>
-                <TableCell>
-                  {new Date(item.createdAt).toLocaleDateString()}
-                </TableCell>
-                <TableCell>
-                  {new Date(item.updatedAt).toLocaleDateString()}
-                </TableCell>
-                <TableCell
-                  className="max-w-[140px] truncate"
-                  title={item.added_by?.name}
-                >
-                  <p>{item.added_by?.name || "غير معروف"}</p>
-                  <p className="text-gray-500 text-sm">
-                    {item.added_by?.role || ""}
-                  </p>
-                </TableCell>{" "}
-                <TableCell>{item.updated_by_id}</TableCell>
-                <TableCell>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="destructive"
-                      className="px-2 py-1 text-sm"
-                      onClick={() => DeleteProduct(item.id)}
-                    >
-                      حذف
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      className="bg-yellow-100 text-black px-2 py-1 text-sm"
-                      onClick={() => editProduct(item.id)}
-                    >
-                      تعديل
-                    </Button>
+          <CardContent className="md:grid-cols-2 gap-6 text-sm text-gray-700">
+            <div className="p-6">
+              <h1 className="text-2xl font-semibold text-gray-800 mb-6 text-right border-b-2 border-b-gray-200 inline-block">
+                إضافة صنف جديد
+              </h1>
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-wrap gap-4">
+                  <div className="flex-1 min-w-[220px] max-w-[350px]">
+                    <Label className="mb-1 block text-sm font-medium text-gray-700">
+                      اسم الصنف
+                    </Label>
+                    <Input
+                      className="w-full"
+                      placeholder="أدخل اسم الصنف"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
                   </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
 
-          <TableCaption className="mt-4 font-semibold text-lg text-gray-500">
-            قائمة المنتجات المُسجلة
-          </TableCaption>
-        </Table>
-      </div>
+                  <div className="flex-1 min-w-[220px] max-w-[350px]">
+                    <Label className="mb-1 block text-sm font-medium text-gray-700">
+                      كود الصنف (SKU)
+                    </Label>
+                    <Input
+                      className="w-full"
+                      value={productCode}
+                      onChange={(e) => setproductCode(e.target.value)}
+                    />
+                  </div>
 
-      {/* Mobile Cards */}
-      <div className="xl:hidden grid gap-4 p-4">
-        {Product.map((item, key) => (
-          <Card
-            key={key}
-            className="shadow-md border border-gray-200 rounded-2xl p-4 space-y-4 w-full"
-          >
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle className="text-base font-bold text-gray-800">
-                  {item.name}
-                </CardTitle>
+                  <div className="flex-1 min-w-[220px] max-w-[350px]">
+                    <Label className="mb-1 block text-sm font-medium text-gray-700">
+                      سعر البيع الافتراضي
+                    </Label>
+                    <Input
+                      className="w-full"
+                      placeholder="مثلاً: 150"
+                      type="number"
+                      value={Price}
+                      onChange={(e) => setPrice(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-4">
+                  <div className="flex-1 min-w-[220px] max-w-[350px]">
+                    <Label className="mb-1 block text-sm font-medium text-gray-700">
+                      الكمية
+                    </Label>
+                    <Input
+                      className="w-full"
+                      placeholder="مثلاً: 10"
+                      value={stock}
+                      type="number"
+                      onChange={(e) => setStock(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="flex-1 min-w-[220px] max-w-[350px]">
+                    <Label className="mb-1 block text-sm font-medium text-gray-700">
+                      ملاحظات
+                    </Label>
+                    <Input
+                      className="w-full"
+                      placeholder="مثلاً: المنتج جديد أو به خصم"
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                    />
+                  </div>
+                  <Button onClick={() => setData()} disabled={loading}>
+                    {loading ? "جاري الإضافة..." : "اضف الصنف"}
+                  </Button>
+                </div>
               </div>
             </div>
+            <hr />
+            <div className="col-span-1 md:col-span-2 bg-white p-6 rounded-xl w-full text-right">
+              <h1 className="text-xl font-semibold mb-2 text-gray-800">
+                استيراد من Excel
+              </h1>
+              <span className="text-sm text-gray-600 block mb-4">
+                قم بتحميل ملف Excel بصيغة
+                <code className="bg-gray-100 text-gray-800 px-1 rounded">
+                  .xlsx
+                </code>
+                ويحتوي على الأعمدة:
+                <br />
+                <code className="bg-gray-100 text-gray-800 px-1 rounded">
+                  name
+                </code>
+                ,
+                <code className="bg-gray-100 text-gray-800 px-1 rounded">
+                  stock
+                </code>
+                ,
+                <code className="bg-gray-100 text-gray-800 px-1 rounded">
+                  note
+                </code>
+                ,
+                <code className="bg-gray-100 text-gray-800 px-1 rounded">
+                  productCode
+                </code>
+                ,
+                <code className="bg-gray-100 text-gray-800 px-1 rounded">
+                  price
+                </code>
+              </span>
 
-            <CardContent className="grid grid-cols-2 gap-y-3 gap-x-4 text-sm text-gray-700">
-              <div>
-                <span className="font-semibold text-gray-600">الفئة:</span>
-                <div>{item.category?.name}</div>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-600">الوحدة:</span>
-                <div>{item.unit}</div>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-600">سعر الشراء:</span>
-                <div>{item.buyPrice}</div>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-600">سعر البيع:</span>
-                <div>{item.sellPrice}</div>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-600">الرصيد:</span>
-                <div>{item.stock}</div>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-600">
-                  الحد الأدنى:
-                </span>
-                <div>{item.minStock}</div>
-              </div>
-              {item.note && (
-                <div className="col-span-2">
-                  <span className="font-semibold text-gray-600">ملاحظات:</span>
-                  <div>{item.note}</div>
-                </div>
-              )}
-              <div>
-                <span className="font-semibold text-gray-600">
-                  تاريخ الإضافة:
-                </span>
-                <div>{new Date(item.createdAt).toLocaleDateString()}</div>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-600">
-                  تاريخ التحديث:
-                </span>
-                <div>{new Date(item.updatedAt).toLocaleDateString()}</div>
-              </div>
-              <div className="col-span-2">
-                <span className="font-semibold text-gray-600">
-                  أضيف بواسطة:
-                </span>
-
-                <p>{item.added_by?.name || "غير معروف"}</p>
-                <p className="text-gray-500 text-sm">
-                  {item.added_by?.role || ""}
+              <div className="border-2 border-gray-300 rounded-lg p-6 text-right hover:border-gray-700 transition w-full">
+                <input
+                  type="file"
+                  accept=".xlsx"
+                  className="hidden"
+                  id="excel-upload"
+                />
+                <label
+                  htmlFor="excel-upload"
+                  className="cursor-pointer text-blue-600 font-medium hover:underline"
+                >
+                  📁 اختر ملف Excel من جهازك
+                </label>
+                <p className="mt-2 text-sm text-gray-500">
+                  فقط ملفات .xlsx مدعومة
                 </p>
               </div>
-              <div className="col-span-2">
-                <span className="font-semibold text-gray-600">
-                  تم التحديث بواسطة:
-                </span>
-                <div>{item.updated_by_id}</div>
-              </div>
-            </CardContent>
-
-            <CardFooter className="flex justify-between items-center flex-wrap gap-3 pt-2">
-              <div className="flex gap-2 w-full sm:w-auto">
-                <Button
-                  variant="destructive"
-                  className="flex-1"
-                  onClick={() => DeleteProduct(item.id)}
-                >
-                  الحذف
-                </Button>
-                <Button
-                  variant="secondary"
-                  className="bg-yellow-100 text-black flex-1"
-                  onClick={() => editProduct(item.id)}
-                >
-                  التعديل
-                </Button>
-              </div>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
-
-      <div className="xl:hidden">
-        <Pagention
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          rowsPerPage={rowsPerPage}
-          totalItems={totalItems}
-        />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="mt-4">
+          <CardContent>
+            <div className="text-right mb-10">
+              <h1 className="inline-block text-3xl font-semibold text-gray-800 border-b-2 border-gray-200 pb-2 w-full">
+                إضافة وتعديل الأصناف
+              </h1>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[100px]">الاسم</TableHead>
+                  <TableHead>الكود</TableHead>
+                  <TableHead> الكمية</TableHead>
+                  <TableHead className="text-right">الملاحظات</TableHead>
+                  <TableHead className="text-right">اجمالي السعر</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {product.map((pro: any) => (
+                  <TableRow key={pro.name}>
+                    <TableCell className="font-medium">{pro.name}</TableCell>
+                    <TableCell>{pro.productCode}</TableCell>
+                    <TableCell>{pro.stock}</TableCell>
+                    <TableCell>{pro.note}</TableCell>
+                    <TableCell className="text-right">{pro.price}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={4}>الإجمالي</TableCell>
+                  <TableCell className="text-right">{total} جنيه</TableCell>
+                </TableRow>
+              </TableFooter>
+            </Table>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

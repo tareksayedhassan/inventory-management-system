@@ -42,6 +42,23 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const productName = newEzn.product.name;
+    const isTaxed = newEzn.tax === 14;
+    const stockTax = isTaxed ? newEzn.amount : 0;
+    const stockNotTax = !isTaxed ? newEzn.amount : 0;
+    const totalStock = newEzn.amount;
+    const totalValue = totalStock * newEzn.product.price;
+
+    // إنشاء سجل في جدول المخزون
+    await prisma.stock.create({
+      data: {
+        name: productName,
+        stockTax,
+        stockNotTax,
+        totalStock,
+        totalValue,
+      },
+    });
     const now = new Date();
 
     const dateStr = now.toLocaleDateString("ar-EG", {
