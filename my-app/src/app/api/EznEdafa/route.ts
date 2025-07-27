@@ -43,16 +43,18 @@ export async function POST(req: NextRequest) {
     });
 
     const productName = newEzn.product.name;
+    const productCode = newEzn.product.productCode;
+
     const isTaxed = newEzn.tax === 14;
     const stockTax = isTaxed ? newEzn.amount : 0;
     const stockNotTax = !isTaxed ? newEzn.amount : 0;
     const totalStock = newEzn.amount;
     const totalValue = totalStock * newEzn.product.price;
 
-    // إنشاء سجل في جدول المخزون
     await prisma.stock.create({
       data: {
         name: productName,
+        productCode: productCode,
         stockTax,
         stockNotTax,
         totalStock,

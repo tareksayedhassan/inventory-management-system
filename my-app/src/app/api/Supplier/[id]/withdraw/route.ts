@@ -27,7 +27,6 @@ export async function POST(
       return NextResponse.json({ message: "Invalid amount" }, { status: 400 });
     }
 
-    // تأكد إن الخزنة موجودة ورصيدها كافي
     const treasury = await prisma.treasury.findUnique({
       where: { id: treasuryId },
     });
@@ -44,9 +43,7 @@ export async function POST(
       );
     }
 
-    // نفذ العملية
     await prisma.$transaction(async (tx) => {
-      // أنشئ معاملة جديدة
       await tx.transaction.create({
         data: {
           type: "WITHDRAWAL",
@@ -57,13 +54,11 @@ export async function POST(
         },
       });
 
-      // حدث الخزنة
       await tx.treasury.update({
         where: { id: treasuryId },
         data: { balance: { decrement: amount } },
       });
 
-      // حدث رصيد المورد
       const supplier = await tx.supplier.findUnique({
         where: { id: supplierId },
       });

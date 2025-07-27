@@ -32,3 +32,10 @@ export interface Supplier {
   netBalance?: number;
   name?: string;
 }
+export type Product = {
+  id: number;
+  name: string;
+  productCode: string;
+  stock: string;
+  price: number;
+};

@@ -33,3 +33,17 @@ export const LoginClient = z.object({
     .string({ required_error: "Password is required" })
     .min(6, "Password must be at least 6 characters"),
 });
+
+export const FormSchema = z.object({
+  selectedProductId: z.number({ invalid_type_error: "يجب اختيار الصنف." }),
+  selectedSupplierId: z.number({ invalid_type_error: "يجب اختيار المورد." }),
+  selectedTreasuryId: z.number({ invalid_type_error: "يجب اختيار الخزينة." }),
+  userId: z.number({ invalid_type_error: "حدث خطأ في تعريف المستخدم." }),
+  total: z.number().refine((val) => val > 0, {
+    message: "المبلغ لا يمكن أن يكون صفرًا.",
+  }),
+
+  treasuryBalance: z.number().refine((val) => val >= 0, {
+    message: "الرصيد المتاح بالخزينة غير كافٍ.",
+  }),
+});

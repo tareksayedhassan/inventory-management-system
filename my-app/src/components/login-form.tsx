@@ -5,7 +5,7 @@ import Cookie from "cookie-universal";
 import { useState } from "react";
 import axios from "axios";
 import { BASE_URL, LOGIN, REGISTER } from "@/apiCaild/API";
-import { LoginClient, registerClient } from "@/utils/ValidationSchemas";
+import { LoginClient } from "@/utils/ValidationSchemas";
 import { toast } from "sonner";
 import { Label } from "@radix-ui/react-label";
 import { cn } from "@/lib/utils";

@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableFooter,
   TableHead,
@@ -94,6 +93,7 @@ const Page = () => {
         <Loading />
       </div>
     );
+
   const product = data?.data || [];
   const totalPrice = data?.totalPrice || 0;
   const totalItems = data?.total || 0;
@@ -397,7 +397,7 @@ const Page = () => {
 
                 <TableFooter>
                   <TableRow className="bg-gray-100 font-bold">
-                    <TableCell colSpan={4} className="text-start">
+                    <TableCell colSpan={5} className="text-start">
                       الإجمالي
                     </TableCell>
                     <TableCell className="text-center text-blue-600">

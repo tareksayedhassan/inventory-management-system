@@ -14,7 +14,7 @@ import { IoIosAddCircleOutline } from "react-icons/io";
 import { toast } from "sonner";
 import { jwtDecode } from "jwt-decode";
 import Cookie from "cookie-universal";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import React, { useEffect, useState } from "react";
 import {
   Table,
@@ -39,16 +39,11 @@ import { Input } from "@/components/ui/input";
 import { FaSearch } from "react-icons/fa";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Product } from "@/Types/company";
+import { FormSchema } from "@/utils/ValidationSchemas";
 
 // ========== Types ==========
 type Supplier = { id: number; name: string };
-type Product = {
-  id: number;
-  name: string;
-  code: string;
-  unit: string;
-  buyPrice: number;
-};
 
 // ========== Main Component ==========
 const Page = () => {
@@ -58,7 +53,8 @@ const Page = () => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [isTaxChecked, setIsTaxChecked] = useState(false);
-
+  const [description, setdescription] = useState("");
+  const [error, setError] = useState<Record<string, string> | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<
     (Product & { amount: number; buyPrice: number })[]
   >([]);
@@ -133,6 +129,23 @@ const Page = () => {
       return;
     }
 
+    // 1. التحقق من رصيد الخزنة
+    try {
+      const treasuryRes = await axios.get(
+        `${BASE_URL}/${Treasury}/${selectedTreasuryId}`
+      );
+      const currentBalance = treasuryRes.data?.data?.balance || 0;
+
+      if (currentBalance < finalTotal) {
+        toast.error("رصيد الخزنة لا يكفي لإتمام العملية.");
+        return;
+      }
+    } catch (err) {
+      toast.error("فشل في التحقق من رصيد الخزنة.");
+      return;
+    }
+
+    // 2. تنفيذ إذن الإضافة لو الرصيد كافي
     try {
       const res = await axios.post(`${BASE_URL}/${EznEdafa}`, {
         amount,
@@ -142,13 +155,13 @@ const Page = () => {
         treasuryId: selectedTreasuryId,
         userId,
       });
-      console.log(res);
+
       toast.success("تم إرسال إذن الإضافة بنجاح.");
-    } catch (err) {
+      await treasuryWithdrow();
+    } catch (error) {
+      console.error(error);
       toast.error("فشل في إرسال إذن الإضافة.");
-      console.error("Error:", err);
     }
-    treasuryWithdrow();
   };
 
   const treasuryWithdrow = async () => {
@@ -161,12 +174,13 @@ const Page = () => {
         `${BASE_URL}/${Treasury}/${selectedTreasuryId}/withdraw`,
         {
           amount: finalTotal,
+          description: description || "",
         }
       );
       toast.success("تم تنفيذ عملية السحب من الخزينة بنجاح.");
-    } catch (error) {
-      toast.error("فشل في تنفيذ السحب من الخزينة.");
-      console.error(error);
+    } catch (err: any) {
+      console.error("Error response:", err?.response?.data || err.message);
+      toast.error(err?.response?.data?.message || "فشل في إرسال إذن الإضافة.");
     }
   };
 
@@ -374,16 +388,16 @@ const Page = () => {
                                 onClick={() => setSelectedProductId(item.id)}
                               >
                                 <TableCell className="text-center border py-3">
-                                  {item.buyPrice.toFixed(2)} ج.م
+                                  {item.price.toFixed(2)} ج.م
                                 </TableCell>
                                 <TableCell className="text-center border py-3">
-                                  {item.unit}
+                                  {item.stock}
                                 </TableCell>
                                 <TableCell className="text-center border py-3">
                                   {item.name}
                                 </TableCell>
                                 <TableCell className="text-center border py-3">
-                                  {item.code}
+                                  {item.productCode}
                                 </TableCell>
                               </TableRow>
                             ))}
@@ -433,7 +447,7 @@ const Page = () => {
                               {
                                 ...product,
                                 amount: 1,
-                                buyPrice: product.buyPrice,
+                                buyPrice: product.price,
                               },
                             ]);
                             toast.success("تم إضافة الصنف بنجاح.");
@@ -457,7 +471,7 @@ const Page = () => {
                 </label>
                 <input
                   type="text"
-                  value={selectedProduct.code}
+                  value={selectedProduct.productCode}
                   readOnly
                   className="w-full border rounded p-2 bg-gray-100"
                 />
@@ -479,7 +493,7 @@ const Page = () => {
                 </label>
                 <input
                   type="text"
-                  value={selectedProduct.unit}
+                  value={selectedProduct.stock}
                   readOnly
                   className="w-full border rounded p-2 bg-gray-100"
                 />
@@ -490,7 +504,7 @@ const Page = () => {
                 </label>
                 <input
                   type="number"
-                  value={selectedProduct.buyPrice}
+                  value={selectedProduct.price}
                   readOnly
                   className="w-full border rounded p-2 bg-gray-100"
                 />
@@ -526,7 +540,7 @@ const Page = () => {
 
               <TableBody>
                 {selectedProducts.map((product, index) => {
-                  const total = product.amount * product.buyPrice;
+                  const total = product.amount * product.price;
 
                   return (
                     <TableRow
@@ -534,7 +548,7 @@ const Page = () => {
                       className="hover:bg-gray-50 align-middle"
                     >
                       <TableCell className="align-middle text-center">
-                        {product.code}
+                        {product.productCode}
                       </TableCell>
                       <TableCell className="align-middle text-center">
                         {product.name}
@@ -543,7 +557,7 @@ const Page = () => {
                         {product.amount}
                       </TableCell>
                       <TableCell className="align-middle text-center">
-                        {product.buyPrice.toFixed(2)} ج.م
+                        {product.price.toFixed(2)} ج.م
                       </TableCell>
                       <TableCell className="align-middle text-center font-medium text-green-700">
                         {total.toFixed(2)} ج.م
