@@ -24,23 +24,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  AlertDialog,
-  AlertDialogTrigger,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from "@/components/ui/alert-dialog";
-import { Input } from "@/components/ui/input";
-import { FaSearch } from "react-icons/fa";
+
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Product } from "@/Types/company";
-import { FormSchema } from "@/utils/ValidationSchemas";
+import Alert from "@/components/customUi/Alert";
+import SelectedData from "@/components/customUi/SelctedData";
 
 // ========== Types ==========
 type Supplier = { id: number; name: string };
@@ -48,13 +37,12 @@ type Supplier = { id: number; name: string };
 // ========== Main Component ==========
 const Page = () => {
   const [amount, setAmount] = useState(1);
-  const [tax, setTax] = useState(14);
   const [treasuries, setTreasuries] = useState<Supplier[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [isTaxed, setIsTaxed] = useState<boolean>(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [isTaxChecked, setIsTaxChecked] = useState(false);
   const [description, setdescription] = useState("");
-  const [error, setError] = useState<Record<string, string> | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<
     (Product & { amount: number; buyPrice: number })[]
   >([]);
@@ -90,6 +78,10 @@ const Page = () => {
     }
   }, [token]);
 
+  useEffect(() => {
+    setIsTaxed(isTaxChecked);
+  }, [isTaxChecked]);
+
   // ========== Fetch Data ==========
   useEffect(() => {
     const fetchData = async () => {
@@ -117,19 +109,26 @@ const Page = () => {
     setSelectedProduct(found || null);
   }, [selectedProductId, products]);
 
-  // ========== Submit ==========
   const handleSubmit = async () => {
+    // التحقق من وجود جميع الحقول المطلوبة
     if (
-      !selectedProductId ||
       !selectedSupplierId ||
       !selectedTreasuryId ||
-      !userId
+      !userId ||
+      selectedProducts.length === 0
     ) {
-      toast.error("يرجى تحديد جميع الحقول المطلوبة.");
+      toast.error("يرجى تحديد جميع الحقول المطلوبة وإضافة صنف واحد على الأقل.");
       return;
     }
 
-    // 1. التحقق من رصيد الخزنة
+    const hasInvalidAmount = selectedProducts.some(
+      (product) => product.amount <= 0
+    );
+    if (hasInvalidAmount) {
+      toast.error("يرجى التأكد من أن كمية كل صنف أكبر من صفر.");
+      return;
+    }
+
     try {
       const treasuryRes = await axios.get(
         `${BASE_URL}/${Treasury}/${selectedTreasuryId}`
@@ -140,47 +139,62 @@ const Page = () => {
         toast.error("رصيد الخزنة لا يكفي لإتمام العملية.");
         return;
       }
-    } catch (err) {
-      toast.error("فشل في التحقق من رصيد الخزنة.");
-      return;
-    }
 
-    // 2. تنفيذ إذن الإضافة لو الرصيد كافي
-    try {
-      const res = await axios.post(`${BASE_URL}/${EznEdafa}`, {
-        amount,
-        tax: isTaxChecked ? 14 : 0,
-        supplierId: selectedSupplierId,
-        productId: selectedProductId,
-        treasuryId: selectedTreasuryId,
-        userId,
-      });
+      const failedProducts: string[] = [];
+      for (const product of selectedProducts) {
+        try {
+          await axios.post(`${BASE_URL}/${EznEdafa}`, {
+            amount: product.amount,
+            tax: isTaxChecked ? 14 : 0,
+            supplierId: selectedSupplierId,
+            productId: product.id,
+            treasuryId: selectedTreasuryId,
+            userId,
+            isTaxed: isTaxChecked,
+          });
+        } catch (error: any) {
+          console.error(`خطأ في إضافة الصنف ${product.name}:`, error);
+          failedProducts.push(product.name);
+        }
+      }
 
-      toast.success("تم إرسال إذن الإضافة بنجاح.");
+      if (failedProducts.length > 0) {
+        toast.error(
+          `فشل في إضافة الأصناف التالية: ${failedProducts.join(", ")}`
+        );
+        return;
+      }
+
       await treasuryWithdrow();
-    } catch (error) {
-      console.error(error);
-      toast.error("فشل في إرسال إذن الإضافة.");
+      toast.success("تم إرسال إذن الإضافة بنجاح.");
+    } catch (error: any) {
+      console.error("خطأ عام في إرسال إذن الإضافة:", error);
+      toast.error(
+        error?.response?.data?.message || "فشل في إرسال إذن الإضافة."
+      );
     }
   };
 
   const treasuryWithdrow = async () => {
     if (!selectedTreasuryId) {
-      toast.error("برجاء اختيار خزينه لاتمام العمليه");
+      toast.error("برجاء اختيار خزينة لإتمام العملية");
       return;
     }
+
     try {
       await axios.post(
         `${BASE_URL}/${Treasury}/${selectedTreasuryId}/withdraw`,
         {
           amount: finalTotal,
-          description: description || "",
+          description: description || "سحب من الخزنة لإذن إضافة",
         }
       );
-      toast.success("تم تنفيذ عملية السحب من الخزينة بنجاح.");
-    } catch (err: any) {
-      console.error("Error response:", err?.response?.data || err.message);
-      toast.error(err?.response?.data?.message || "فشل في إرسال إذن الإضافة.");
+      toast.success("تم تنفيذ عملية السحب من الخزنة بنجاح.");
+    } catch (error: any) {
+      console.error("خطأ في عملية السحب من الخزنة:", error);
+      toast.error(
+        error?.response?.data?.message || "فشل في تنفيذ عملية السحب من الخزنة."
+      );
     }
   };
 
@@ -274,356 +288,90 @@ const Page = () => {
                 justify-center
               "
             >
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="
-                      bg-green-600 
-                      text-white 
-                      hover:bg-green-700 
-                      transition-colors 
-                      duration-200 
-                      rounded-lg 
-                      px-8 
-                      py-3 
-                      flex 
-                      items-center 
-                      gap-2 
-                      font-semibold
-                      shadow-md
-                      hover:shadow-lg
-                    "
-                  >
-                    إضافة صنف <FaSearch />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent
-                  className="
-                    w-[95vw] 
-                    max-w-[90vw] 
-                    h-[70vh] 
-                    bg-white 
-                    rounded-2xl 
-                    shadow-xl 
-                    p-8 
-                    border 
-                    border-gray-100 
-                    transition-all 
-                    duration-300 
-                    ease-in-out
-                    flex 
-                    flex-col
-                    bg-gradient-to-br 
-                    from-gray-50 
-                    to-green-50
-                  "
-                >
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className="text-2xl font-bold text-gray-800 mb-4 text-center">
-                      اختيار الأصناف
-                    </AlertDialogTitle>
-                    <div className="w-full max-w-lg mx-auto mb-6">
-                      <Input
-                        type="search"
-                        placeholder="ابحث باسم الصنف..."
-                        className="
-                          rounded-lg 
-                          border 
-                          border-gray-200 
-                          px-4 
-                          py-3 
-                          w-full 
-                          focus:ring-2 
-                          focus:ring-green-400 
-                          focus:outline-none 
-                          text-gray-700
-                          transition-all 
-                          duration-200
-                          bg-white
-                          shadow-sm
-                          hover:shadow-md
-                        "
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                      />
-                    </div>
-                  </AlertDialogHeader>
-
-                  <AlertDialogDescription className="flex-1 overflow-auto">
-                    <div className="w-full">
-                      <Table className="w-full text-center border border-gray-100 rounded-lg bg-white shadow-sm">
-                        <TableHeader>
-                          <TableRow className="bg-gray-50 text-gray-700 font-semibold">
-                            <TableHead className="w-1/4 text-center border py-3">
-                              تكلفة الشراء
-                            </TableHead>
-                            <TableHead className="w-1/4 text-center border py-3">
-                              الكمية
-                            </TableHead>
-                            <TableHead className="w-2/4 text-center border py-3">
-                              اسم الصنف
-                            </TableHead>
-                            <TableHead className="w-1/4 text-center border py-3">
-                              كود الصنف
-                            </TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {products
-                            .filter((item) =>
-                              item.name
-                                .toLowerCase()
-                                .includes(search.toLowerCase())
-                            )
-                            .map((item, key) => (
-                              <TableRow
-                                key={key}
-                                className="
-                                  hover:bg-green-100 
-                                  transition-colors 
-                                  duration-200 
-                                  cursor-pointer
-                                "
-                                onClick={() => setSelectedProductId(item.id)}
-                              >
-                                <TableCell className="text-center border py-3">
-                                  {item.price.toFixed(2)} ج.م
-                                </TableCell>
-                                <TableCell className="text-center border py-3">
-                                  {item.stock}
-                                </TableCell>
-                                <TableCell className="text-center border py-3">
-                                  {item.name}
-                                </TableCell>
-                                <TableCell className="text-center border py-3">
-                                  {item.productCode}
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </AlertDialogDescription>
-
-                  <AlertDialogFooter className="mt-6 flex justify-end gap-4">
-                    <AlertDialogCancel
-                      className="
-                        bg-gray-200 
-                        text-gray-700 
-                        hover:bg-gray-300 
-                        transition-colors 
-                        duration-200 
-                        rounded-lg 
-                        px-6 
-                        py-2
-                        shadow-md
-                        hover:shadow-lg
-                      "
-                    >
-                      إلغاء
-                    </AlertDialogCancel>
-                    <AlertDialogAction
-                      className="
-                        bg-green-600 
-                        text-white 
-                        hover:bg-green-700 
-                        transition-colors 
-                        duration-200 
-                        rounded-lg 
-                        px-6 
-                        py-2
-                        shadow-md
-                        hover:shadow-lg
-                      "
-                      onClick={() => {
-                        if (selectedProductId) {
-                          const product = products.find(
-                            (p) => p.id === selectedProductId
-                          );
-                          if (product) {
-                            setSelectedProducts([
-                              ...selectedProducts,
-                              {
-                                ...product,
-                                amount: 1,
-                                buyPrice: product.price,
-                              },
-                            ]);
-                            toast.success("تم إضافة الصنف بنجاح.");
-                          }
-                        }
-                      }}
-                    >
-                      متابعة
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <Alert
+                search={search}
+                setSearch={setSearch}
+                products={products}
+                selectedProductId={selectedProductId}
+                setSelectedProductId={setSelectedProductId}
+                selectedProducts={selectedProducts}
+                setSelectedProducts={setSelectedProducts}
+              />
+            </div>
+            <div className="w-full col-span-1 md:col-span-2 mt-8">
+              <SelectedData
+                products={products}
+                selectedProductId={selectedProductId}
+                selectedProducts={selectedProducts}
+                setSelectedProductId={setSelectedProductId}
+                setSelectedProducts={setSelectedProducts}
+              />
             </div>
           </CardContent>
-
-          {selectedProduct && (
-            <>
-              <div>
-                <label className="block mb-1 font-medium text-gray-700">
-                  كود الصنف
-                </label>
-                <input
-                  type="text"
-                  value={selectedProduct.productCode}
-                  readOnly
-                  className="w-full border rounded p-2 bg-gray-100"
+          <div className="flex flex-col items-center justify-center col-end-2 gap-6">
+            {/* قسم الضريبة وخصم المنبع */}
+            <div className="space-y-4 w-full max-w-md">
+              {/* Checkbox لضريبة القيمة المضافة */}
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  id="tax"
+                  checked={isTaxChecked}
+                  onCheckedChange={(value) => setIsTaxChecked(!!value)}
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
-              </div>
-              <div>
-                <label className="block mb-1 font-medium text-gray-700">
-                  اسم الصنف
-                </label>
-                <input
-                  type="text"
-                  value={selectedProduct.name}
-                  readOnly
-                  className="w-full border rounded p-2 bg-gray-100"
-                />
-              </div>
-              <div>
-                <label className="block mb-1 font-medium text-gray-700">
-                  الوحدة
-                </label>
-                <input
-                  type="text"
-                  value={selectedProduct.stock}
-                  readOnly
-                  className="w-full border rounded p-2 bg-gray-100"
-                />
-              </div>
-              <div>
-                <label className="block mb-1 font-medium text-gray-700">
-                  تكلفة الشراء
-                </label>
-                <input
-                  type="number"
-                  value={selectedProduct.price}
-                  readOnly
-                  className="w-full border rounded p-2 bg-gray-100"
-                />
-              </div>
-            </>
-          )}
-          <div className="col-span-1 md:col-span-2"></div>
-
-          <div className="col-span-1 md:col-span-2 overflow-x-auto">
-            <Table className="w-full border text-center">
-              <TableHeader>
-                <TableRow className="bg-gray-100">
-                  <TableHead className="min-w-[100px] text-center">
-                    كود الصنف
-                  </TableHead>
-                  <TableHead className="min-w-[150px] text-center">
-                    اسم الصنف
-                  </TableHead>
-                  <TableHead className="min-w-[100px] text-center">
-                    الكمية
-                  </TableHead>
-                  <TableHead className="min-w-[120px] text-center">
-                    تكلفة الواحدة
-                  </TableHead>
-                  <TableHead className="min-w-[120px] text-center">
-                    الإجمالي بالجنيه
-                  </TableHead>
-                  <TableHead className="min-w-[100px] text-center">
-                    إجراءات
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-
-              <TableBody>
-                {selectedProducts.map((product, index) => {
-                  const total = product.amount * product.price;
-
-                  return (
-                    <TableRow
-                      key={`${product.id}-${index}`}
-                      className="hover:bg-gray-50 align-middle"
-                    >
-                      <TableCell className="align-middle text-center">
-                        {product.productCode}
-                      </TableCell>
-                      <TableCell className="align-middle text-center">
-                        {product.name}
-                      </TableCell>
-                      <TableCell className="align-middle text-center">
-                        {product.amount}
-                      </TableCell>
-                      <TableCell className="align-middle text-center">
-                        {product.price.toFixed(2)} ج.م
-                      </TableCell>
-                      <TableCell className="align-middle text-center font-medium text-green-700">
-                        {total.toFixed(2)} ج.م
-                      </TableCell>
-                      <TableCell className="align-middle">
-                        <Button
-                          variant="destructive"
-                          className="text-sm px-3 py-1 cursor-pointer"
-                          onClick={() => {
-                            setSelectedProducts(
-                              selectedProducts.filter((_, i) => i !== index)
-                            );
-                          }}
-                        >
-                          حذف
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-          <div className="w-full max-w-2xl bg-gray-50 border border-gray-300 rounded-2xl shadow-md p-6 text-gray-800 space-y-6">
-            {/* Checkbox */}
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="tax"
-                checked={isTaxChecked}
-                onCheckedChange={(value) => setIsTaxChecked(!!value)}
-              />
-              <Label
-                htmlFor="tax"
-                className="text-sm font-medium text-gray-700"
-              >
-                تطبيق ضريبة 14%
-              </Label>
-            </div>
-            <hr />
-
-            {/* Summary Grid */}
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="font-medium text-gray-700">
-                الإجمالي قبل الخصم والضريبة:
-              </div>
-              <div className="text-right">
-                {totalAmountBeforeSubmit.toFixed(2)} ج.م
+                <Label
+                  htmlFor="tax"
+                  className="text-sm font-medium text-gray-800 dark:text-gray-200"
+                >
+                  تطبيق ضريبة 14%
+                </Label>
               </div>
 
-              <div className="font-medium text-gray-700">الضريبة (14%) :</div>
-              <div className="text-right">{taxx.toFixed(2)} ج.م</div>
-
-              <div className="font-medium text-gray-700">خصم المنبع (1%) :</div>
-              <div className="text-right">{deduction.toFixed(2)} ج.م</div>
+              {/* خصم المنبع */}
+              <div className="flex items-center justify-between py-2">
+                <Label className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                  خصم المنبع (1%):
+                </Label>
+                <span className="text-sm font-semibold text-red-500 dark:text-red-400">
+                  -{deduction.toFixed(2)} ج.م
+                </span>
+              </div>
             </div>
 
-            <hr className="border-gray-300" />
+            {/* قسم الضريبة والإجمالي قبل الخصم */}
+            <div className="space-y-4 w-full max-w-md">
+              {/* الضريبة */}
+              <div className="flex items-center justify-between py-2">
+                <Label className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                  الضريبة (14%):
+                </Label>
+                <span className="text-sm font-semibold text-gray-800 dark:text-white">
+                  {taxx.toFixed(2)} ج.م
+                </span>
+              </div>
 
-            {/* Final Total */}
-            <div className="flex justify-between items-center text-green-700 font-semibold text-base">
-              <span>الإجمالي النهائي للكارت:</span>
-              <span>{finalTotal.toFixed(2)} ج.م</span>
+              {/* الإجمالي قبل الخصم */}
+              <div className="flex items-center justify-between py-2">
+                <Label className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                  الإجمالي قبل الخصم والضريبة:
+                </Label>
+                <span className="text-sm font-semibold text-gray-800 dark:text-white">
+                  {totalAmountBeforeSubmit.toFixed(2)} ج.م
+                </span>
+              </div>
             </div>
           </div>
         </CardContent>
-
+        <div className="flex">
+          <div className="w-[45%] ms-auto">
+            <div className="flex items-center justify-between bg-blue-100 text-gray-800 p-3 rounded-lg h-16">
+              <Label className="text-lg font-semibold">الإجمالي النهائي:</Label>
+              <span className="text-xl font-bold tracking-wider">
+                {finalTotal.toFixed(2)} ج.م
+              </span>
+            </div>
+          </div>
+        </div>
         <CardFooter className="flex justify-end">
           <Button
             className="bg-green-600 hover:bg-green-700 text-white"

@@ -5,15 +5,8 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    const { amount, tax, supplierId, productId, treasuryId, userId } = body;
-
-    const supplierHasEzn = await prisma.eznEdafa.findFirst({
-      where: { supplierId },
-    });
-
-    const productHasEzn = await prisma.eznEdafa.findFirst({
-      where: { productId },
-    });
+    const { amount, tax, supplierId, productId, treasuryId, userId, isTaxed } =
+      body;
 
     const treasury = await prisma.treasury.findUnique({
       where: { id: treasuryId },
@@ -21,10 +14,11 @@ export async function POST(req: NextRequest) {
 
     if (!treasury) {
       return NextResponse.json(
-        { message: "الخزنه غير موجوده" },
+        { message: "الخزنة غير موجودة" },
         { status: 404 }
       );
     }
+
     const newEzn = await prisma.eznEdafa.create({
       data: {
         amount,
@@ -44,23 +38,42 @@ export async function POST(req: NextRequest) {
 
     const productName = newEzn.product.name;
     const productCode = newEzn.product.productCode;
+    const totalValue = newEzn.amount * newEzn.product.price;
 
-    const isTaxed = newEzn.tax === 14;
-    const stockTax = isTaxed ? newEzn.amount : 0;
-    const stockNotTax = !isTaxed ? newEzn.amount : 0;
-    const totalStock = newEzn.amount;
-    const totalValue = totalStock * newEzn.product.price;
+    let stockId: number | null = null;
+    let stockWithoutTaxId: number | null = null;
 
-    await prisma.stock.create({
+    if (isTaxed) {
+      const stock = await prisma.stock.create({
+        data: {
+          name: productName,
+          productCode,
+          stockTax: newEzn.amount,
+          totalStock: newEzn.amount,
+          totalValue,
+        },
+      });
+      stockId = stock.id;
+    } else {
+      const stockWithoutTax = await prisma.stockWithoutTax.create({
+        data: {
+          name: productName,
+          productCode,
+          totalStock: newEzn.amount,
+          totalValue,
+        },
+      });
+      stockWithoutTaxId = stockWithoutTax.id;
+    }
+
+    await prisma.eznEdafa.update({
+      where: { id: newEzn.id },
       data: {
-        name: productName,
-        productCode: productCode,
-        stockTax,
-        stockNotTax,
-        totalStock,
-        totalValue,
+        stockId,
+        StockWithoutTaxID: stockWithoutTaxId,
       },
     });
+
     const now = new Date();
 
     const dateStr = now.toLocaleDateString("ar-EG", {

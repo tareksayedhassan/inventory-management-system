@@ -49,7 +49,6 @@ model User {
   notifications    Notification[] @relation("TriggeredBy")
   eznEdafat        EznEdafa[]     @relation("TriggeredBy")
 
-  productMovements ProductMovement[] @relation("TriggeredBy")
 }
 
 model Supplier {
@@ -137,7 +136,6 @@ model Treasury {
   updated_by           User?                 @relation("UpdatedBy", fields: [updated_by_id], references: [id])
   treasuryTransactions TreasuryTransaction[]
   notifications        Notification[]        @relation("TreasuryNotifications")
-  productMovements     ProductMovement[]     @relation("TreasuryProductMovements")
   eznEdafat            EznEdafa[]            @relation("TreasuryEznEdafa")
 }
 
@@ -168,7 +166,6 @@ model Notification {
   treasury              Treasury?            @relation("TreasuryNotifications", fields: [treasuryId], references: [id])
   transaction           Transaction?         @relation("TransactionNotifications", fields: [transactionId], references: [id])
   treasuryTransaction   TreasuryTransaction? @relation("TreasuryTransactionNotifications", fields: [treasuryTransactionId], references: [id])
-  productMovement       ProductMovement?     @relation("ProductMovementNotifications", fields: [productMovementId], references: [id])
 
   @@index([userId])
   @@index([treasuryId])
@@ -192,29 +189,9 @@ model Product {
 
   added_by         User?             @relation("AddedBy", fields: [added_by_id], references: [id])
   updated_by       User?             @relation("UpdatedBy", fields: [updated_by_id], references: [id])
-  productMovements ProductMovement[] @relation("ProductMovements")
 
   @@index([added_by_id], map: "Product_added_by_id_fkey")
   @@index([updated_by_id], map: "Product_updated_by_id_fkey")
-}
-
-model ProductMovement {
-  id            Int            @id @default(autoincrement())
-  type          String // نوع الحركة (مثل ADD, PURCHASE_RETURN, SALE_RETURN)
-  quantity      Int // الكمية
-  productId     Int
-  treasuryId    Int
-  userId        Int? // المستخدم اللي قام بالحركة
-  description   String? // وصف الحركة
-  createdAt     DateTime       @default(now())
-  product       Product        @relation("ProductMovements", fields: [productId], references: [id])
-  treasury      Treasury       @relation("TreasuryProductMovements", fields: [treasuryId], references: [id])
-  user          User?          @relation("TriggeredBy", fields: [userId], references: [id])
-  notifications Notification[] @relation("ProductMovementNotifications")
-
-  @@index([productId])
-  @@index([treasuryId])
-  @@index([userId])
 }
 
 model EznEdafa {
@@ -228,12 +205,14 @@ model EznEdafa {
   supplierId Int
   supplier   Supplier @relation("SupplierEznEdafa", fields: [supplierId], references: [id])
 
-  productId  Int
-  product    Product  @relation("ProductEznEdafa", fields: [productId], references: [id])
-  stockId    Int?
-  stock      Stock?   @relation(fields: [stockId], references: [id])
-  treasuryId Int
-  treasury   Treasury @relation("TreasuryEznEdafa", fields: [treasuryId], references: [id])
+  productId         Int
+  product           Product          @relation("ProductEznEdafa", fields: [productId], references: [id], onDelete: Cascade)
+  stockId           Int?
+  stock             Stock?           @relation(fields: [stockId], references: [id])
+  treasuryId        Int
+  treasury          Treasury         @relation("TreasuryEznEdafa", fields: [treasuryId], references: [id])
+  StockWithoutTaxID Int?
+  StockWithoutTax   StockWithoutTax? @relation(fields: [StockWithoutTaxID], references: [id])
 }
 
 model Stock {
@@ -241,7 +220,17 @@ model Stock {
   name        String
   productCode String?
   stockTax    Int
-  stockNotTax Int
+  totalStock  Int
+  totalValue  Int
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  eznEdafat   EznEdafa[]
+}
+
+model StockWithoutTax {
+  id          Int        @id @default(autoincrement())
+  name        String
+  productCode String?
   totalStock  Int
   totalValue  Int
   createdAt   DateTime   @default(now())
