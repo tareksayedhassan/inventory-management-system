@@ -85,15 +85,12 @@ export async function POST(req: NextRequest) {
 
       for (const row of data) {
         const price = parseFloat(String(row.price));
-        const stock = parseInt(String(row.stock));
         const added_by_id = parseInt(String(row.added_by_id));
         const updated_by_id = parseInt(String(row.updated_by_id));
 
         if (
           row.name &&
           !isNaN(price) &&
-          !isNaN(stock) &&
-          row.note &&
           !isNaN(added_by_id) &&
           !isNaN(updated_by_id)
         ) {
@@ -101,8 +98,6 @@ export async function POST(req: NextRequest) {
             name: String(row.name),
             productCode: String(row.productCode ?? ""),
             price,
-            stock,
-            note: String(row.note),
             added_by: { connect: { id: added_by_id } },
             updated_by: { connect: { id: updated_by_id } },
           });
@@ -122,19 +117,10 @@ export async function POST(req: NextRequest) {
     const name = formData.get("name") as string;
     const productCode = formData.get("productCode") as string;
     const price = parseFloat(String(formData.get("price")));
-    const stock = parseInt(String(formData.get("stock")), 10);
-    const note = formData.get("note") as string;
     const added_by_id = parseInt(String(formData.get("added_by_id")), 10);
     const updated_by_id = parseInt(String(formData.get("updated_by_id")), 10);
 
-    if (
-      !name ||
-      isNaN(price) ||
-      isNaN(stock) ||
-      !note ||
-      isNaN(added_by_id) ||
-      isNaN(updated_by_id)
-    ) {
+    if (!name || isNaN(price) || isNaN(added_by_id) || isNaN(updated_by_id)) {
       return NextResponse.json(
         { message: "Some fields are missing or invalid." },
         { status: 400 }
@@ -146,8 +132,6 @@ export async function POST(req: NextRequest) {
         name,
         productCode,
         price,
-        stock,
-        note,
         added_by: { connect: { id: added_by_id } },
         updated_by: { connect: { id: updated_by_id } },
       },

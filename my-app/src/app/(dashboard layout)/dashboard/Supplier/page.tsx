@@ -87,15 +87,15 @@ const Page = () => {
     router.push(`/dashboard/Supplier/${id}/addOpertion`);
   };
 
-  const calcCompanyBalance = (transactions: any[]) => {
-    let balance = 0;
-    for (const t of transactions) {
-      if (t.type === "DEPOSIT") balance += t.amount;
-      else if (t.type === "WITHDRAWAL") balance -= t.amount;
-      else if (t.type === "RETURN") balance += t.amount;
-    }
-    return balance;
-  };
+  // const calcCompanyBalance = (transactions: any[]) => {
+  //   let balance = 0;
+  //   for (const t of transactions) {
+  //     if (t.type === "DEPOSIT") balance += t.amount;
+  //     else if (t.type === "WITHDRAWAL") balance -= t.amount;
+  //     else if (t.type === "RETURN") balance += t.amount;
+  //   }
+  //   return balance;
+  // };
 
   return (
     <div dir="rtl" className="p-4">
@@ -202,7 +202,7 @@ const Page = () => {
                   {item.address}
                 </TableCell>
                 <TableCell className="px-2 py-3 text-sm text-right">
-                  {item.transactions && (
+                  {/* {item.transactions && (
                     <Badge
                       variant="outline"
                       className={`text-white font-medium rounded-full px-3 py-1 ${
@@ -221,7 +221,7 @@ const Page = () => {
                           )}`
                         : "لا يوجد عمليات"}
                     </Badge>
-                  )}
+                  )} */}
                 </TableCell>
                 <TableCell
                   className="px-2 py-3 text-sm text-right truncate max-w-[120px]"
@@ -347,7 +347,7 @@ const Page = () => {
                   مستحقات مالية:
                 </span>
                 <div className="mt-1">
-                  <Badge
+                  {/* <Badge
                     className={`text-white font-medium rounded-full px-3 py-1 ${
                       calcCompanyBalance(item.transactions) > 0
                         ? "bg-green-600"
@@ -363,7 +363,7 @@ const Page = () => {
                           calcCompanyBalance(item.transactions)
                         )}`
                       : "لا يوجد عمليات"}
-                  </Badge>
+                  </Badge> */}
                 </div>
               </div>
             </CardContent>

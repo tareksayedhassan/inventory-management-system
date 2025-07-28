@@ -73,6 +73,26 @@ export async function POST(req: NextRequest) {
         StockWithoutTaxID: stockWithoutTaxId,
       },
     });
+    await prisma.product.update({
+      where: { id: productId },
+      data: {
+        lastBuyPrice: amount,
+      },
+    });
+    const totalTransactionAmount = newEzn.amount * newEzn.product.price;
+    const transactionType = "WITHDRAWAL";
+    const transactionDescription = `إذن إضافة رقم ${newEzn.id}`;
+
+    await prisma.treasuryTransaction.create({
+      data: {
+        type: transactionType,
+        amount: totalTransactionAmount,
+        description: transactionDescription,
+        treasuryId: treasuryId,
+        userId: userId || null,
+        createdAt: new Date(),
+      },
+    });
 
     const now = new Date();
 

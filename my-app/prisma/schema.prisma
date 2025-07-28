@@ -43,12 +43,11 @@ model User {
   added_Client     Client[]       @relation("AddedBy")
   updated_Client   Client[]       @relation("UpdatedBy")
   added_Treasury   Treasury[]     @relation("AddedBy")
-  updated_Treasury Treasury[]     @relation("UpdatedBy")
   added_Product    Product[]      @relation("AddedBy")
   updated_Product  Product[]      @relation("UpdatedBy")
   notifications    Notification[] @relation("TriggeredBy")
   eznEdafat        EznEdafa[]     @relation("TriggeredBy")
-
+   treasuryTransaction TreasuryTransaction[]
 }
 
 model Supplier {
@@ -68,7 +67,6 @@ model Supplier {
   updated_by_id Int?
   added_by      User?         @relation("AddedBy", fields: [added_by_id], references: [id])
   updated_by    User?         @relation("UpdatedBy", fields: [updated_by_id], references: [id])
-  transactions  Transaction[] @relation("SupplierTransactions")
   eznEdafat     EznEdafa[]    @relation("SupplierEznEdafa")
 
   @@index([added_by_id], map: "Supplier_added_by_id_fkey")
@@ -92,48 +90,20 @@ model Client {
   updated_by_id Int?
   added_by      User?         @relation("AddedBy", fields: [added_by_id], references: [id])
   updated_by    User?         @relation("UpdatedBy", fields: [updated_by_id], references: [id])
-  transactions  Transaction[] @relation("ClientTransactions")
 
   @@index([added_by_id], map: "Client_added_by_id_fkey")
   @@index([updated_by_id], map: "Client_updated_by_id_fkey")
 }
 
-model Transaction {
-  id            Int             @id @default(autoincrement())
-  type          TransactionType
-  returnType    ReturnType? // نوع المرتجع (شراء أو بيع)
-  amount        Float
-  description   String?
-  supplierId    Int?
-  clientId      Int?
-  treasuryId    Int
-  createdAt     DateTime        @default(now())
-  supplier      Supplier?       @relation("SupplierTransactions", fields: [supplierId], references: [id])
-  client        Client?         @relation("ClientTransactions", fields: [clientId], references: [id])
-  treasury      Treasury        @relation(fields: [treasuryId], references: [id])
-  notifications Notification[]  @relation("TransactionNotifications")
-
-  @@index([supplierId])
-  @@index([clientId])
-  @@index([treasuryId])
-}
 
 model Treasury {
   id                           Int      @id @default(autoincrement())
   name                         String
-  is_master                    Boolean
-  last_exchange_receipt_number Int
-  last_collect_receipt_number  Int
   balance                      Float    @default(0)
   createdAt                    DateTime @default(now())
   updatedAt                    DateTime @updatedAt
-  date                         DateTime @default(now())
   added_by_id                  Int?
-  updated_by_id                Int?
-
-  transactions         Transaction[]
   added_by             User?                 @relation("AddedBy", fields: [added_by_id], references: [id])
-  updated_by           User?                 @relation("UpdatedBy", fields: [updated_by_id], references: [id])
   treasuryTransactions TreasuryTransaction[]
   notifications        Notification[]        @relation("TreasuryNotifications")
   eznEdafat            EznEdafa[]            @relation("TreasuryEznEdafa")
@@ -148,7 +118,8 @@ model TreasuryTransaction {
   treasury      Treasury        @relation(fields: [treasuryId], references: [id])
   createdAt     DateTime        @default(now())
   notifications Notification[]  @relation("TreasuryTransactionNotifications")
-
+userId Int?
+user   User? @relation(fields: [userId], references: [id])
   @@index([treasuryId])
 }
 
@@ -160,27 +131,23 @@ model Notification {
   treasuryId            Int? // الخزينة المتأثرة (بقت اختياري)
   transactionId         Int? // المعاملة من جدول Transaction (لو موجودة)
   treasuryTransactionId Int? // المعاملة من جدول TreasuryTransaction (لو موجودة)
-  productMovementId     Int? // حركة المنتج من جدول ProductMovement (لو موجودة)
   redirectUrl           String?
   user                  User?                @relation("TriggeredBy", fields: [userId], references: [id])
   treasury              Treasury?            @relation("TreasuryNotifications", fields: [treasuryId], references: [id])
-  transaction           Transaction?         @relation("TransactionNotifications", fields: [transactionId], references: [id])
   treasuryTransaction   TreasuryTransaction? @relation("TreasuryTransactionNotifications", fields: [treasuryTransactionId], references: [id])
 
   @@index([userId])
   @@index([treasuryId])
   @@index([transactionId])
   @@index([treasuryTransactionId])
-  @@index([productMovementId])
 }
 
 model Product {
   id            Int        @id @default(autoincrement())
   productCode   String?
   name          String
-  stock         Int        @default(0)
-  note          String?
   price         Float
+  lastBuyPrice  Float?
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
   added_by_id   Int?

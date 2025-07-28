@@ -8,7 +8,6 @@ import { jwtDecode, JwtPayload } from "jwt-decode";
 import { MdOutlineDashboard } from "react-icons/md";
 import { FaFileInvoiceDollar } from "react-icons/fa";
 import { IoIosAddCircleOutline } from "react-icons/io";
-import { MdInventory } from "react-icons/md";
 import { FaBox } from "react-icons/fa";
 import { GiReturnArrow } from "react-icons/gi";
 import { FaArrowTrendUp } from "react-icons/fa6";
@@ -17,6 +16,16 @@ import { FaUserTie } from "react-icons/fa";
 import { FaAddressCard } from "react-icons/fa6";
 import { FaUsersGear } from "react-icons/fa6";
 import { FaChartBar } from "react-icons/fa";
+import { FaBoxes } from "react-icons/fa";
+
+import { MdInventory2 } from "react-icons/md"; // لأيقونات
+
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "../ui/accordion";
 
 interface MyJwtPayload extends JwtPayload {
   avatar?: string;
@@ -87,7 +96,6 @@ const SideBar = () => {
           <FaUserTie className="text-xl" />
           <span>الموردين</span>
         </Link>
-
         <Link
           href="/dashboard"
           className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
@@ -95,7 +103,6 @@ const SideBar = () => {
           <FaAddressCard className="text-xl" />
           <span>العملاء</span>
         </Link>
-
         <Link
           href="/dashboard"
           className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
@@ -110,7 +117,6 @@ const SideBar = () => {
           <FaChartBar className="text-xl" />
           <span>التقارير</span>
         </Link>
-
         <Link
           href="/dashboard"
           className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
@@ -118,15 +124,30 @@ const SideBar = () => {
           <FaFileInvoiceDollar className="text-xl" />
           <span>فاتورة بيع</span>
         </Link>
-
-        <Link
-          href="/dashboard/stocks"
-          className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
-        >
-          <MdInventory className="text-xl" />
-          <span>ادارة المخزون</span>
-        </Link>
-
+        <Accordion type="single" collapsible>
+          <AccordionItem value="item-1">
+            <AccordionTrigger className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200">
+              <FaBoxes />
+              <span className="text-sm font-medium">إدارة المخزون</span>
+            </AccordionTrigger>
+            <AccordionContent className="pl-8 pr-3 py-2 flex flex-col gap-1">
+              <Link
+                href="/dashboard/stocks"
+                className="flex items-center gap-2 text-sm px-2 py-2 rounded hover:bg-blue-50 text-gray-600 hover:text-blue-600 transition duration-200"
+              >
+                <MdInventory2 className="text-lg" />
+                <span>مخزون بضريبة</span>
+              </Link>
+              <Link
+                href="/dashboard/StockWithoutTax"
+                className="flex items-center gap-2 text-sm px-2 py-2 rounded hover:bg-blue-50 text-gray-600 hover:text-blue-600 transition duration-200"
+              >
+                <MdInventory2 className="text-lg" />
+                <span>مخزون بدون ضريبة</span>
+              </Link>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
         <Link
           href="/dashboard/Products"
           className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
@@ -134,7 +155,6 @@ const SideBar = () => {
           <FaBox className="text-xl" />
           <span>اعداد الاصناف</span>
         </Link>
-
         <Link
           href="/dashboard"
           className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
@@ -142,7 +162,6 @@ const SideBar = () => {
           <GiReturnArrow className="text-xl" />
           <span>مرتجع بيع وشراء</span>
         </Link>
-
         <Link
           href="/dashboard"
           className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
@@ -150,7 +169,6 @@ const SideBar = () => {
           <FaArrowTrendUp className="text-xl" />
           <span>تسويه المخزون</span>
         </Link>
-
         <Link
           href="/dashboard/treasury"
           className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
@@ -158,7 +176,6 @@ const SideBar = () => {
           <PiTreasureChestBold className="text-xl" />
           <span>الخزينه</span>
         </Link>
-
         <Link
           href="/dashboard"
           className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
@@ -166,7 +183,6 @@ const SideBar = () => {
           <MdOutlineDashboard className="text-xl" />
           <span>المصروفات</span>
         </Link>
-
         {/* <DropsDown /> */}
         <button
           onClick={logOut}

@@ -81,10 +81,10 @@ export async function POST(
       });
 
       // تسجيل المعاملة
-      const transaction = await tx.transaction.create({
+      const transaction = await tx.treasuryTransaction.create({
         data: {
           type: TransactionType.RETURN,
-          returnType,
+          // returnType,
           amount,
           description,
           supplierId,

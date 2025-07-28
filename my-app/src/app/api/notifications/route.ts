@@ -13,14 +13,6 @@ export async function GET(req: NextRequest) {
       where: whereCondition,
       include: {
         user: { select: { name: true } },
-        transaction: { select: { type: true, amount: true } },
-        productMovement: {
-          select: {
-            type: true,
-            quantity: true,
-            product: { select: { name: true } },
-          },
-        },
       },
       orderBy: { createdAt: "desc" },
       take: 50,

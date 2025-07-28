@@ -14,16 +14,8 @@ import { IoIosAddCircleOutline } from "react-icons/io";
 import { toast } from "sonner";
 import { jwtDecode } from "jwt-decode";
 import Cookie from "cookie-universal";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import React, { useEffect, useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";

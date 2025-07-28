@@ -31,10 +31,6 @@ export async function GET(req: NextRequest) {
       include: {
         added_by: { select: { name: true } },
         updated_by: { select: { name: true } },
-        transactions: {
-          orderBy: { createdAt: "desc" },
-          include: { treasury: { select: { name: true, balance: true } } },
-        },
       },
     });
 

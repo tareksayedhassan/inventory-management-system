@@ -11,40 +11,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   BASE_URL,
-  EznEdafa,
   Products,
   Supplier as SupplierEndpoint,
-  Treasury,
 } from "@/apiCaild/API";
 import { DecodedToken } from "@/Types/CustomJWTDecoded";
-import { IoIosAddCircleOutline } from "react-icons/io";
 import { toast } from "sonner";
 import { jwtDecode } from "jwt-decode";
 import Cookie from "cookie-universal";
 import axios from "axios";
-import {
-  AlertDialog,
-  AlertDialogTrigger,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from "@/components/ui/alert-dialog";
+
 import { Input } from "@/components/ui/input";
-import { FaSearch } from "react-icons/fa";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import useSWR from "swr";
 import Loading from "@/components/customUi/loading";
@@ -59,7 +38,6 @@ const Page = () => {
 
   const [name, setName] = useState("");
   const [Price, setPrice] = useState("");
-  const [stock, setStock] = useState("");
   const [note, setNote] = useState("");
   const [productCode, setproductCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -128,7 +106,6 @@ const Page = () => {
     const formData = new FormData();
     formData.append("name", name);
     formData.append("price", Price);
-    formData.append("stock", stock);
     formData.append("note", note);
     formData.append("productCode", productCode);
 
@@ -147,7 +124,6 @@ const Page = () => {
         mutate();
         setName("");
         setPrice("");
-        setStock("");
         setNote("");
         setproductCode("");
       } else {
@@ -216,19 +192,6 @@ const Page = () => {
                 </div>
 
                 <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-end">
-                  <div className="flex-1 min-w-[200px] sm:min-w-[220px] max-w-full sm:max-w-[350px]">
-                    <Label className="mb-1 block text-sm font-medium text-gray-700">
-                      الكمية
-                    </Label>
-                    <Input
-                      className="w-full"
-                      placeholder="مثلاً: 10"
-                      value={stock}
-                      type="number"
-                      onChange={(e) => setStock(e.target.value)}
-                    />
-                  </div>
-
                   <div className="flex-1 min-w-[200px] sm:min-w-[220px] max-w-full sm:max-w-[350px]">
                     <Label className="mb-1 block text-sm font-medium text-gray-700">
                       ملاحظات

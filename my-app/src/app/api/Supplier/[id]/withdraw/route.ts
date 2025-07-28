@@ -44,12 +44,11 @@ export async function POST(
     }
 
     await prisma.$transaction(async (tx) => {
-      await tx.transaction.create({
+      await tx.treasuryTransaction.create({
         data: {
           type: "WITHDRAWAL",
           amount,
           description,
-          supplierId,
           treasuryId,
         },
       });
