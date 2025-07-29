@@ -1,8 +1,8 @@
 "use client";
 import { useParams, useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import useSWR from "swr";
-import { BASE_URL, Treasury } from "@/apiCaild/API";
+import { BASE_URL, Treasury, TreasuryTransaction } from "@/apiCaild/API";
 import { fetcher } from "@/apiCaild/fetcher";
 import axios from "axios";
 import Cookie from "cookie-universal";
@@ -32,10 +32,9 @@ const Page = () => {
   const [loadingDeposit, setLoadingDeposit] = useState(false);
   const [loadingWithdraw, setLoadingWithdraw] = useState(false);
   const [loadingReturn, setLoadingReturn] = useState(false);
-
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-
+  const [Transaction, setTransaction] = useState<[]>([]);
   const cookie = Cookie();
   const router = useRouter();
   const token = cookie.get("Bearer");
@@ -45,7 +44,19 @@ const Page = () => {
   const treasury = data?.data || {};
   const totalItems = data?.total || 0;
 
-  console.log(treasury);
+  useEffect(() => {
+    const getData = async () => {
+      try {
+        const res = await axios.get(`${BASE_URL}/${TreasuryTransaction}/${id}`);
+        setTransaction(res.data?.data || []);
+        console.log(res.data?.data);
+      } catch (error) {
+        toast.error("خطأ في جلب حركات الخزينة");
+      }
+    };
+
+    getData();
+  }, []);
   const handleDeposit = async () => {
     if (loadingDeposit) return;
     setLoadingDeposit(true);
@@ -88,7 +99,7 @@ const Page = () => {
     <div className="container  mt-10" dir="rtl">
       <div className="w-full bg-white rounded-xl px-6 py-4 flex justify-between items-center shadow-sm border-b-2 border-blue-200">
         <h1 className="text-lg font-semibold text-gray-800">
-          سجل حركة خزنة: الخزنة الرئيسية
+          سجل حركة خزنة: {treasury.name}
         </h1>
         <Button
           className="bg-blue-600 text-white cursor-pointer hover:bg-blue-700 transition"
@@ -114,48 +125,72 @@ const Page = () => {
               الحركات المسجلة
             </h1>
           </div>
-          <div className="col-span-1 md:col-span-2 overflow-x-auto">
+          <div className="col-span-1 md:col-span-2 overflow-x-auto ">
             <Table className="w-full border text-center">
               <TableHeader>
                 <TableRow className="bg-gray-100">
                   <TableHead className="min-w-[150px] text-center">
-                    التاريخ{" "}
-                  </TableHead>
-                  <TableHead className="min-w-[100px] text-center">
-                    البيان
-                  </TableHead>
-                  <TableHead className="min-w-[80px] text-center">
-                    المستخدم{" "}
+                    التاريخ
                   </TableHead>
                   <TableHead className="min-w-[150px] text-center">
-                    اجراء{" "}
+                    البيان
+                  </TableHead>
+                  <TableHead className="min-w-[100px] text-center">
+                    نوع الحركة
+                  </TableHead>
+                  <TableHead className="min-w-[100px] text-center">
+                    المبلغ
+                  </TableHead>
+                  <TableHead className="min-w-[120px] text-center">
+                    المستخدم
+                  </TableHead>
+                  <TableHead className="min-w-[150px] text-center">
+                    إجراء
                   </TableHead>
                 </TableRow>
               </TableHeader>
 
               <TableBody>
-                {/* {product.map((pro: any, index: number) => (
+                {Transaction.map((tra: any, index: number) => (
                   <TableRow
-                    key={`${pro.name}-${index}`}
+                    key={`${tra.id}-${index}`}
                     className="hover:bg-gray-50"
                   >
-                    <TableCell className="text-center">{pro.name}</TableCell>
                     <TableCell className="text-center">
-                      {pro.productCode}
+                      {new Date(tra.createdAt).toLocaleString("ar-EG")}
                     </TableCell>
-                    <TableCell className="text-center">{pro.stock}</TableCell>
                     <TableCell className="text-center">
-                      {pro.note || "--"}
+                      {tra.description || "--"}
                     </TableCell>
-                    <TableCell className="text-center font-medium text-green-700">
-                      {pro.price} ج.م
+                    <TableCell className="text-center">
+                      {tra.type === "DEPOSIT"
+                        ? "إيداع"
+                        : tra.type === "WITHDRAWAL"
+                        ? "سحب"
+                        : tra.type === "RETURN"
+                        ? "مرتجع"
+                        : "غير معروف"}
+                    </TableCell>
+                    <TableCell
+                      className={`text-center font-medium ${
+                        tra.type === "DEPOSIT"
+                          ? "text-green-700"
+                          : tra.type === "WITHDRAWAL"
+                          ? "text-red-600"
+                          : "text-yellow-600"
+                      }`}
+                    >
+                      {tra.amount} ج.م
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {tra.user?.name || "غير معروف"}
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex justify-center items-center gap-2">
                         <Button
                           variant="secondary"
                           className="bg-red-300 cursor-pointer px-2 py-1 text-sm"
-                          onClick={() => DeleteRecord(pro.id)}
+                          // onClick={() => DeleteRecord(tra.id)}
                         >
                           الحذف
                         </Button>
@@ -165,19 +200,53 @@ const Page = () => {
                         >
                           التعديل
                         </Button>
-                      </div>{" "}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
-                */}
               </TableBody>
             </Table>
+
             <Pagention
               currentPage={currentPage}
               setCurrentPage={setCurrentPage}
               rowsPerPage={rowsPerPage}
               totalItems={totalItems}
             />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-10 shadow">
+        <CardContent className="w-[70%]">
+          <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
+            <div className="w-full">
+              <Label htmlFor="transactionType">النوع</Label>
+              <select
+                id="transactionType"
+                className="mt-1 p-2 border rounded w-full"
+              >
+                <optgroup label="اختر نوع الحركة">
+                  <option value="DEPOSIT">إيداع</option>
+                  <option value="WITHDRAWAL">سحب</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <div className="w-full">
+              <Label>المبلغ</Label>
+              <Input type="number" className="w-full" />
+            </div>
+
+            <div className="w-full">
+              <Label>التاريخ</Label>
+              <Input type="date" className="w-full" />
+            </div>
+          </div>
+
+          <div className="mt-4 w-[50%]">
+            <Label>البيان</Label>
+            <Input type="text" className="w-full" />
           </div>
         </CardContent>
       </Card>

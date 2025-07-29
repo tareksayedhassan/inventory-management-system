@@ -4,10 +4,11 @@ import { TransactionType } from "@prisma/client";
 
 export async function POST(
   req: NextRequest,
-  context: { params: Promise<{ id: string }> }
+
+  context: { params: { id: string } }
 ) {
   try {
-    const { id } = await context.params;
+    const { id } = context.params;
     const supplierId = parseInt(id, 10);
     const { amount, description, treasuryId } = await req.json();
 

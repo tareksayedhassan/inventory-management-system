@@ -12,7 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import Pagention from "@/components/customUi/pagention";
 import { Card, CardContent } from "@/components/ui/card";
 const page = () => {
@@ -25,7 +24,6 @@ const page = () => {
     `${BASE_URL}/${stock}?page=${currentPage}&pageSize=${rowsPerPage}&search=${search}`,
     fetcher
   );
-  console.log(data);
 
   const product = data?.data || [];
   const totalPrice = data?.totalPrice || 0;

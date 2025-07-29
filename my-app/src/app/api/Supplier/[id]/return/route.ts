@@ -4,10 +4,10 @@ import { TransactionType, ReturnType } from "@prisma/client";
 
 export async function POST(
   req: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: { id: string } }
 ) {
   try {
-    const { id } = await context.params;
+    const { id } = context.params;
     const supplierId = parseInt(id, 10);
     const { amount, description, treasuryId, returnType } = await req.json();
 
@@ -84,7 +84,7 @@ export async function POST(
       const transaction = await tx.treasuryTransaction.create({
         data: {
           type: TransactionType.RETURN,
-          // returnType,
+          returnType,
           amount,
           description,
           supplierId,

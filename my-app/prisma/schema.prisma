@@ -160,28 +160,25 @@ model Product {
   @@index([added_by_id], map: "Product_added_by_id_fkey")
   @@index([updated_by_id], map: "Product_updated_by_id_fkey")
 }
-
 model EznEdafa {
-  id     Int   @id @default(autoincrement())
-  tax    Float @default(14)
-  amount Float
-
-  userId Int?
-  user   User? @relation("TriggeredBy", fields: [userId], references: [id])
-
-  supplierId Int
-  supplier   Supplier @relation("SupplierEznEdafa", fields: [supplierId], references: [id])
-
-  productId         Int
-  product           Product          @relation("ProductEznEdafa", fields: [productId], references: [id], onDelete: Cascade)
-  stockId           Int?
-  stock             Stock?           @relation(fields: [stockId], references: [id])
+  id                Int            @id @default(autoincrement())
+  totalAmount       Float          // إجمالي التكلفة لكل المنتجات
+  tax               Float?         @default(14)
+  supplierId        Int
   treasuryId        Int
-  treasury          Treasury         @relation("TreasuryEznEdafa", fields: [treasuryId], references: [id])
+  userId            Int?
+  stockId           Int?
   StockWithoutTaxID Int?
-  StockWithoutTax   StockWithoutTax? @relation(fields: [StockWithoutTaxID], references: [id])
-}
+  createdAt         DateTime       @default(now())
+  supplier          Supplier       @relation("SupplierEznEdafa", fields: [supplierId], references: [id])
+  treasury          Treasury       @relation("TreasuryEznEdafa", fields: [treasuryId], references: [id])
+  user              User?          @relation("TriggeredBy", fields: [userId], references: [id])
+  stock             Stock?         @relation(fields: [stockId], references: [id])
+  stockWithoutTax   StockWithoutTax? @relation(fields: [StockWithoutTaxID], references: [id])
+  productId Int?
+product   Product? @relation("ProductEznEdafa", fields: [productId], references: [id])
 
+}
 model Stock {
   id          Int        @id @default(autoincrement())
   name        String

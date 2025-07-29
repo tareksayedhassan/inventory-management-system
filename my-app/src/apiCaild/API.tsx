@@ -27,3 +27,6 @@ export const EznEdafa = "EznEdafa";
 //  stock
 
 export const stock = "stock";
+// TreasuryTransaction
+
+export const TreasuryTransaction = "TreasuryTransaction";

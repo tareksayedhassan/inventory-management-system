@@ -11,13 +11,15 @@ interface Treasury {
   added_by_id: number;
   updaeted_by_id: number;
 }
+
 // get single setting
 export async function GET(
   req: NextRequest,
-  context: { params: { id: string } }
-) {
-  const treasuryId = parseInt(context.params.id, 10); // ✅ بدون تكرار id
 
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const treasuryId = parseInt(id, 10);
   try {
     const treasury = await prisma.treasury.findUnique({
       where: { id: treasuryId },

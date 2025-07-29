@@ -106,7 +106,6 @@ const Page = () => {
   if (isLoading) return <div>{<Loading />}</div>;
   console.log(data);
   const treasury: ITreasury[] = data?.data || [];
-  console.log(treasury);
   const DeleteRecord = async (id: number) => {
     try {
       await axios.delete(`${BASE_URL}/${Treasury}/${id}`, {
