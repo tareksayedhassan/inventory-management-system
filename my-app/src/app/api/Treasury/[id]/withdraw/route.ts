@@ -4,13 +4,13 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(
   req: NextRequest,
 
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = context.params;
+    const { id } = await params;
 
     const treasuryId = parseInt(id);
-    const { amount, description = "" } = await req.json();
+    const { amount, description = "", userId } = await req.json();
     console.log("Withdraw Request:", { amount, description });
 
     const treasury = await prisma.treasury.findUnique({
@@ -27,8 +27,13 @@ export async function POST(
       prisma.treasuryTransaction.create({
         data: {
           type: "WITHDRAWAL",
+          description,
           amount,
           treasuryId,
+          userId,
+        },
+        include: {
+          user: true,
         },
       }),
       prisma.treasury.update({

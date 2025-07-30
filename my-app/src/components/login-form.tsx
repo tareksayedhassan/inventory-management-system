@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Cookie from "cookie-universal";
 import { useState } from "react";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { BASE_URL, LOGIN, REGISTER } from "@/apiCaild/API";
 import { LoginClient } from "@/utils/ValidationSchemas";
 import { toast } from "sonner";
@@ -62,8 +62,16 @@ function LoginForm({ className, ...props }: React.ComponentProps<"form">) {
         maxAge: 60 * 60 * 24 * 7,
       });
       toast.success("user Login sucssuflly");
+      if (res.status == 404) {
+        toast.error("User Not Found");
+      }
     } catch (err) {
-      toast.error("Something went wrong, please try again");
+      const error = err as AxiosError;
+      if (error.response?.status == 404) {
+        toast.error("User Not Found");
+      } else {
+        toast.error("Something went wrong, please try again");
+      }
     }
   };
   return (

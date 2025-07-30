@@ -30,79 +30,78 @@ enum ReturnType {
 }
 
 model User {
-  id               Int            @id @default(autoincrement())
-  name             String
-  email            String         @unique
-  password         String
-  role             Role           @default(USER)
-  avatar           String?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  added_Supplier   Supplier[]     @relation("AddedBy")
-  updated_Supplier Supplier[]     @relation("UpdatedBy")
-  added_Client     Client[]       @relation("AddedBy")
-  updated_Client   Client[]       @relation("UpdatedBy")
-  added_Treasury   Treasury[]     @relation("AddedBy")
-  added_Product    Product[]      @relation("AddedBy")
-  updated_Product  Product[]      @relation("UpdatedBy")
-  notifications    Notification[] @relation("TriggeredBy")
-  eznEdafat        EznEdafa[]     @relation("TriggeredBy")
-   treasuryTransaction TreasuryTransaction[]
+  id                  Int                   @id @default(autoincrement())
+  name                String
+  email               String                @unique
+  password            String
+  role                Role                  @default(USER)
+  avatar              String?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  added_Supplier      Supplier[]            @relation("AddedBy")
+  updated_Supplier    Supplier[]            @relation("UpdatedBy")
+  added_Client        Client[]              @relation("AddedBy")
+  updated_Client      Client[]              @relation("UpdatedBy")
+  added_Treasury      Treasury[]            @relation("AddedBy")
+  added_Product       Product[]             @relation("AddedBy")
+  updated_Product     Product[]             @relation("UpdatedBy")
+  notifications       Notification[]        @relation("TriggeredBy")
+  eznEdafat           EznEdafa[]            @relation("TriggeredBy")
+  treasuryTransaction TreasuryTransaction[]
 }
 
 model Supplier {
-  id            Int           @id @default(autoincrement())
-  photo         String        @default("default.jpg")
-  status        CompStatus    @default(ACTIVE)
+  id            Int        @id @default(autoincrement())
+  photo         String     @default("default.jpg")
+  status        CompStatus @default(ACTIVE)
   general_alert String
   address       String
   phone         String
-  creditBalance Float?        @default(0) // ليه فلوس (مدين للمورد)
-  debitBalance  Float?        @default(0) // عليه فلوس (المورد مدين لك)
+  creditBalance Float?     @default(0) // ليه فلوس (مدين للمورد)
+  debitBalance  Float?     @default(0) // عليه فلوس (المورد مدين لك)
   netBalance    Float? // الرصيد النهائي (creditBalance - debitBalance)
   name          String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
   added_by_id   Int?
   updated_by_id Int?
-  added_by      User?         @relation("AddedBy", fields: [added_by_id], references: [id])
-  updated_by    User?         @relation("UpdatedBy", fields: [updated_by_id], references: [id])
-  eznEdafat     EznEdafa[]    @relation("SupplierEznEdafa")
+  added_by      User?      @relation("AddedBy", fields: [added_by_id], references: [id])
+  updated_by    User?      @relation("UpdatedBy", fields: [updated_by_id], references: [id])
+  eznEdafat     EznEdafa[] @relation("SupplierEznEdafa")
 
   @@index([added_by_id], map: "Supplier_added_by_id_fkey")
   @@index([updated_by_id], map: "Supplier_updated_by_id_fkey")
 }
 
 model Client {
-  id            Int           @id @default(autoincrement())
-  photo         String        @default("default.jpg")
-  status        CompStatus    @default(ACTIVE)
+  id            Int        @id @default(autoincrement())
+  photo         String     @default("default.jpg")
+  status        CompStatus @default(ACTIVE)
   general_alert String
   address       String
   phone         String
-  creditBalance Float?        @default(0) // ليه فلوس (مدين للعميل)
-  debitBalance  Float?        @default(0) // عليه فلوس (العميل مدين لك)
+  creditBalance Float?     @default(0) // ليه فلوس (مدين للعميل)
+  debitBalance  Float?     @default(0) // عليه فلوس (العميل مدين لك)
   netBalance    Float? // الرصيد النهائي (creditBalance - debitBalance)
   name          String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
   added_by_id   Int?
   updated_by_id Int?
-  added_by      User?         @relation("AddedBy", fields: [added_by_id], references: [id])
-  updated_by    User?         @relation("UpdatedBy", fields: [updated_by_id], references: [id])
+  added_by      User?      @relation("AddedBy", fields: [added_by_id], references: [id])
+  updated_by    User?      @relation("UpdatedBy", fields: [updated_by_id], references: [id])
 
   @@index([added_by_id], map: "Client_added_by_id_fkey")
   @@index([updated_by_id], map: "Client_updated_by_id_fkey")
 }
 
-
 model Treasury {
-  id                           Int      @id @default(autoincrement())
-  name                         String
-  balance                      Float    @default(0)
-  createdAt                    DateTime @default(now())
-  updatedAt                    DateTime @updatedAt
-  added_by_id                  Int?
+  id                   Int                   @id @default(autoincrement())
+  name                 String
+  balance              Float                 @default(0)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  added_by_id          Int?
   added_by             User?                 @relation("AddedBy", fields: [added_by_id], references: [id])
   treasuryTransactions TreasuryTransaction[]
   notifications        Notification[]        @relation("TreasuryNotifications")
@@ -115,11 +114,12 @@ model TreasuryTransaction {
   amount        Float
   description   String?
   treasuryId    Int
-  treasury      Treasury        @relation(fields: [treasuryId], references: [id])
+  treasury      Treasury        @relation(fields: [treasuryId], references: [id], onDelete: Cascade)
   createdAt     DateTime        @default(now())
   notifications Notification[]  @relation("TreasuryTransactionNotifications")
-userId Int?
-user   User? @relation(fields: [userId], references: [id])
+  userId        Int?
+  user          User?           @relation(fields: [userId], references: [id])
+
   @@index([treasuryId])
 }
 
@@ -154,31 +154,32 @@ model Product {
   updated_by_id Int?
   eznEdafat     EznEdafa[] @relation("ProductEznEdafa")
 
-  added_by         User?             @relation("AddedBy", fields: [added_by_id], references: [id])
-  updated_by       User?             @relation("UpdatedBy", fields: [updated_by_id], references: [id])
+  added_by   User? @relation("AddedBy", fields: [added_by_id], references: [id])
+  updated_by User? @relation("UpdatedBy", fields: [updated_by_id], references: [id])
 
   @@index([added_by_id], map: "Product_added_by_id_fkey")
   @@index([updated_by_id], map: "Product_updated_by_id_fkey")
 }
+
 model EznEdafa {
-  id                Int            @id @default(autoincrement())
-  totalAmount       Float          // إجمالي التكلفة لكل المنتجات
-  tax               Float?         @default(14)
+  id                Int              @id @default(autoincrement())
+  totalAmount       Float // إجمالي التكلفة لكل المنتجات
+  tax               Float?           @default(0)
   supplierId        Int
   treasuryId        Int
   userId            Int?
   stockId           Int?
   StockWithoutTaxID Int?
-  createdAt         DateTime       @default(now())
-  supplier          Supplier       @relation("SupplierEznEdafa", fields: [supplierId], references: [id])
-  treasury          Treasury       @relation("TreasuryEznEdafa", fields: [treasuryId], references: [id])
-  user              User?          @relation("TriggeredBy", fields: [userId], references: [id])
-  stock             Stock?         @relation(fields: [stockId], references: [id])
+  createdAt         DateTime         @default(now())
+  supplier          Supplier         @relation("SupplierEznEdafa", fields: [supplierId], references: [id])
+  treasury          Treasury         @relation("TreasuryEznEdafa", fields: [treasuryId], references: [id])
+  user              User?            @relation("TriggeredBy", fields: [userId], references: [id])
+  stock             Stock?           @relation(fields: [stockId], references: [id])
   stockWithoutTax   StockWithoutTax? @relation(fields: [StockWithoutTaxID], references: [id])
-  productId Int?
-product   Product? @relation("ProductEznEdafa", fields: [productId], references: [id])
-
+  productId         Int?
+  product           Product?         @relation("ProductEznEdafa", fields: [productId], references: [id])
 }
+
 model Stock {
   id          Int        @id @default(autoincrement())
   name        String

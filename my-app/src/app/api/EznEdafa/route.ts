@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
-import { z } from "zod"; // للـ validation (اختياري)
+import { z } from "zod";
 
 const productSchema = z.array(
   z.object({
@@ -39,7 +39,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // فحص وجود المورد
     const supplier = await prisma.supplier.findUnique({
       where: { id: supplierId },
     });
@@ -50,14 +49,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // جلب المنتجات من الـ database
     const productIds = products.map((p: { productId: number }) => p.productId);
     const dbProducts = await prisma.product.findMany({
       where: { id: { in: productIds } },
       select: { id: true, name: true, productCode: true, price: true },
     });
 
-    // فحص إن كل المنتجات موجودة
     const missingProducts = productIds.filter(
       (id: number) => !dbProducts.some((p) => p.id === id)
     );
@@ -68,7 +65,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // حساب إجمالي التكلفة وإجمالي الكمية
     let totalAmount = 0;
     let totalQuantity = 0;
     const productsDetails = products.map(
@@ -86,12 +82,12 @@ export async function POST(req: NextRequest) {
         };
       }
     );
-
-    // إنشاء إذن الإضافة
+    const deductionRate = 0.01;
+    const finalAmount = totalAmount - totalAmount * deductionRate;
     const newEzn = await prisma.eznEdafa.create({
       data: {
-        totalAmount,
-        tax: tax || 14,
+        totalAmount: finalAmount,
+        tax: tax || 0,
         supplier: { connect: { id: supplierId } },
         treasury: { connect: { id: treasuryId } },
         user: userId ? { connect: { id: userId } } : undefined,
@@ -108,7 +104,6 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // تحديث المخزون
     let stockId: number | null = null;
     let stockWithoutTaxId: number | null = null;
 
@@ -134,8 +129,17 @@ export async function POST(req: NextRequest) {
       });
       stockWithoutTaxId = stockWithoutTax.id;
     }
+    await prisma.treasuryTransaction.create({
+      data: {
+        type: "WITHDRAWAL",
+        amount: finalAmount,
+        description: `إذن إضافة رقم ${newEzn.id}`,
+        treasuryId,
+        userId: userId || null,
+        createdAt: new Date(),
+      },
+    });
 
-    // تحديث الإذن بربطه بالمخزون
     await prisma.eznEdafa.update({
       where: { id: newEzn.id },
       data: {
@@ -152,20 +156,6 @@ export async function POST(req: NextRequest) {
         data: { lastBuyPrice: item.amount * product.price },
       });
     }
-
-    // إنشاء معاملة مالية
-    const transactionType = "WITHDRAWAL";
-    const transactionDescription = `إذن إضافة رقم ${newEzn.id}`;
-    await prisma.treasuryTransaction.create({
-      data: {
-        type: transactionType,
-        amount: totalAmount,
-        description: transactionDescription,
-        treasuryId: treasuryId,
-        userId: userId || null,
-        createdAt: new Date(),
-      },
-    });
 
     // إنشاء إشعار
     const now = new Date();

@@ -49,12 +49,14 @@ export async function GET(
 }
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const id = parseInt(params.id, 10);
+  const { id } = await params;
+
+  const treasuryId = parseInt(id, 10);
   try {
     await prisma.treasury.delete({
-      where: { id },
+      where: { id: treasuryId },
     });
 
     return NextResponse.json(
@@ -72,9 +74,11 @@ export async function DELETE(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const id = parseInt(params.id, 10);
+  const { id } = await params;
+
+  const treasuryId = parseInt(id, 10);
   const body = (await req.json()) as Treasury;
 
   try {
@@ -97,7 +101,7 @@ export async function PATCH(
     }
 
     const updatedTreasury = await prisma.treasury.update({
-      where: { id },
+      where: { id: treasuryId },
       data: updateData,
     });
 

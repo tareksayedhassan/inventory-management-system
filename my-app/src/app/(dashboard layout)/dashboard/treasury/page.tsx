@@ -218,7 +218,7 @@ const Page = () => {
             <div className="flex items-end w-full sm:w-[20%]">
               <Button
                 onClick={handilSubmit}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-lg h-14 w-full"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-lg h-14 w-full cursor-pointer"
               >
                 اضافه الخزنة
               </Button>

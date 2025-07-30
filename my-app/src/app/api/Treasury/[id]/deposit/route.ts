@@ -8,7 +8,7 @@ export async function POST(
 ) {
   try {
     const treasuryId = parseInt(params.id);
-    const { amount, description } = await req.json();
+    const { amount, description, userId } = await req.json();
 
     if (isNaN(amount) || amount <= 0) {
       return NextResponse.json({ message: "Invalid amount" }, { status: 400 });
@@ -21,6 +21,10 @@ export async function POST(
           amount,
           description,
           treasuryId,
+          userId,
+        },
+        include: {
+          user: true,
         },
       }),
       prisma.treasury.update({

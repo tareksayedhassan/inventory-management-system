@@ -28,7 +28,7 @@ type Supplier = { id: number; name: string };
 
 // ========== Main Component ==========
 const Page = () => {
-  const [amount, setAmount] = useState(1);
+  const [totalAmount, settotalAmount] = useState(0);
   const [treasuries, setTreasuries] = useState<Supplier[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [isTaxed, setIsTaxed] = useState<boolean>(false);
@@ -100,9 +100,7 @@ const Page = () => {
     const found = products.find((p) => p.id === selectedProductId);
     setSelectedProduct(found || null);
   }, [selectedProductId, products]);
-
   const handleSubmit = async () => {
-    // التحقق من وجود جميع الحقول المطلوبة
     if (
       !selectedSupplierId ||
       !selectedTreasuryId ||
@@ -132,32 +130,19 @@ const Page = () => {
         return;
       }
 
-      const failedProducts: string[] = [];
-      for (const product of selectedProducts) {
-        try {
-          await axios.post(`${BASE_URL}/${EznEdafa}`, {
-            amount: product.amount,
-            tax: isTaxChecked ? 14 : 0,
-            supplierId: selectedSupplierId,
-            productId: product.id,
-            treasuryId: selectedTreasuryId,
-            userId,
-            isTaxed: isTaxChecked,
-          });
-        } catch (error: any) {
-          console.error(`خطأ في إضافة الصنف ${product.name}:`, error);
-          failedProducts.push(product.name);
-        }
-      }
+      await axios.post(`${BASE_URL}/${EznEdafa}`, {
+        totalAmount: finalTotal,
+        tax: isTaxChecked ? taxx : 0, // قيمة الضريبة فقط لو متفعلة
+        supplierId: selectedSupplierId,
+        products: selectedProducts.map((product) => ({
+          productId: product.id,
+          amount: product.amount,
+        })),
+        treasuryId: selectedTreasuryId,
+        userId,
+        isTaxed: isTaxChecked,
+      });
 
-      if (failedProducts.length > 0) {
-        toast.error(
-          `فشل في إضافة الأصناف التالية: ${failedProducts.join(", ")}`
-        );
-        return;
-      }
-
-      await treasuryWithdrow();
       toast.success("تم إرسال إذن الإضافة بنجاح.");
     } catch (error: any) {
       console.error("خطأ عام في إرسال إذن الإضافة:", error);
@@ -319,7 +304,6 @@ const Page = () => {
                 </Label>
               </div>
 
-              {/* خصم المنبع */}
               <div className="flex items-center justify-between py-2">
                 <Label className="text-sm font-medium text-gray-800 dark:text-gray-200">
                   خصم المنبع (1%):

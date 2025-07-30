@@ -9,8 +9,28 @@ export async function GET(
   const treasuryId = parseInt(id, 10);
 
   try {
+    const { searchParams } = new URL(req.url);
+
+    const page = parseInt(searchParams.get("page") || "1");
+    const pageSize = parseInt(searchParams.get("pageSize") || "5");
+    const searchQuery = searchParams.get("search") || "";
+
+    const filters =
+      searchQuery.trim() !== ""
+        ? {
+            treasuryId,
+            description: {
+              contains: searchQuery,
+            },
+          }
+        : { treasuryId };
+
+    const total = await prisma.treasuryTransaction.count({ where: filters });
+
     const transactions = await prisma.treasuryTransaction.findMany({
-      where: { treasuryId: treasuryId },
+      where: filters,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
       include: {
         user: true,
         treasury: true,
@@ -20,24 +40,18 @@ export async function GET(
       },
     });
 
-    if (!transactions) {
-      return NextResponse.json(
-        {
-          message: "transactions Not Found",
-        },
-        { status: 404 }
-      );
-    }
-
     return NextResponse.json(
       {
         data: transactions,
+        total,
+        currentPage: page,
       },
       { status: 200 }
     );
   } catch (error) {
+    console.error("Error fetching transactions:", error);
     return NextResponse.json(
-      { message: "500 Internal Server Error" },
+      { message: "Internal Server Error" },
       { status: 500 }
     );
   }
@@ -45,13 +59,13 @@ export async function GET(
 
 export async function DELETE(
   req: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await context.params;
+  const { id } = await params;
 
   const transactionId = parseInt(id, 10);
   try {
-    await prisma.treasury.delete({
+    await prisma.treasuryTransaction.delete({
       where: { id: transactionId },
     });
 

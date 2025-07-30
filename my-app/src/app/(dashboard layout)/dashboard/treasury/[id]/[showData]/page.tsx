@@ -16,87 +16,87 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-const Page = () => {
-  const [depositAmount, setDepositAmount] = useState(0);
-  const [depositDesc, setDepositDesc] = useState("");
-  const [withdrawAmount, setWithdrawAmount] = useState(0);
-  const [withdrawDesc, setWithdrawDesc] = useState("");
-  const [returnAmount, setReturnAmount] = useState(0);
-  const [returnDesc, setReturnDesc] = useState("");
+import { jwtDecode } from "jwt-decode";
+import { DecodedToken } from "@/Types/CustomJWTDecoded";
 
-  const [loadingDeposit, setLoadingDeposit] = useState(false);
-  const [loadingWithdraw, setLoadingWithdraw] = useState(false);
-  const [loadingReturn, setLoadingReturn] = useState(false);
+const Page = () => {
+  const [transactionType, setTransactionType] = useState("DEPOSIT");
+  const [amount, setAmount] = useState(0);
+  const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [transaction, setTransaction] = useState<[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [Transaction, setTransaction] = useState<[]>([]);
+
   const cookie = Cookie();
   const router = useRouter();
   const token = cookie.get("Bearer");
+  const decoded = jwtDecode<DecodedToken>(token);
+  const userId = decoded.id;
   const { id } = useParams();
 
-  const { data } = useSWR(`${BASE_URL}/${Treasury}/${id}`, fetcher);
+  const { data, mutate } = useSWR(`${BASE_URL}/${Treasury}/${id}`, fetcher);
   const treasury = data?.data || {};
   const totalItems = data?.total || 0;
 
-  useEffect(() => {
-    const getData = async () => {
-      try {
-        const res = await axios.get(`${BASE_URL}/${TreasuryTransaction}/${id}`);
-        setTransaction(res.data?.data || []);
-        console.log(res.data?.data);
-      } catch (error) {
-        toast.error("خطأ في جلب حركات الخزينة");
-      }
-    };
+  const { data: transactionData, mutate: mutateTransaction } = useSWR(
+    `${BASE_URL}/${TreasuryTransaction}/${id}?page=${currentPage}&pageSize=${rowsPerPage}`,
+    fetcher
+  );
+  const transactions = transactionData?.data || [];
+  console.log(transactions);
+  const handleSubmit = async () => {
+    if (loading) return;
+    if (amount <= 0 || !description) {
+      return toast.error("يرجى إدخال المبلغ والبيان بشكل صحيح");
+    }
 
-    getData();
-  }, []);
-  const handleDeposit = async () => {
-    if (loadingDeposit) return;
-    setLoadingDeposit(true);
+    setLoading(true);
     try {
+      const endpoint =
+        transactionType === "DEPOSIT"
+          ? `${BASE_URL}/Treasury/${id}/deposit`
+          : `${BASE_URL}/Treasury/${id}/withdraw`;
+
       await axios.post(
-        `${BASE_URL}/Treasury/${id}/deposit`,
-        { amount: depositAmount, description: depositDesc },
+        endpoint,
+        { amount, description, userId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success("تم الإيداع بنجاح");
-      setDepositAmount(0);
-      setDepositDesc("");
-    } catch {
-      toast.error("فشل في عملية الإيداع");
-    } finally {
-      setLoadingDeposit(false);
-    }
-  };
-
-  const handleWithdraw = async () => {
-    if (loadingWithdraw) return;
-    setLoadingWithdraw(true);
-    try {
-      await axios.post(
-        `${BASE_URL}/Treasury/${id}/withdraw`,
-        { amount: withdrawAmount, description: withdrawDesc },
-        { headers: { Authorization: `Bearer ${token}` } }
+      mutate();
+      mutateTransaction();
+      toast.success(
+        transactionType === "DEPOSIT" ? "تم الإيداع بنجاح" : "تم السحب بنجاح"
       );
-      toast.success("تم السحب بنجاح");
-      setWithdrawAmount(0);
-      setWithdrawDesc("");
+
+      setAmount(0);
+      setDescription("");
     } catch {
-      toast.error("فشل في عملية السحب");
+      toast.error("فشل في تنفيذ العملية");
     } finally {
-      setLoadingWithdraw(false);
+      setLoading(false);
     }
   };
-
+  const DeleteRecord = async (transactionId: number) => {
+    try {
+      axios.delete(`${BASE_URL}/${TreasuryTransaction}/${transactionId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      toast.success("تم حذف السجل بنجاح");
+      mutateTransaction();
+    } catch (error) {
+      toast.error("خطاء في حذف السجل");
+    }
+  };
   return (
-    <div className="container  mt-10" dir="rtl">
+    <div className="container mt-4" dir="rtl">
+      {/* Header */}
       <div className="w-full bg-white rounded-xl px-6 py-4 flex justify-between items-center shadow-sm border-b-2 border-blue-200">
         <h1 className="text-lg font-semibold text-gray-800">
           سجل حركة خزنة: {treasury.name}
@@ -108,17 +108,19 @@ const Page = () => {
           العودة للخزائن
         </Button>
       </div>
-      <Card className="mt-10 shadow-2xl border-0 border-b-4 border-blue-200">
+
+      {/* Current Balance */}
+      <Card className="mt-4 shadow-2xl border-0 border-b-4 border-blue-200">
         <CardContent>
           <div className="flex flex-col items-center">
             <h1 className="text-lg font-semibold text-gray-800">
               الرصيد الحالي
             </h1>
-            <p>{treasury.balance}</p>
+            <p>{treasury.balance} ج.م</p>
           </div>
         </CardContent>
       </Card>
-      <Card className="mt-4">
+      <Card className="mt-6">
         <CardContent>
           <div className="text-right mb-10">
             <h1 className="inline-block text-3xl font-semibold text-gray-800 border-b-2 border-gray-200 pb-2 w-full">
@@ -151,7 +153,7 @@ const Page = () => {
               </TableHeader>
 
               <TableBody>
-                {Transaction.map((tra: any, index: number) => (
+                {transactions.map((tra: any, index: number) => (
                   <TableRow
                     key={`${tra.id}-${index}`}
                     className="hover:bg-gray-50"
@@ -190,7 +192,7 @@ const Page = () => {
                         <Button
                           variant="secondary"
                           className="bg-red-300 cursor-pointer px-2 py-1 text-sm"
-                          // onClick={() => DeleteRecord(tra.id)}
+                          onClick={() => DeleteRecord(tra.id)}
                         >
                           الحذف
                         </Button>
@@ -217,6 +219,7 @@ const Page = () => {
         </CardContent>
       </Card>
 
+      {/* Transaction Form */}
       <Card className="mt-10 shadow">
         <CardContent className="w-[70%]">
           <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
@@ -225,28 +228,40 @@ const Page = () => {
               <select
                 id="transactionType"
                 className="mt-1 p-2 border rounded w-full"
+                value={transactionType}
+                onChange={(e) => setTransactionType(e.target.value)}
               >
-                <optgroup label="اختر نوع الحركة">
-                  <option value="DEPOSIT">إيداع</option>
-                  <option value="WITHDRAWAL">سحب</option>
-                </optgroup>
+                <option value="DEPOSIT">إيداع</option>
+                <option value="WITHDRAWAL">سحب</option>
               </select>
             </div>
-
             <div className="w-full">
               <Label>المبلغ</Label>
-              <Input type="number" className="w-full" />
+              <Input
+                type="number"
+                className="w-full"
+                value={amount}
+                onChange={(e) => setAmount(+e.target.value)}
+              />
             </div>
-
             <div className="w-full">
-              <Label>التاريخ</Label>
-              <Input type="date" className="w-full" />
+              <Label>البيان</Label>
+              <Input
+                type="text"
+                className="w-full"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
             </div>
           </div>
-
-          <div className="mt-4 w-[50%]">
-            <Label>البيان</Label>
-            <Input type="text" className="w-full" />
+          <div className="mt-6">
+            <Button
+              className="bg-green-600 text-white hover:bg-green-700 transition"
+              onClick={handleSubmit}
+              disabled={loading}
+            >
+              {loading ? "جارٍ التنفيذ..." : "تنفيذ العملية"}
+            </Button>
           </div>
         </CardContent>
       </Card>
