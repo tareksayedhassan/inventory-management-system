@@ -14,7 +14,7 @@ const page = () => {
           height={100}
           className="rounded-md"
         />
-        <div className="w-full">
+        <div className="w-full h-[90%]">
           <LoginForm />
         </div>
       </div>

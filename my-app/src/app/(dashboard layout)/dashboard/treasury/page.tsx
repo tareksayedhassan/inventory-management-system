@@ -200,7 +200,6 @@ const Page = () => {
               />
             </div>
 
-            {/* الرصيد الافتتاحي */}
             <div className="flex flex-col w-full sm:w-[30%]">
               <Label className="mb-2 text-right text-lg font-medium text-gray-700">
                 الرصيد الافتتاحي
@@ -214,7 +213,6 @@ const Page = () => {
               />
             </div>
 
-            {/* الزرار */}
             <div className="flex items-end w-full sm:w-[20%]">
               <Button
                 onClick={handilSubmit}

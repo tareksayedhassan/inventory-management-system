@@ -28,7 +28,6 @@ const Page = () => {
   const [amount, setAmount] = useState(0);
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
-  const [transaction, setTransaction] = useState<[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 

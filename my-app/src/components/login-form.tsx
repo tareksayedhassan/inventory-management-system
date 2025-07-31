@@ -148,12 +148,6 @@ function LoginForm({ className, ...props }: React.ComponentProps<"form">) {
             </span>
           </div>
         </div>
-        <div className="text-center text-sm">
-          Don&apos;t have an account?{" "}
-          <Link href="/register" className="underline underline-offset-4">
-            Sign up
-          </Link>
-        </div>
       </form>
     </>
   );

@@ -1,6 +1,5 @@
 "use client";
-import React, { useState } from "react";
-
+import React from "react";
 import {
   Pagination,
   PaginationContent,
@@ -9,6 +8,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Button } from "@/components/ui/button";
 
 type PagentionProps = {
   totalItems: number;
@@ -16,6 +16,7 @@ type PagentionProps = {
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
   rowsPerPage: number;
 };
+
 const Pagention = ({
   totalItems,
   currentPage,
@@ -23,15 +24,17 @@ const Pagention = ({
   rowsPerPage,
 }: PagentionProps) => {
   const totalPages = Math.ceil(totalItems / rowsPerPage);
+
   return (
     <div className="flex justify-center items-center mt-4">
       <Pagination>
         <PaginationContent>
           <PaginationItem>
             <PaginationPrevious
-              href="#"
+              className="cursor-pointer"
               onClick={(e) => {
                 e.preventDefault();
+                console.log("Previous clicked, currentPage:", currentPage);
                 if (currentPage > 1) setCurrentPage((prev) => prev - 1);
               }}
             />
@@ -39,24 +42,24 @@ const Pagention = ({
 
           {Array.from({ length: totalPages }).map((_, index) => (
             <PaginationItem key={index}>
-              <PaginationLink
-                href="#"
-                isActive={currentPage === index + 1}
-                onClick={(e) => {
-                  e.preventDefault();
+              <Button
+                variant={currentPage === index + 1 ? "default" : "outline"}
+                onClick={() => {
+                  console.log("Page clicked, new page:", index + 1);
                   setCurrentPage(index + 1);
                 }}
               >
                 {index + 1}
-              </PaginationLink>
+              </Button>
             </PaginationItem>
           ))}
 
           <PaginationItem>
             <PaginationNext
-              href="#"
+              className="cursor-pointer"
               onClick={(e) => {
                 e.preventDefault();
+                console.log("Next clicked, currentPage:", currentPage);
                 if (currentPage < totalPages)
                   setCurrentPage((prev) => prev + 1);
               }}

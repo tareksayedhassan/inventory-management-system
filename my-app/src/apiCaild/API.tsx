@@ -2,9 +2,12 @@ export const BASE_URL = "http://localhost:3000/api";
 
 // auth
 
-export const REGISTER = "users/register";
+export const REGISTER = "auth/register";
 
-export const LOGIN = "users/login";
+export const LOGIN = "auth/login";
+// users
+
+export const USERS = "users";
 
 // Treasury
 

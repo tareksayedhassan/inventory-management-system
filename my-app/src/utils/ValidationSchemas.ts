@@ -4,13 +4,13 @@ export const registervalidate = z.object({
   name: z.string().min(3).max(100),
   email: z.string().email(),
   password: z.string().min(6),
-  role: z.enum(["user", "admin"]).optional(),
+  role: z.enum(["USER", "ADMIN"]).optional(),
 });
 
 export const loginValidate = z.object({
   email: z.string().email(),
   password: z.string().min(6),
-  role: z.enum(["user", "admin"]).optional(),
+  role: z.enum(["USER", "ADMIN"]).optional(),
 });
 
 export const registerClient = z
@@ -24,6 +24,7 @@ export const registerClient = z
     message: "Passwords don't match",
     path: ["confirmPassword"],
   });
+
 export const LoginClient = z.object({
   email: z
     .string({ required_error: "Email is required" })

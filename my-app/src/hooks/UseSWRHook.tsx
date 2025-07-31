@@ -1,15 +1,16 @@
 "use client";
 import { BASE_URL } from "@/apiCaild/API";
 import { fetcher } from "@/apiCaild/fetcher";
-import React from "react";
 import useSWR from "swr";
+
 interface ApiProps {
   dataProps: string;
-  currentPage: number;
-  rowsPerPage: number;
+  currentPage?: number;
+  rowsPerPage?: number;
   search?: string;
-  id: number;
+  id?: number;
 }
+
 const UseSWRHook = ({
   dataProps,
   currentPage,
@@ -17,10 +18,26 @@ const UseSWRHook = ({
   search,
   id,
 }: ApiProps) => {
-  const { data, error, isLoading, mutate } = useSWR(
-    `${BASE_URL}/${dataProps}/${id}?page=${currentPage}&pageSize=${rowsPerPage}&search=${search}`,
-    fetcher
-  );
+  // بناء رابط الأساس
+  let url = `${BASE_URL}/${dataProps}`;
+
+  // لو فيه ID ضيفه
+  if (id !== undefined) {
+    url += `/${id}`;
+  }
+
+  // بناء باراميترات البحث
+  const queryParams: string[] = [];
+
+  if (currentPage !== undefined) queryParams.push(`page=${currentPage}`);
+  if (rowsPerPage !== undefined) queryParams.push(`pageSize=${rowsPerPage}`);
+  if (search) queryParams.push(`search=${search}`);
+
+  if (queryParams.length > 0) {
+    url += `?${queryParams.join("&")}`;
+  }
+
+  const { data, error, isLoading, mutate } = useSWR(url, fetcher);
 
   return { data, error, isLoading, mutate };
 };

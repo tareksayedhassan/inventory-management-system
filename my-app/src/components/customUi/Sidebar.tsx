@@ -107,13 +107,6 @@ const SideBar = () => {
           href="/dashboard"
           className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
         >
-          <FaUsersGear className="text-xl" />
-          <span>اداره المستخدمين</span>
-        </Link>
-        <Link
-          href="/dashboard"
-          className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
-        >
           <FaChartBar className="text-xl" />
           <span>التقارير</span>
         </Link>
@@ -183,7 +176,13 @@ const SideBar = () => {
           <MdOutlineDashboard className="text-xl" />
           <span>المصروفات</span>
         </Link>
-        {/* <DropsDown /> */}
+        <Link
+          href="/dashboard/users"
+          className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
+        >
+          <FaUsersGear className="text-xl" />
+          <span>اداره المستخدمين</span>
+        </Link>
         <button
           onClick={logOut}
           className="mt-6 px-3 py-2 rounded-md text-red-500 hover:bg-red-50 hover:text-red-600 transition duration-200 text-right"

@@ -21,7 +21,6 @@ enum CompStatus {
 enum TransactionType {
   DEPOSIT
   WITHDRAWAL
-  RETURN
 }
 
 enum ReturnType {
@@ -113,9 +112,10 @@ model TreasuryTransaction {
   type          TransactionType
   amount        Float
   description   String?
+  sheck        Int
   treasuryId    Int
   treasury      Treasury        @relation(fields: [treasuryId], references: [id], onDelete: Cascade)
-  createdAt     DateTime        @default(now())
+createdAt DateTime? @default(now())
   notifications Notification[]  @relation("TreasuryTransactionNotifications")
   userId        Int?
   user          User?           @relation(fields: [userId], references: [id])
