@@ -48,3 +48,21 @@ export const FormSchema = z.object({
     message: "الرصيد المتاح بالخزينة غير كافٍ.",
   }),
 });
+
+// Form Schema
+
+export const formSchema = z.object({
+  transactionType: z.enum([
+    "Tahseel_mn_3ameel",
+    "Sadad_le_moored",
+    "Eda3_mobasher",
+    "Sa7b_mobasher",
+  ]),
+  partyId: z.string().optional(),
+  amount: z.number().positive("المبلغ يجب أن يكون أكبر من 0"),
+  date: z.date(),
+  method: z.enum(["cash", "check", "transfer"]),
+  reference: z.string().optional(),
+});
+export type TransactionForm = z.infer<typeof formSchema>;
+export type TransactionType = TransactionForm["transactionType"];

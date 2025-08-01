@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
+import { TransactionType } from "@prisma/client";
+
 // GET all suppliers with pagination
 export async function GET(req: NextRequest) {
   try {
@@ -47,5 +49,116 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const body = req.json();
+  let {
+    amount,
+    type,
+    treasuryId,
+    description = "",
+    reference,
+    userId,
+    method,
+    supplierId,
+    clientId,
+    createdAt,
+  } = await req.json();
+
+  const treasury = await prisma.treasury.findUniqueOrThrow({
+    where: { id: treasuryId },
+  });
+
+  const isWithdraw =
+    type === TransactionType.Sadad_le_moored ||
+    type === TransactionType.Sa7b_mobasher;
+
+  if (isWithdraw && amount > treasury.balance) {
+    return NextResponse.json(
+      { message: "لا يمكن سحب مبلغ أكبر من رصيد الخزنة الحالي." },
+      { status: 400 }
+    );
+  }
+
+  const updatedBalance = isWithdraw
+    ? treasury.balance - amount
+    : treasury.balance + amount;
+  if (type === "Sadad_le_moored") {
+    if (!supplierId) {
+      return NextResponse.json(
+        { message: "يجب اختيار المورد عند سداد دفعة لمورد." },
+        { status: 400 }
+      );
+    }
+
+    const supplier = await prisma.supplier.findUnique({
+      where: { id: supplierId },
+    });
+
+    description = `تم سداد دفعة إلى المورد ${supplier?.name || "غير معروف"}`;
+  } else if (type === "Tahseel_mn_3ameel") {
+    if (!clientId) {
+      return NextResponse.json(
+        { message: "يجب اختيار العميل عند تحصيل دفعة من عميل." },
+        { status: 400 }
+      );
+    }
+
+    const client = await prisma.client.findUnique({
+      where: { id: clientId },
+    });
+
+    description = `تم تحصيل دفعة من العميل ${client?.name || "غير معروف"}`;
+  } else if (type === "Eda3_mobasher") {
+    if (!treasuryId) {
+      return NextResponse.json(
+        { message: "رقم الخزنة غير موجود." },
+        { status: 400 }
+      );
+    }
+
+    const treasury = await prisma.treasury.findUnique({
+      where: { id: treasuryId },
+    });
+
+    description = `تم إيداع مبلغ نقدي في خزنة ${
+      treasury?.name || "غير معروفة"
+    }`;
+  } else if (type === "Sa7b_mobasher") {
+    if (!treasuryId) {
+      return NextResponse.json(
+        { message: "رقم الخزنة غير موجود." },
+        { status: 400 }
+      );
+    }
+
+    const treasury = await prisma.treasury.findUnique({
+      where: { id: treasuryId },
+    });
+
+    description = `تم سحب مبلغ نقدي من خزنة ${treasury?.name || "غير معروفة"}`;
+  }
+
+  await prisma.$transaction([
+    prisma.treasuryTransaction.create({
+      data: {
+        method,
+        type,
+        amount,
+        description,
+        reference,
+        treasuryId,
+        userId,
+        createdAt,
+        supplierId: supplierId || undefined,
+        clientId: clientId || undefined,
+      },
+    }),
+    prisma.treasury.update({
+      where: { id: treasuryId },
+      data: { balance: updatedBalance },
+    }),
+  ]);
+
+  return NextResponse.json(
+    { message: "تم تسجيل الحركة بنجاح." },
+    { status: 200 }
+  );
 }

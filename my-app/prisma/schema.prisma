@@ -19,13 +19,21 @@ enum CompStatus {
 }
 
 enum TransactionType {
-  DEPOSIT
-  WITHDRAWAL
+  Tahseel_mn_3ameel
+  Sadad_le_moored
+  Eda3_mobasher
+  Sa7b_mobasher
 }
 
 enum ReturnType {
   PURCHASE_RETURN
   SALE_RETURN
+}
+
+enum Method {
+  cash
+  check
+  transfer
 }
 
 model User {
@@ -50,45 +58,47 @@ model User {
 }
 
 model Supplier {
-  id            Int        @id @default(autoincrement())
-  photo         String     @default("default.jpg")
-  status        CompStatus @default(ACTIVE)
-  general_alert String
-  address       String
-  phone         String
-  creditBalance Float?     @default(0) // ليه فلوس (مدين للمورد)
-  debitBalance  Float?     @default(0) // عليه فلوس (المورد مدين لك)
-  netBalance    Float? // الرصيد النهائي (creditBalance - debitBalance)
-  name          String?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  added_by_id   Int?
-  updated_by_id Int?
-  added_by      User?      @relation("AddedBy", fields: [added_by_id], references: [id])
-  updated_by    User?      @relation("UpdatedBy", fields: [updated_by_id], references: [id])
-  eznEdafat     EznEdafa[] @relation("SupplierEznEdafa")
+  id                   Int                   @id @default(autoincrement())
+  photo                String                @default("default.jpg")
+  status               CompStatus            @default(ACTIVE)
+  general_alert        String
+  address              String
+  phone                String
+  creditBalance        Float?                @default(0) // ليه فلوس (مدين للمورد)
+  debitBalance         Float?                @default(0) // عليه فلوس (المورد مدين لك)
+  netBalance           Float? // الرصيد النهائي (creditBalance - debitBalance)
+  name                 String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  added_by_id          Int?
+  updated_by_id        Int?
+  added_by             User?                 @relation("AddedBy", fields: [added_by_id], references: [id])
+  updated_by           User?                 @relation("UpdatedBy", fields: [updated_by_id], references: [id])
+  eznEdafat            EznEdafa[]            @relation("SupplierEznEdafa")
+  treasuryTransactions TreasuryTransaction[] @relation("SupplierTransactions")
 
   @@index([added_by_id], map: "Supplier_added_by_id_fkey")
   @@index([updated_by_id], map: "Supplier_updated_by_id_fkey")
 }
 
 model Client {
-  id            Int        @id @default(autoincrement())
-  photo         String     @default("default.jpg")
-  status        CompStatus @default(ACTIVE)
-  general_alert String
-  address       String
-  phone         String
-  creditBalance Float?     @default(0) // ليه فلوس (مدين للعميل)
-  debitBalance  Float?     @default(0) // عليه فلوس (العميل مدين لك)
-  netBalance    Float? // الرصيد النهائي (creditBalance - debitBalance)
-  name          String?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  added_by_id   Int?
-  updated_by_id Int?
-  added_by      User?      @relation("AddedBy", fields: [added_by_id], references: [id])
-  updated_by    User?      @relation("UpdatedBy", fields: [updated_by_id], references: [id])
+  id                   Int                   @id @default(autoincrement())
+  photo                String                @default("default.jpg")
+  status               CompStatus            @default(ACTIVE)
+  general_alert        String
+  address              String
+  phone                String
+  creditBalance        Float?                @default(0) // ليه فلوس (مدين للعميل)
+  debitBalance         Float?                @default(0) // عليه فلوس (العميل مدين لك)
+  netBalance           Float? // الرصيد النهائي (creditBalance - debitBalance)
+  name                 String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  added_by_id          Int?
+  updated_by_id        Int?
+  added_by             User?                 @relation("AddedBy", fields: [added_by_id], references: [id])
+  updated_by           User?                 @relation("UpdatedBy", fields: [updated_by_id], references: [id])
+  treasuryTransactions TreasuryTransaction[] @relation("ClientTransactions")
 
   @@index([added_by_id], map: "Client_added_by_id_fkey")
   @@index([updated_by_id], map: "Client_updated_by_id_fkey")
@@ -111,14 +121,20 @@ model TreasuryTransaction {
   id            Int             @id @default(autoincrement())
   type          TransactionType
   amount        Float
+  method        Method
   description   String?
-  sheck        Int
+  reference     String?
   treasuryId    Int
   treasury      Treasury        @relation(fields: [treasuryId], references: [id], onDelete: Cascade)
-createdAt DateTime? @default(now())
+  createdAt     DateTime?       @default(now())
   notifications Notification[]  @relation("TreasuryTransactionNotifications")
   userId        Int?
   user          User?           @relation(fields: [userId], references: [id])
+  clientId      Int?
+  client        Client?         @relation("ClientTransactions", fields: [clientId], references: [id])
+  supplierId    Int?
+
+  supplier Supplier? @relation("SupplierTransactions", fields: [supplierId], references: [id])
 
   @@index([treasuryId])
 }
