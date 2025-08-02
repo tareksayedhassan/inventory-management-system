@@ -63,6 +63,17 @@ export const formSchema = z.object({
   date: z.date(),
   method: z.enum(["cash", "check", "transfer"]),
   reference: z.string().optional(),
+  note: z.string().optional().nullable(),
+});
+
+export const supplierSchema = z.object({
+  status: z.enum(["creditBalance", "debitBalance"]),
+  phone: z.string(),
+  tax_number: z.string(),
+  address: z.string(),
+  note: z.string(),
+  name: z.string(),
+  Campname: z.string(),
 });
 export type TransactionForm = z.infer<typeof formSchema>;
 export type TransactionType = TransactionForm["transactionType"];

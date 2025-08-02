@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
-import { CompStatus } from "@prisma/client";
 import fs from "fs/promises";
 import path from "path";
+import { SupplierStatus } from "@prisma/client";
 
 // GET all suppliers with pagination
 export async function GET(req: NextRequest) {
@@ -51,35 +51,26 @@ export async function GET(req: NextRequest) {
     );
   }
 }
+
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
-    const file = formData.get("file") as File | null;
 
-    let photoFileName = "default.jpg";
-    if (file) {
-      const arrayBuffer = await file.arrayBuffer();
-      const buffer = new Uint8Array(arrayBuffer);
-      photoFileName = `${Date.now()}_${file.name}`;
-      const filePath = path.join(
-        process.cwd(),
-        "public/uploads",
-        photoFileName
-      );
-      await fs.writeFile(filePath, buffer);
-    }
-
-    const general_alert = formData.get("general_alert") as string;
     const address = formData.get("address") as string;
     const phone = formData.get("phone") as string;
     const name = formData.get("name") as string;
+    const Campname = formData.get("Campname") as string;
+
     const added_by_id = parseInt(formData.get("added_by_id") as string, 10);
     const updated_by_id = parseInt(formData.get("updated_by_id") as string, 10);
     const treasuryIdFromForm = formData.get("treasuryId");
-
+    const tax_number = formData.get("tax_number") as string;
     const statusRaw = formData.get("status") as string;
-    const status = Object.values(CompStatus).includes(statusRaw as CompStatus)
-      ? (statusRaw as CompStatus)
+    const note = formData.get("note") as string;
+    const status = Object.values(SupplierStatus).includes(
+      statusRaw as SupplierStatus
+    )
+      ? (statusRaw as SupplierStatus)
       : undefined;
 
     if (!status) {
@@ -88,14 +79,15 @@ export async function POST(req: NextRequest) {
 
     const newSupplier = await prisma.supplier.create({
       data: {
+        Campname,
         status,
-        general_alert,
+        tax_number,
+        note,
         address,
         phone,
         name,
         added_by_id,
         updated_by_id,
-        photo: photoFileName,
       },
     });
 

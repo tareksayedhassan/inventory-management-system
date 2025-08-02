@@ -130,6 +130,8 @@ const Page = () => {
           reference: values.reference || null,
           createdAt: values.date,
           method: values.method,
+          note: values.note,
+
           userId,
           treasuryId: Number(id),
           ...(values.transactionType === "Tahseel_mn_3ameel" && {
@@ -183,7 +185,7 @@ const Page = () => {
           سجل حركة خزنة: {treasury.name}
         </h1>
         <Button
-          className="bg-blue-600 text-white hover:bg-blue-700"
+          className="bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
           onClick={() => router.push("/dashboard/treasury")}
         >
           العودة للخزائن
@@ -290,7 +292,10 @@ const Page = () => {
                                           </SelectItem>
                                         ))
                                       ) : (
-                                        <SelectItem value="" disabled>
+                                        <SelectItem
+                                          value="no-suppliers"
+                                          disabled
+                                        >
                                           لا يوجد موردين
                                         </SelectItem>
                                       )
@@ -389,7 +394,7 @@ const Page = () => {
                   />
                 </div>
 
-                {/* Payment Method and Reference */}
+                {/* Payment Method, Reference, and Notes */}
                 <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
@@ -451,6 +456,24 @@ const Page = () => {
                   </AnimatePresence>
                 </div>
 
+                <FormField
+                  control={form.control}
+                  name="note"
+                  render={({ field }) => (
+                    <FormItem className="lg:col-span-4">
+                      <FormLabel>الملاحظات</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                          placeholder="أدخل ملاحظاتك هنا..."
+                          {...field}
+                          value={field.value ?? ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 {/* Submit Button */}
                 <div className="lg:col-span-4 flex justify-end ">
                   <Button
@@ -537,9 +560,11 @@ const Page = () => {
                         <TableCell className="px-3 py-2 text-center hidden sm:table-cell">
                           {tra.method === "cash"
                             ? "كاش"
-                            : tra.method === "bank"
-                            ? "بنك"
-                            : tra.method || "--"}
+                            : tra.method === "transfer"
+                            ? "تحويل"
+                            : tra.method === "check"
+                            ? "شيك"
+                            : tra.method || "__"}
                         </TableCell>
                         <TableCell className="px-3 py-2 text-center hidden md:table-cell">
                           {tra.reference || "--"}
