@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
-import fs from "fs/promises";
-import path from "path";
-import { SupplierStatus } from "@prisma/client";
+import { updateSupplierStatus } from "@/utils/supplierBalance";
 
 // GET all suppliers with pagination
 export async function GET(req: NextRequest) {
@@ -60,27 +58,18 @@ export async function POST(req: NextRequest) {
     const phone = formData.get("phone") as string;
     const name = formData.get("name") as string;
     const Campname = formData.get("Campname") as string;
-
+    const balance = parseFloat(formData.get("balance") as string) || 0;
+    const note = (formData.get("note") as string) || "";
     const added_by_id = parseInt(formData.get("added_by_id") as string, 10);
     const updated_by_id = parseInt(formData.get("updated_by_id") as string, 10);
     const treasuryIdFromForm = formData.get("treasuryId");
     const tax_number = formData.get("tax_number") as string;
-    const statusRaw = formData.get("status") as string;
-    const note = formData.get("note") as string;
-    const status = Object.values(SupplierStatus).includes(
-      statusRaw as SupplierStatus
-    )
-      ? (statusRaw as SupplierStatus)
-      : undefined;
-
-    if (!status) {
-      return NextResponse.json({ message: "حالة غير صالحة" }, { status: 400 });
-    }
 
     const newSupplier = await prisma.supplier.create({
       data: {
+        balance,
         Campname,
-        status,
+        status: "neutral", // دايمًا تبدأ بـ neutral
         tax_number,
         note,
         address,
@@ -91,6 +80,9 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // احسب الحالة الحقيقية من المعاملات
+    await updateSupplierStatus(newSupplier.id);
+
     const user = await prisma.user.findUnique({
       where: { id: added_by_id },
       select: { name: true },
@@ -100,18 +92,10 @@ export async function POST(req: NextRequest) {
 
     const redirectUrl = `/Supplier`;
     const now = new Date();
-    const dateStr = now.toLocaleDateString("ar-EG", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-    const timeStr = now.toLocaleTimeString("ar-EG", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
     const message = `تم إضافة مورد جديد "${name}" (هاتف: ${
       phone || "غير متوفر"
     }) بواسطة ${userName}`;
+
     await prisma.notification.create({
       data: {
         message,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
 import { TransactionType } from "@prisma/client";
+import { updateSupplierStatus } from "@/utils/supplierBalance";
 
 // GET all suppliers with pagination
 export async function GET(req: NextRequest) {
@@ -47,11 +48,12 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-
 // POST create new treasury transaction
+// routes/api/treasury/transaction.ts
+
 export async function POST(req: NextRequest) {
   try {
-    let {
+    const {
       amount,
       type,
       treasuryId,
@@ -65,17 +67,17 @@ export async function POST(req: NextRequest) {
       note,
     } = await req.json();
 
-    // التحقق من وجود الخزنة
+    // 1. التحقق من وجود الخزنة
     const treasury = await prisma.treasury.findUniqueOrThrow({
       where: { id: treasuryId },
     });
 
-    // التحقق إذا كانت العملية سحب (سداد لمورد أو سحب مباشر)
+    // 2. التحقق إذا كانت العملية سحب
     const isWithdraw =
       type === TransactionType.Sadad_le_moored ||
       type === TransactionType.Sa7b_mobasher;
 
-    // التحقق من الرصيد في حالة السحب
+    // 3. التحقق من الرصيد في حالة السحب
     if (isWithdraw && amount > treasury.balance) {
       return NextResponse.json(
         { message: "لا يمكن سحب مبلغ أكبر من رصيد الخزنة الحالي." },
@@ -83,12 +85,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // حساب الرصيد الجديد
+    // 4. حساب الرصيد الجديد للخزنة
     const updatedBalance = isWithdraw
       ? treasury.balance - amount
       : treasury.balance + amount;
 
-    // إعداد الوصف بناءً على نوع الحركة
+    // 5. توليد وصف الحركة حسب النوع
+    let finalDescription = description;
+
     if (type === TransactionType.Sadad_le_moored) {
       if (!supplierId) {
         return NextResponse.json(
@@ -96,15 +100,12 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
-
       const supplier = await prisma.supplier.findUnique({
         where: { id: supplierId },
       });
-
-      const supplierName = supplier?.name || "غير معروف";
-      description = `تم سداد دفعة إلى المورد ${supplierName} ${
-        note ? `(${note})` : ""
-      }`;
+      finalDescription = `تم سداد دفعة إلى المورد ${
+        supplier?.name || "غير معروف"
+      }${note ? ` (${note})` : ""}`;
     } else if (type === TransactionType.Tahseel_mn_3ameel) {
       if (!clientId) {
         return NextResponse.json(
@@ -112,32 +113,30 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
-
       const client = await prisma.client.findUnique({
         where: { id: clientId },
       });
-
-      description = `تم تحصيل دفعة من العميل ${client?.name || "غير معروف"} ${
-        note ? `(${note})` : ""
-      }`;
+      finalDescription = `تم تحصيل دفعة من العميل ${
+        client?.name || "غير معروف"
+      }${note ? ` (${note})` : ""}`;
     } else if (type === TransactionType.Eda3_mobasher) {
-      description = `تم إيداع مبلغ نقدي في خزنة ${
-        treasury?.name || "غير معروفة"
-      } ${note ? `(${note})` : ""}`;
+      finalDescription = `تم إيداع مبلغ نقدي في خزنة ${treasury.name}${
+        note ? ` (${note})` : ""
+      }`;
     } else if (type === TransactionType.Sa7b_mobasher) {
-      description = `تم سحب مبلغ نقدي من خزنة ${
-        treasury?.name || "غير معروفة"
-      } ${note ? `(${note})` : ""}`;
+      finalDescription = `تم سحب مبلغ نقدي من خزنة ${treasury.name}${
+        note ? ` (${note})` : ""
+      }`;
     }
 
-    // تنفيذ معاملة الخزنة (TreasuryTransaction و Treasury)
+    // 6. تنفيذ معاملة الخزنة وتحديث الرصيد
     await prisma.$transaction([
       prisma.treasuryTransaction.create({
         data: {
           method,
           type,
           amount,
-          description,
+          description: finalDescription,
           reference,
           treasuryId,
           userId,
@@ -153,18 +152,31 @@ export async function POST(req: NextRequest) {
       }),
     ]);
 
-    // تسجيل حركة المورد (SupplierTransaction) بشكل مستقل إذا كان نوع العملية سداد لمورد
+    // 7. تسجيل حركة المورد وتحديث الرصيد في حالة سداد لمورد
     if (type === TransactionType.Sadad_le_moored && supplierId) {
-      await prisma.supplierTransaction.create({
-        data: {
-          debitBalance: amount,
-          description,
-          supplierId,
-          treasuryId,
-          userId,
-          createdAt,
-        },
-      });
+      await prisma.$transaction([
+        prisma.supplierTransaction.create({
+          data: {
+            debitBalance: amount,
+            description: finalDescription,
+            supplierId,
+            treasuryId,
+            userId,
+            createdAt,
+          },
+        }),
+        prisma.supplier.update({
+          where: { id: supplierId },
+          data: {
+            balance: {
+              decrement: amount,
+            },
+          },
+        }),
+      ]);
+
+      // ✅ تحديث حالة المورد بعد ما الرصيد يتحدث
+      await updateSupplierStatus(supplierId);
     }
 
     return NextResponse.json(

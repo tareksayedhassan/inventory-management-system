@@ -30,6 +30,7 @@
     "clsx": "^2.1.1",
     "cookie-universal": "^2.2.2",
     "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
     "formidable": "^3.5.4",
     "framer-motion": "^12.23.12",
     "jsonwebtoken": "^9.0.2",

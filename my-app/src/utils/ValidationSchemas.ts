@@ -67,13 +67,17 @@ export const formSchema = z.object({
 });
 
 export const supplierSchema = z.object({
-  status: z.enum(["creditBalance", "debitBalance"]),
-  phone: z.string(),
-  tax_number: z.string(),
-  address: z.string(),
-  note: z.string(),
-  name: z.string(),
-  Campname: z.string(),
+  name: z.string().min(1, "الاسم مطلوب"),
+  phone: z
+    .string()
+    .regex(
+      /^01[0-2,5]{1}[0-9]{8}$/,
+      "رقم الهاتف غير صحيح (يجب أن يكون مصريًا)"
+    ),
+  tax_number: z.string().min(1, "الرقم الضريبي مطلوب"),
+  address: z.string().min(1, "العنوان مطلوب"),
+  note: z.string().optional(),
+  companyName: z.string().min(1, "اسم الشركة مطلوب"),
 });
 export type TransactionForm = z.infer<typeof formSchema>;
 export type TransactionType = TransactionForm["transactionType"];

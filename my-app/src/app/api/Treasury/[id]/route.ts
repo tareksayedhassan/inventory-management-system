@@ -1,4 +1,3 @@
-import { CompStatus } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
 

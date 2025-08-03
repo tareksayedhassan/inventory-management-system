@@ -1,30 +1,20 @@
-import { CompStatus } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
 import { writeFile } from "fs/promises";
 import { randomUUID } from "crypto";
 import path from "path";
 
-interface Company {
-  system_nums: number;
-  photo: string;
-  active: CompStatus;
-  general_alert: string;
-  address: string;
-  phone: string;
-  Name: number;
-  added_by_id: number;
-  updaeted_by_id: number;
-}
 // get single setting
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const id = parseInt(params.id, 10);
+  const { id } = await params;
+  const supplierId = parseInt(id, 10);
+
   try {
     const setting = await prisma.supplier.findUnique({
-      where: { id },
+      where: { id: supplierId },
     });
 
     if (!setting) {
@@ -50,12 +40,14 @@ export async function GET(
 }
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const id = parseInt(params.id, 10);
+  const { id } = await params;
+  const supplierId = parseInt(id, 10);
+
   try {
     await prisma.supplier.delete({
-      where: { id },
+      where: { id: supplierId },
     });
 
     return NextResponse.json(
