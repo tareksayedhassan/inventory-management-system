@@ -160,28 +160,51 @@ export async function POST(req: NextRequest) {
         data: { balance: updatedBalance },
       });
 
-      // تحصيل من عميل
+      const clientBlance = await prisma.client.findUnique({
+        where: { id: clientId },
+        select: {
+          balance: true,
+        },
+      });
+
       if (type === TransactionType.Tahseel_mn_3ameel && clientId) {
-        await tx.clientTransaction.create({
-          data: {
-            debitBalance: amount,
-            description: finalDescription,
-            ClientId: clientId,
-            userId,
-            createdAt,
-          },
+        const clientBalance = await prisma.client.findUnique({
+          where: { id: clientId },
+          select: { balance: true },
         });
 
-        await tx.client.update({
-          where: { id: clientId },
-          data: {
-            balance: {
-              decrement: amount,
+        // تأكد من وجود العميل
+        if (!clientBalance || clientBalance.balance === undefined) {
+          throw new Error("العميل غير موجود أو لا يحتوي على رصيد");
+        }
+
+        // تأكد من كفاية الرصيد
+        if (amount > clientBalance.balance) {
+          throw new Error("لا يمكن تحصيل مبلغ أكبر من رصيد العميل");
+        }
+
+        // تنفيذ المعاملة داخل الـ transaction
+        await prisma.$transaction(async (tx) => {
+          await tx.clientTransaction.create({
+            data: {
+              debitBalance: amount,
+              description: finalDescription,
+              ClientId: clientId,
+              userId,
+              createdAt,
             },
-          },
+          });
+
+          await tx.client.update({
+            where: { id: clientId },
+            data: {
+              balance: {
+                decrement: amount,
+              },
+            },
+          });
         });
       }
-
       // سداد لمورد
       if (type === TransactionType.Sadad_le_moored && supplierId) {
         await tx.supplierTransaction.create({
