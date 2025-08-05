@@ -48,9 +48,11 @@ export async function GET(req: NextRequest) {
     );
   }
 }
+
 // POST create new treasury transaction
 // routes/api/treasury/transaction.ts
 
+// POST create new treasury transaction
 export async function POST(req: NextRequest) {
   try {
     const {
@@ -100,9 +102,11 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
+
       const supplier = await prisma.supplier.findUnique({
         where: { id: supplierId },
       });
+
       finalDescription = `تم سداد دفعة إلى المورد ${
         supplier?.name || "غير معروف"
       }${note ? ` (${note})` : ""}`;
@@ -113,9 +117,11 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
+
       const client = await prisma.client.findUnique({
         where: { id: clientId },
       });
+
       finalDescription = `تم تحصيل دفعة من العميل ${
         client?.name || "غير معروف"
       }${note ? ` (${note})` : ""}`;
@@ -129,9 +135,10 @@ export async function POST(req: NextRequest) {
       }`;
     }
 
-    // 6. تنفيذ معاملة الخزنة وتحديث الرصيد
-    await prisma.$transaction([
-      prisma.treasuryTransaction.create({
+    // 6. تنفيذ الترانزاكشن بالكامل
+    await prisma.$transaction(async (tx) => {
+      // حركة الخزنة
+      await tx.treasuryTransaction.create({
         data: {
           method,
           type,
@@ -145,17 +152,39 @@ export async function POST(req: NextRequest) {
           supplierId: supplierId || undefined,
           clientId: clientId || undefined,
         },
-      }),
-      prisma.treasury.update({
+      });
+
+      // تحديث رصيد الخزنة
+      await tx.treasury.update({
         where: { id: treasuryId },
         data: { balance: updatedBalance },
-      }),
-    ]);
+      });
 
-    // 7. تسجيل حركة المورد وتحديث الرصيد في حالة سداد لمورد
-    if (type === TransactionType.Sadad_le_moored && supplierId) {
-      await prisma.$transaction([
-        prisma.supplierTransaction.create({
+      // تحصيل من عميل
+      if (type === TransactionType.Tahseel_mn_3ameel && clientId) {
+        await tx.clientTransaction.create({
+          data: {
+            debitBalance: amount,
+            description: finalDescription,
+            ClientId: clientId,
+            userId,
+            createdAt,
+          },
+        });
+
+        await tx.client.update({
+          where: { id: clientId },
+          data: {
+            balance: {
+              decrement: amount,
+            },
+          },
+        });
+      }
+
+      // سداد لمورد
+      if (type === TransactionType.Sadad_le_moored && supplierId) {
+        await tx.supplierTransaction.create({
           data: {
             debitBalance: amount,
             description: finalDescription,
@@ -164,19 +193,22 @@ export async function POST(req: NextRequest) {
             userId,
             createdAt,
           },
-        }),
-        prisma.supplier.update({
+        });
+
+        await tx.supplier.update({
           where: { id: supplierId },
           data: {
             balance: {
               decrement: amount,
             },
           },
-        }),
-      ]);
+        });
+      }
+    });
 
-      // ✅ تحديث حالة المورد بعد ما الرصيد يتحدث
-      await updateSupplierStatus(supplierId);
+    // تحديث حالة المورد بعد الترانزاكشن
+    if (type === TransactionType.Sadad_le_moored && supplierId) {
+      await updateSupplierStatus(supplierId, "supplier");
     }
 
     return NextResponse.json(

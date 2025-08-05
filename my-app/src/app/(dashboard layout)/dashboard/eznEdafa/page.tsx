@@ -7,7 +7,6 @@ import {
   EznEdafa,
   Products,
   Supplier as SupplierEndpoint,
-  Treasury,
 } from "@/apiCaild/API";
 import { DecodedToken } from "@/Types/CustomJWTDecoded";
 import { IoIosAddCircleOutline } from "react-icons/io";
@@ -15,21 +14,20 @@ import { toast } from "sonner";
 import { jwtDecode } from "jwt-decode";
 import Cookie from "cookie-universal";
 import axios from "axios";
-import React, { useEffect, useState } from "react";
-
+import React, { useEffect, useState, useRef } from "react";
+import { motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Product } from "@/Types/company";
 import Alert from "@/components/customUi/Alert";
 import SelectedData from "@/components/customUi/SelctedData";
+import { useReactToPrint } from "react-to-print";
+import PrintableComponent from "@/components/customUi/PrintComponent";
 
 // ========== Types ==========
 type Supplier = { id: number; name: string };
-
-// ========== Main Component ==========
 const Page = () => {
   const [totalAmount, settotalAmount] = useState(0);
-  const [treasuries, setTreasuries] = useState<Supplier[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [isTaxed, setIsTaxed] = useState<boolean>(false);
   const [products, setProducts] = useState<Product[]>([]);
@@ -43,14 +41,12 @@ const Page = () => {
   );
   const [search, setSearch] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [selectedTreasuryId, setSelectedTreasuryId] = useState<number | null>(
-    null
-  );
   const [selectedSupplierId, setSelectedSupplierId] = useState<number | null>(
     null
   );
   const [userId, setUserId] = useState<number | null>(null);
 
+  const printRef = useRef<HTMLDivElement>(null);
   const cookie = Cookie();
   const token = cookie.get("Bearer");
 
@@ -78,14 +74,12 @@ const Page = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [suppliersRes, treasuriesRes, productsRes] = await Promise.all([
+        const [suppliersRes, productsRes] = await Promise.all([
           fetch(`${BASE_URL}/${SupplierEndpoint}`).then((res) => res.json()),
-          fetch(`${BASE_URL}/${Treasury}`).then((res) => res.json()),
           fetch(`${BASE_URL}/${Products}`).then((res) => res.json()),
         ]);
 
         setSuppliers(suppliersRes.data || []);
-        setTreasuries(treasuriesRes.data || []);
         setProducts(productsRes.data || []);
       } catch {
         toast.error("فشل في تحميل البيانات.");
@@ -100,13 +94,9 @@ const Page = () => {
     const found = products.find((p) => p.id === selectedProductId);
     setSelectedProduct(found || null);
   }, [selectedProductId, products]);
+
   const handleSubmit = async () => {
-    if (
-      !selectedSupplierId ||
-      !selectedTreasuryId ||
-      !userId ||
-      selectedProducts.length === 0
-    ) {
+    if (!selectedSupplierId || !userId || selectedProducts.length === 0) {
       toast.error("يرجى تحديد جميع الحقول المطلوبة وإضافة صنف واحد على الأقل.");
       return;
     }
@@ -120,25 +110,14 @@ const Page = () => {
     }
 
     try {
-      const treasuryRes = await axios.get(
-        `${BASE_URL}/${Treasury}/${selectedTreasuryId}`
-      );
-      const currentBalance = treasuryRes.data?.data?.balance || 0;
-
-      if (currentBalance < finalTotal) {
-        toast.error("رصيد الخزنة لا يكفي لإتمام العملية.");
-        return;
-      }
-
       await axios.post(`${BASE_URL}/${EznEdafa}`, {
         totalAmount: finalTotal,
-        tax: isTaxChecked ? taxx : 0, // قيمة الضريبة فقط لو متفعلة
+        tax: isTaxChecked ? taxx : 0,
         supplierId: selectedSupplierId,
         products: selectedProducts.map((product) => ({
           productId: product.id,
           amount: product.amount,
         })),
-        treasuryId: selectedTreasuryId,
         userId,
         isTaxed: isTaxChecked,
       });
@@ -152,27 +131,32 @@ const Page = () => {
     }
   };
 
-  const treasuryWithdrow = async () => {
-    if (!selectedTreasuryId) {
-      toast.error("برجاء اختيار خزينة لإتمام العملية");
-      return;
-    }
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: "Invoice-Ezn",
+    pageStyle: `
+      @page { size: A4; margin: 10mm; }
+      @media print {
+        .printable-component { position: static; left: auto; top: auto; }
+        table { width: 100%; border-collapse: collapse; page-break-inside: auto; }
+        tr { page-break-inside: avoid; page-break-after: auto; }
+        .no-print { display: none; }
+      }
+    `,
 
-    try {
-      await axios.post(
-        `${BASE_URL}/${Treasury}/${selectedTreasuryId}/withdraw`,
-        {
-          amount: finalTotal,
-          description: description || "سحب من الخزنة لإذن إضافة",
-        }
-      );
-      toast.success("تم تنفيذ عملية السحب من الخزنة بنجاح.");
-    } catch (error: any) {
-      console.error("خطأ في عملية السحب من الخزنة:", error);
-      toast.error(
-        error?.response?.data?.message || "فشل في تنفيذ عملية السحب من الخزنة."
-      );
-    }
+    onBeforePrint: () => {
+      if (!selectedProducts.length || !selectedSupplierId) {
+        toast.error("يرجى تحديد مورد ومنتجات قبل الطباعة.");
+        return Promise.reject();
+      }
+
+      return Promise.resolve(); // لازم ده
+    },
+  });
+
+  const handleExportExcel = () => {
+    toast.info("سيتم تصدير البيانات إلى Excel");
+    // يمكنك إضافة منطق تصدير Excel هنا
   };
 
   const totalAmountBeforeSubmit = selectedProducts.reduce((acc, item) => {
@@ -184,9 +168,18 @@ const Page = () => {
   const deduction = totalAmountBeforeSubmit * 0.01;
   const finalTotal = totalAmountBeforeSubmit + taxx - deduction;
 
-  // ========== Render ==========
+  const selectedSupplier = suppliers.find((s) => s.id === selectedSupplierId);
+
   return (
-    <div dir="rtl" className="p-6 bg-gray-50 min-h-screen">
+    <div dir="rtl">
+      <style jsx>{`
+        .printable-component {
+          position: absolute;
+          left: -9999px;
+          top: -9999px;
+        }
+      `}</style>
+
       <div className="flex justify-between items-center mb-8 max-w-6xl mx-auto">
         <h1 className="font-semibold text-3xl text-gray-800">إذن إضافة</h1>
         <Button variant="secondary" className="hover:bg-amber-100">
@@ -223,47 +216,27 @@ const Page = () => {
             </select>
           </div>
 
-          {/* Treasury */}
-          <div>
-            <label className="block mb-1 font-medium text-gray-700">
-              اختر الخزينة
-            </label>
-            <select
-              value={selectedTreasuryId ?? ""}
-              onChange={(e) => setSelectedTreasuryId(Number(e.target.value))}
-              className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              <option value="" disabled>
-                اختر اسم الخزينة
-              </option>
-              {treasuries.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
           {/* Product Select */}
           <CardContent className="w-full col-span-1 md:col-span-2">
-            <div
+            <motion.div
+              whileHover={{ scale: 1.01 }}
               dir="rtl"
               className="
-                p-6 
-                bg-gradient-to-br 
-                from-green-50 
-                to-blue-50 
-                rounded-xl 
-                shadow-md 
-                hover:shadow-lg 
-                transition-shadow 
-                duration-300
-                min-h-[120px]
-                flex
-                flex-col
-                items-center
-                justify-center
-              "
+                  p-6 
+                  bg-gradient-to-br 
+                  from-green-50 
+                  to-blue-50 
+                  rounded-xl 
+                  shadow-md 
+                  hover:shadow-lg 
+                  transition-shadow 
+                  duration-300
+                  min-h-[120px]
+                  flex
+                  flex-col
+                  items-center
+                  justify-center
+                "
             >
               <Alert
                 search={search}
@@ -274,7 +247,7 @@ const Page = () => {
                 selectedProducts={selectedProducts}
                 setSelectedProducts={setSelectedProducts}
               />
-            </div>
+            </motion.div>
             <div className="w-full col-span-1 md:col-span-2 mt-8">
               <SelectedData
                 products={products}
@@ -348,7 +321,21 @@ const Page = () => {
             </div>
           </div>
         </div>
-        <CardFooter className="flex justify-end">
+        <CardFooter className="flex justify-end gap-4">
+          <Button
+            variant="outline"
+            className="bg-white text-blue-600 border-blue-600 hover:bg-blue-50"
+            onClick={handlePrint}
+          >
+            طباعة إذن الإضافة
+          </Button>
+          <Button
+            variant="outline"
+            className="bg-white text-green-600 border-green-600 hover:bg-green-50"
+            onClick={handleExportExcel}
+          >
+            تصدير إلى Excel
+          </Button>
           <Button
             className="bg-green-600 hover:bg-green-700 text-white"
             onClick={() => handleSubmit()}
@@ -357,6 +344,19 @@ const Page = () => {
           </Button>
         </CardFooter>
       </Card>
+
+      <div className="printable-component">
+        <PrintableComponent
+          ref={printRef}
+          selectedSupplier={selectedSupplier}
+          selectedProducts={selectedProducts}
+          totalAmountBeforeSubmit={totalAmountBeforeSubmit}
+          taxx={taxx}
+          deduction={deduction}
+          finalTotal={finalTotal}
+          isTaxChecked={isTaxChecked}
+        />
+      </div>
     </div>
   );
 };

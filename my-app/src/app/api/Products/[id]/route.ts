@@ -1,15 +1,16 @@
-import { CompStatus } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const id = parseInt(params.id, 10);
+  const { id } = await params;
+
+  const ProductId = parseInt(id, 10);
   try {
     await prisma.product.delete({
-      where: { id },
+      where: { id: ProductId },
     });
 
     return NextResponse.json(
@@ -26,9 +27,11 @@ export async function DELETE(
 }
 export async function PATCH(
   req: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const id = parseInt(context.params.id);
+  const { id } = await params;
+
+  const ProductId = parseInt(id, 10);
   const body = await req.json();
 
   try {
@@ -46,7 +49,7 @@ export async function PATCH(
       updateData.updated_by_id = body.updated_by_id;
 
     const updatedTreasury = await prisma.treasury.update({
-      where: { id },
+      where: { id: ProductId },
       data: updateData,
     });
 

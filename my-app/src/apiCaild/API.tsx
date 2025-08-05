@@ -33,3 +33,8 @@ export const stock = "stock";
 // TreasuryTransaction
 
 export const TreasuryTransaction = "TreasuryTransaction";
+
+// SupplierTransaction
+export const SupplierTransaction = "SupplierTransaction";
+// clients
+export const clients = "clients";

@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
       include: {
         eznEdafat: {
           include: {
-            product: true,
+            products: true,
             supplier: true,
           },
         },

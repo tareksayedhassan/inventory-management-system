@@ -7,9 +7,12 @@ import { SupplierStatus } from "@prisma/client";
  * - إذا كان مجموع المدين أكبر => المورد "ليه فلوس"
  * - إذا كانوا متساويين => "محايد"
  */
-export async function updateSupplierStatus(supplierId: number) {
+export async function updateSupplierStatus(
+  id: number,
+  type: "supplier" | "client"
+) {
   const transactions = await prisma.supplierTransaction.findMany({
-    where: { supplierId },
+    where: { supplierId: id },
     select: {
       creditBalance: true,
       debitBalance: true,
@@ -34,11 +37,23 @@ export async function updateSupplierStatus(supplierId: number) {
     newStatus = "creditBalance";
   }
 
-  await prisma.supplier.update({
-    where: { id: supplierId },
-    data: {
-      status: newStatus,
-      balance: totalCredit - totalDebit,
-    },
-  });
+  const balance = totalCredit - totalDebit;
+
+  if (type === "supplier") {
+    await prisma.supplier.update({
+      where: { id },
+      data: {
+        status: newStatus,
+        balance,
+      },
+    });
+  } else {
+    await prisma.client.update({
+      where: { id },
+      data: {
+        status: newStatus,
+        balance,
+      },
+    });
+  }
 }

@@ -17,7 +17,7 @@ import {
 import { Compny } from "@/Types/company";
 import useSWR from "swr";
 import { fetcher } from "@/apiCaild/fetcher";
-import { BASE_URL, Company } from "@/apiCaild/API";
+import { BASE_URL, Supplier } from "@/apiCaild/API";
 import { toast } from "sonner";
 import Loading from "@/components/customUi/loading";
 import Image from "next/image";
@@ -28,7 +28,7 @@ const EditCompanyForm = () => {
   const router = useRouter();
 
   const { data, error, isLoading, mutate } = useSWR(
-    `${BASE_URL}/${Company}/${id}`,
+    `${BASE_URL}/${Supplier}/${id}`,
     fetcher
   );
   const company: Compny = data?.data || {};
@@ -57,10 +57,10 @@ const EditCompanyForm = () => {
       formData.append("general_alert", company.general_alert || "");
       formData.append("address", company.address || "");
       formData.append("phone", company.phone || "");
-      formData.append("Name", company.Name || "");
+      formData.append("Name", company.name || "");
       formData.append("status", company.status || "");
 
-      const response = await fetch(`${BASE_URL}/${Company}/${id}`, {
+      const response = await fetch(`${BASE_URL}/${Supplier}/${id}`, {
         method: "PATCH",
         body: formData,
       });
@@ -114,7 +114,7 @@ const EditCompanyForm = () => {
 
       <div>
         <Label htmlFor="Name">Company Name</Label>
-        <Input id="Name" {...register("Name")} />
+        <Input id="Name" {...register("name")} />
       </div>
       <div>
         <Label htmlFor="photo">Company Logo</Label>

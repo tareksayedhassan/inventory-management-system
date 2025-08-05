@@ -1,6 +1,11 @@
 "use client";
 
-import { BASE_URL, Supplier, Treasury } from "@/apiCaild/API";
+import {
+  BASE_URL,
+  Supplier,
+  SupplierTransaction,
+  Treasury,
+} from "@/apiCaild/API";
 import { fetcher } from "@/apiCaild/fetcher";
 import Loading from "@/components/customUi/loading";
 import axios from "axios";
@@ -13,6 +18,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { PiPencilCircleDuotone } from "react-icons/pi";
+import { format } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
+import { SupplierStatus } from "@prisma/client";
+import { Badge } from "@/components/ui/badge";
 
 // مكون EditPartyModal (يُفترض أنه موجود)
 const EditPartyModal = ({
@@ -28,14 +37,10 @@ const EditPartyModal = ({
   return null;
 };
 
-// وظائف تنسيق افتراضية (يجب استبدالها بالوظائف الحقيقية إذا كانت موجودة)
-const formatDate = (date: string) => new Date(date).toLocaleDateString("ar-EG");
 const formatDateTime = (date: string) => new Date(date).toLocaleString("ar-EG");
 const formatCurrency = (amount: number) => `${amount.toFixed(2)} ج.م`;
 
 const CompanyPage = () => {
-  const [treasuries, setTreasuries] = useState<any[]>([]);
-  const [editingParty, setEditingParty] = useState<any | null>(null);
   const router = useRouter();
   const params = useParams();
   const id = params?.id as string;
@@ -45,64 +50,17 @@ const CompanyPage = () => {
     fetcher
   );
 
-  useEffect(() => {
-    axios
-      .get(`${BASE_URL}/${Treasury}`)
-      .then((res) => setTreasuries(res.data?.data || []))
-      .catch((err) => {
-        console.error("خطأ في تحميل الخزن", err);
-        toast.error("فشل تحميل بيانات الخزن");
-      });
-  }, []);
-
+  const {
+    data: TransactionData,
+    error: TransactionError,
+    isLoading: TransactionisLoading,
+    mutate: TransactionMutate,
+  } = useSWR(`${BASE_URL}/${SupplierTransaction}/${id}`, fetcher);
+  const Transactions = TransactionData?.data ?? [];
   const suppler = data?.data ?? {};
-
+  console.log(Transactions);
   const cookie = Cookie();
   const token = cookie.get("Bearer");
-
-  // بيانات حركات افتراضية (يجب استبدالها ببيانات حقيقية)
-  const partyTransactions = [
-    {
-      id: 1,
-      txType: "payment",
-      date: "2025-08-01",
-      description: "دفعة مقدمة",
-      debit: 1000,
-      credit: 0,
-      runningBalance: 1000,
-    },
-    {
-      id: 2,
-      txType: "invoice",
-      date: "2025-08-02",
-      description: "فاتورة شراء",
-      debit: 0,
-      credit: 500,
-      runningBalance: 500,
-    },
-  ];
-  const totalDebit = partyTransactions.reduce(
-    (sum, tx) => sum + (tx.debit || 0),
-    0
-  );
-  const totalCredit = partyTransactions.reduce(
-    (sum, tx) => sum + (tx.credit || 0),
-    0
-  );
-
-  const handleEditSave = async (updatedData: any) => {
-    try {
-      await axios.put(`${BASE_URL}/${Supplier}/${id}`, updatedData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      mutate(); // إعادة تحميل البيانات بعد التعديل
-      setEditingParty(null);
-      toast.success("تم تعديل بيانات المورد بنجاح");
-    } catch (err) {
-      console.error("خطأ في تعديل البيانات", err);
-      toast.error("فشل تعديل بيانات المورد");
-    }
-  };
 
   if (isLoading)
     return (
@@ -115,13 +73,6 @@ const CompanyPage = () => {
 
   return (
     <div className="py-8" dir="rtl">
-      {editingParty && (
-        <EditPartyModal
-          party={editingParty}
-          onClose={() => setEditingParty(null)}
-          onSave={handleEditSave}
-        />
-      )}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -134,14 +85,14 @@ const CompanyPage = () => {
         <div className="flex gap-3">
           <Button
             className="bg-blue-600 text-white hover:bg-blue-700 cursor-pointer flex items-center gap-2"
-            onClick={() => setEditingParty(suppler)}
+            // onClick={() => setEditingParty(suppler)}
           >
             <PiPencilCircleDuotone className="w-5 h-5" />
             تعديل البيانات
           </Button>
           <Button
             className="bg-gray-200 text-gray-800 hover:bg-gray-300 cursor-pointer"
-            onClick={() => router.push("/dashboard/treasury")}
+            onClick={() => router.push("/dashboard/Supplier")}
           >
             العودة للقائمة
           </Button>
@@ -153,9 +104,9 @@ const CompanyPage = () => {
         transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
         className="mt-5"
       >
-        <Card className="shadow-lg border-none bg-gradient-to-br from-blue-50 to-white">
+        <Card className="shadow-lg border-0 border-b-2 border-blue-200">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold text-blue-800">
+            <CardTitle className="text-2xl font-bold ">
               بيانات المورد - {suppler.name}
             </CardTitle>
           </CardHeader>
@@ -217,7 +168,10 @@ const CompanyPage = () => {
               >
                 <p className="text-sm text-gray-500">تاريخ الإنشاء</p>
                 <p className="font-semibold text-base font-numeric">
-                  {suppler.created_at ? formatDate(suppler.created_at) : "-"}
+                  {format(
+                    toZonedTime(suppler.createdAt, "Africa/Cairo"),
+                    "dd/MM/yyyy hh:mm a"
+                  )}{" "}
                 </p>
               </motion.div>
               <motion.div
@@ -238,15 +192,15 @@ const CompanyPage = () => {
                 >
                   {formatCurrency(Math.abs(suppler.balance || 0))}
                 </div>
-                <div className="text-sm font-semibold">
-                  {suppler.balance
-                    ? suppler.balance > 0
-                      ? "عليه (مدين)"
-                      : suppler.balance < 0
-                      ? "له (دائن)"
-                      : "مسدد"
-                    : ""}
-                </div>
+                {suppler.status === SupplierStatus.creditBalance ? (
+                  <Badge className="bg-green-500 text-white">له</Badge>
+                ) : suppler.status === SupplierStatus.debitBalance ? (
+                  <Badge className="bg-red-500 text-white">عليه</Badge>
+                ) : suppler.status === SupplierStatus.neutral ? (
+                  <Badge className="bg-blue-400 text-white">صافي حساب</Badge>
+                ) : (
+                  <Badge className="bg-gray-500 text-white">معلق</Badge>
+                )}
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
@@ -256,7 +210,7 @@ const CompanyPage = () => {
               >
                 <p className="text-sm text-gray-500">ملاحظات</p>
                 <p className="font-semibold text-base whitespace-pre-wrap">
-                  {suppler.note || "-"}
+                  {suppler.note || <span>لا توجد ملاحظات</span>}
                 </p>
               </motion.div>
             </div>
@@ -269,11 +223,9 @@ const CompanyPage = () => {
         transition={{ duration: 0.5, ease: "easeOut", delay: 0.4 }}
         className="mt-5"
       >
-        <Card className="shadow-lg border-none bg-gradient-to-br from-blue-50 to-white">
+        <Card className="shadow-lg border-0 border-b-2 border-blue-200">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold text-blue-800">
-              سجل الحركات
-            </CardTitle>
+            <CardTitle className="text-2xl font-bold ">سجل الحركات</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -282,44 +234,37 @@ const CompanyPage = () => {
                   <tr>
                     <th className="p-3">التاريخ</th>
                     <th className="p-3">البيان</th>
-                    <th className="p-3">مدين (عليه)</th>
                     <th className="p-3">دائن (له)</th>
+                    <th className="p-3">مدين (عليه)</th>
+
                     <th className="p-3">الرصيد</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {partyTransactions.map((tx, index) => (
+                  {Transactions.map((tx: any, index: number) => (
                     <motion.tr
                       key={`${tx.id}-${tx.txType}`}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, delay: 0.5 + index * 0.1 }}
                     >
-                      <td className="p-2">{formatDateTime(tx.date)}</td>
+                      <td className="p-2">
+                        {" "}
+                        {format(
+                          toZonedTime(tx.createdAt, "Africa/Cairo"),
+                          "dd/MM/yyyy hh:mm a"
+                        )}
+                      </td>
                       <td className="p-2">{tx.description}</td>
                       <td className="p-2 text-green-500 font-numeric text-base font-semibold">
-                        {tx.debit ? formatCurrency(tx.debit) : "-"}
+                        {tx.creditBalance
+                          ? formatCurrency(tx.creditBalance)
+                          : "-"}
                       </td>
                       <td className="p-2 text-red-500 font-numeric text-base font-semibold">
-                        {tx.credit ? formatCurrency(tx.credit) : "-"}
-                      </td>
-                      <td
-                        className={`p-2 font-numeric text-base font-bold ${
-                          tx.runningBalance > 0
-                            ? "text-green-600"
-                            : tx.runningBalance < 0
-                            ? "text-red-600"
-                            : ""
-                        }`}
-                      >
-                        {formatCurrency(Math.abs(tx.runningBalance))}
-                        <span className="text-xs ms-1">
-                          {tx.runningBalance > 0
-                            ? "عليه"
-                            : tx.runningBalance < 0
-                            ? "له"
-                            : ""}
-                        </span>
+                        {tx.debitBalance
+                          ? formatCurrency(tx.debitBalance)
+                          : "-"}
                       </td>
                     </motion.tr>
                   ))}
@@ -330,10 +275,10 @@ const CompanyPage = () => {
                       الإجماليات
                     </td>
                     <td className="p-3 text-green-500 font-numeric text-base font-semibold">
-                      {formatCurrency(totalDebit)}
+                      {/* {formatCurrency(totalDebit)} */}
                     </td>
                     <td className="p-3 text-red-500 font-numeric text-base font-semibold">
-                      {formatCurrency(totalCredit)}
+                      {/* {formatCurrency(totalCredit)} */}
                     </td>
                     <td></td>
                   </tr>
@@ -343,9 +288,9 @@ const CompanyPage = () => {
                     </td>
                     <td
                       className={`p-3 font-numeric text-lg font-bold ${
-                        suppler.balance > 0
+                        Transactions.balance > 0
                           ? "text-green-600"
-                          : suppler.balance < 0
+                          : Transactions.balance < 0
                           ? "text-red-600"
                           : ""
                       }`}

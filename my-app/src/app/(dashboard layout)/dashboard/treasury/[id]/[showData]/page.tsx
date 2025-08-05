@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import useSWR from "swr";
 import {
   BASE_URL,
+  clients,
   Supplier,
   Treasury,
   TreasuryTransaction,
@@ -97,7 +98,10 @@ const Page = () => {
   const treasury = data?.data || {};
 
   const { data: DataSupplier } = useSWR(`${BASE_URL}/${Supplier}`, fetcher);
-  const supplier = DataSupplier?.data || {};
+  const { data: Dataclient } = useSWR(`${BASE_URL}/${clients}`, fetcher);
+
+  const supplier = DataSupplier?.data || [];
+  const Client = Dataclient?.data || [];
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -150,7 +154,10 @@ const Page = () => {
       toast.success("تم تسجيل بيانات العملية بنجاح");
 
       mutateTransaction();
-      form.reset();
+      form.reset({
+        transactionType: undefined,
+        partyId: "",
+      });
       mutate();
     } catch (error: any) {
       const errMessage = error?.response?.data?.message || "حدث خطأ غير متوقع";
@@ -288,7 +295,7 @@ const Page = () => {
                                             key={sup.id}
                                             value={sup.id.toString()}
                                           >
-                                            {sup.name}
+                                            (رصيده {sup.balance}) {sup.name}
                                           </SelectItem>
                                         ))
                                       ) : (
@@ -301,18 +308,25 @@ const Page = () => {
                                       )
                                     ) : null}
 
-                                    {transactionType ===
-                                      "Tahseel_mn_3ameel" && (
-                                      // هنا ممكن تعرض العملاء بنفس الطريقة لو عندك بياناتهم
-                                      <>
-                                        <SelectItem value="1">
-                                          عميل 1
+                                    {transactionType === "Tahseel_mn_3ameel" &&
+                                      (Client.length > 0 ? (
+                                        Client.map((sup: any) => (
+                                          <SelectItem
+                                            className="cursor-pointer"
+                                            key={sup.id}
+                                            value={sup.id.toString()}
+                                          >
+                                            (رصيده {sup.balance}) {sup.name}
+                                          </SelectItem>
+                                        ))
+                                      ) : (
+                                        <SelectItem
+                                          value="no-suppliers"
+                                          disabled
+                                        >
+                                          لا يوجد عملاء
                                         </SelectItem>
-                                        <SelectItem value="2">
-                                          عميل 2
-                                        </SelectItem>
-                                      </>
-                                    )}
+                                      ))}
                                   </SelectContent>
                                 </Select>
                               </FormControl>

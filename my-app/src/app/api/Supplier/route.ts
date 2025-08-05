@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
     });
 
     // احسب الحالة الحقيقية من المعاملات
-    await updateSupplierStatus(newSupplier.id);
+    await updateSupplierStatus(newSupplier.id, "supplier");
 
     const user = await prisma.user.findUnique({
       where: { id: added_by_id },

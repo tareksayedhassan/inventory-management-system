@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
 import { z } from "zod";
+import { updateSupplierStatus } from "@/utils/supplierBalance";
 
 const productSchema = z.array(
   z.object({
@@ -12,7 +13,15 @@ const productSchema = z.array(
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { supplierId, treasuryId, userId, isTaxed, tax, products } = body;
+    const { supplierId, userId, isTaxed, tax, products } = body;
+
+    // ✅ تحقق من وجود منتجات وصحة البيانات
+    if (!products || products.length === 0) {
+      return NextResponse.json(
+        { message: "لم يتم إدخال أي منتجات" },
+        { status: 400 }
+      );
+    }
 
     const validation = productSchema.safeParse(products);
     if (!validation.success) {
@@ -22,23 +31,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!products || products.length === 0) {
-      return NextResponse.json(
-        { message: "لم يتم إدخال أي منتجات" },
-        { status: 400 }
-      );
-    }
-
-    const treasury = await prisma.treasury.findUnique({
-      where: { id: treasuryId },
-    });
-    if (!treasury) {
-      return NextResponse.json(
-        { message: "الخزنة غير موجودة" },
-        { status: 404 }
-      );
-    }
-
+    // ✅ تحقق من وجود المورد
     const supplier = await prisma.supplier.findUnique({
       where: { id: supplierId },
     });
@@ -49,6 +42,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // ✅ تحقق من وجود المنتجات
     const productIds = products.map((p: { productId: number }) => p.productId);
     const dbProducts = await prisma.product.findMany({
       where: { id: { in: productIds } },
@@ -65,6 +59,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // ✅ حساب الإجمالي وتفاصيل المنتجات
     let totalAmount = 0;
     let totalQuantity = 0;
     const productsDetails = products.map(
@@ -82,6 +77,7 @@ export async function POST(req: NextRequest) {
         };
       }
     );
+
     const deductionRate = 0.01;
     const finalAmount = totalAmount - totalAmount * deductionRate;
     const newEzn = await prisma.eznEdafa.create({
@@ -89,18 +85,19 @@ export async function POST(req: NextRequest) {
         totalAmount: finalAmount,
         tax: tax || 0,
         supplier: { connect: { id: supplierId } },
-        treasury: { connect: { id: treasuryId } },
         user: userId ? { connect: { id: userId } } : undefined,
-        // استخدام productId لأول منتج كقيمة رمزية (لو الـ schema مش متغير)
-        product: products[0]
-          ? { connect: { id: products[0].productId } }
-          : undefined,
+        products: {
+          create: productsDetails.map((item: any) => ({
+            product: { connect: { id: item.productId } },
+            amount: item.amount,
+            itemTotal: item.itemTotal,
+          })),
+        },
       },
       include: {
         supplier: true,
-        treasury: true,
         user: true,
-        product: true,
+        products: true,
       },
     });
 
@@ -129,17 +126,8 @@ export async function POST(req: NextRequest) {
       });
       stockWithoutTaxId = stockWithoutTax.id;
     }
-    await prisma.treasuryTransaction.create({
-      data: {
-        type: "WITHDRAWAL",
-        amount: finalAmount,
-        description: `إذن إضافة رقم ${newEzn.id}`,
-        treasuryId,
-        userId: userId || null,
-        createdAt: new Date(),
-      },
-    });
 
+    // ✅ تحديث الإذن بعد إنشاء المخازن
     await prisma.eznEdafa.update({
       where: { id: newEzn.id },
       data: {
@@ -148,7 +136,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // تحديث lastBuyPrice لكل منتج
+    // ✅ تحديث السعر الأخير للشراء لكل منتج
     for (const item of products) {
       const product = dbProducts.find((p) => p.id === item.productId)!;
       await prisma.product.update({
@@ -156,8 +144,20 @@ export async function POST(req: NextRequest) {
         data: { lastBuyPrice: item.amount * product.price },
       });
     }
+    const createdAt = new Date();
+    const finalDescription = `إذن إضافة رقم ${newEzn.id}`;
 
-    // إنشاء إشعار
+    await prisma.supplierTransaction.create({
+      data: {
+        creditBalance: finalAmount,
+        description: finalDescription,
+        supplierId,
+        userId,
+        createdAt,
+      },
+    });
+    await updateSupplierStatus(supplierId, "supplier");
+
     const now = new Date();
     const dateStr = now.toLocaleDateString("ar-EG", {
       year: "numeric",
@@ -177,11 +177,11 @@ export async function POST(req: NextRequest) {
       data: {
         message,
         userId: userId || null,
-        treasuryId: treasuryId || null,
         redirectUrl: `/Supplier`,
       },
     });
 
+    // ✅ الإرجاع النهائي
     return NextResponse.json(
       {
         message: "تم إضافة الإذن بنجاح",

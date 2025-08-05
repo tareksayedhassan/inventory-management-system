@@ -97,7 +97,7 @@ const SideBar = () => {
           <span>الموردين</span>
         </Link>
         <Link
-          href="/dashboard"
+          href="/dashboard/clients"
           className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
         >
           <FaAddressCard className="text-xl" />

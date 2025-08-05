@@ -65,9 +65,10 @@ export async function DELETE(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const id = Number(params.id);
+  const { id } = await params;
+  const supplierId = parseInt(id);
   const formData = await req.formData();
 
   try {
@@ -97,7 +98,7 @@ export async function PATCH(
     }
 
     const updatedCompany = await prisma.supplier.update({
-      where: { id },
+      where: { id: supplierId },
       data: updateData,
     });
 
