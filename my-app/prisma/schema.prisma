@@ -11,6 +11,15 @@ enum Role {
   USER
   ADMIN
 }
+enum ProductMovementType {
+  EznEdafa
+
+}
+
+enum ProductMovementUser{
+  Supplier 
+  Client
+}
 
 enum SupplierStatus {
   neutral       // لا ليه ولا عليه
@@ -57,6 +66,7 @@ model User {
   treasuryTransaction  TreasuryTransaction[]
   supplierTransactions SupplierTransaction[] @relation("TriggeredSupplierTransactions")
   clientTransactions   ClientTransaction[]   @relation("TriggeredClientTransactions")
+productTransaction     ProductTransaction[]  @relation("AddedProductTransactionBy")
 }
 
 model Supplier {
@@ -78,6 +88,7 @@ model Supplier {
   updated_by_id        Int?
   updated_by           User?                 @relation("UpdatedBy", fields: [updated_by_id], references: [id])
 
+  ProductTransaction  ProductTransaction[]  @relation("addedProductBy")
   @@index([added_by_id], map: "Supplier_added_by_id_fkey")
 }
 
@@ -119,7 +130,7 @@ model Client {
   updated_by             User?                 @relation("UpdatedClientBy", fields: [updated_by_id], references: [id])
   clientTransactions     ClientTransaction[]   @relation("ClientTransactions")
   treasuryTransactions   TreasuryTransaction[] @relation("ClientTreasuryTransactions")
-
+  productTransaction      ProductTransaction[] @relation("addedProductBy")
   @@index([added_by_id], map: "Client_added_by_id_fkey")
 }
 
@@ -221,18 +232,48 @@ model Product {
   @@index([added_by_id], map: "Product_added_by_id_fkey")
   @@index([updated_by_id], map: "Product_updated_by_id_fkey")
 }
+model ProductTransaction {
+  id               Int                @id @default(autoincrement())
+  productCode      String?
+  name             String
+  price            Float
+  lastBuyPrice     Float?
+  quantity         Int
+  total            Float?             // price * quantity
+  type             ProductMovementType
+  note             String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+ supplierId       Int?
+supplier         Supplier?  @relation("addedProductBy", fields: [supplierId], references: [id])
+ ClientId       Int?
+Client         Client?  @relation("addedProductBy", fields: [ ClientId], references: [id])
+
+  added_by_id      Int?
+  added_by         User?              @relation("AddedProductTransactionBy", fields: [added_by_id], references: [id])
+
+  // علاقات المخازن
+  StockId          Int?
+  Stock            Stock?             @relation("stockId", fields: [StockId], references: [id])
+
+  StockWithoutTaxId Int?
+  StockWithoutTax   StockWithoutTax?  @relation("StockWithoutTaxId", fields: [StockWithoutTaxId], references: [id])
+  eznEdafaProductId Int?
+eznEdafaProduct   EznEdafaProduct? @relation("EznEdafaProductTransactions", fields: [eznEdafaProductId], references: [id])
+
+}
 
 model EznEdafaProduct {
   id          Int        @id @default(autoincrement())
   eznEdafa    EznEdafa   @relation(fields: [eznEdafaId], references: [id])
   eznEdafaId  Int
   product     Product    @relation(fields: [productId], references: [id])
+ProductTransaction ProductTransaction[] @relation("EznEdafaProductTransactions")
   productId   Int
   amount      Int
   itemTotal   Float
   createdAt   DateTime   @default(now())
 
-  @@unique([eznEdafaId, productId])
 }
 
 model EznEdafa {
@@ -270,6 +311,8 @@ model Stock {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
   eznEdafat   EznEdafa[]
+
+  ProductTransaction ProductTransaction[] @relation("stockId")
 }
 
 model StockWithoutTax {
@@ -281,4 +324,6 @@ model StockWithoutTax {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
   eznEdafat   EznEdafa[]
+    ProductTransaction ProductTransaction[] @relation("StockWithoutTaxId") 
+
 }

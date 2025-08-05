@@ -11,7 +11,6 @@ import {
 import useSWR from "swr";
 import { BASE_URL, clients, Supplier } from "@/apiCaild/API";
 import { fetcher } from "@/apiCaild/fetcher";
-import { Compny } from "@/Types/company";
 import { motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
@@ -99,13 +98,13 @@ const Page = () => {
   const totalItems = data?.total || 0;
 
   const DeleteRecord = async (id: number) => {
-    const conf = confirm("هل انت متاكد من حذف هذا المورد ؟");
+    const conf = confirm("هل انت متاكد من حذف هذا العميل ؟");
     if (!conf) {
       return;
     }
 
     try {
-      await axios.delete(`${BASE_URL}/${Supplier}/${id}`, {
+      await axios.delete(`${BASE_URL}/${clients}/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       mutate();
@@ -118,6 +117,7 @@ const Page = () => {
   const handilSubmit = async () => {
     const validation = ClientSchema.safeParse({
       Campname,
+      name,
       tax_number,
       added_by_id: userId,
       address,
@@ -146,7 +146,7 @@ const Page = () => {
           },
         }
       );
-      toast.success("تم اضافه المورد بنجاح");
+      toast.success("تم اضافه العميل بنجاح");
       mutate();
     } catch (error: any) {
       const errMessage = error?.response?.data?.message || "حدث خطأ غير متوقع";
@@ -160,7 +160,7 @@ const Page = () => {
     <div dir="rtl" className="p-4">
       <Card>
         <CardTitle className="text-2xl font-semibold border-b border-blue-200 text-start pb-2 mb-4 pr-3.5">
-          حسابات الموردين
+          حسابات العملاء
         </CardTitle>
 
         <CardContent>
@@ -418,7 +418,7 @@ const Page = () => {
               {/* الزر في أقصى اليمين */}
               <div className="flex-1 flex justify-end">
                 <Button onClick={handilSubmit} className="whitespace-nowrap">
-                  اضف المورد
+                  اضف العميل
                 </Button>
               </div>
             </div>

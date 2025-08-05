@@ -42,6 +42,8 @@ type AlertProps = {
   setSelectedProducts: (
     products: (Product & { amount: number; buyPrice: number })[]
   ) => void;
+  quantity: number;
+  setquantity: (value: number) => void;
 };
 const Alert = ({
   search,
@@ -51,6 +53,8 @@ const Alert = ({
   setSelectedProductId,
   selectedProducts,
   setSelectedProducts,
+  quantity,
+  setquantity,
 }: AlertProps) => {
   return (
     <div>
@@ -168,6 +172,18 @@ const Alert = ({
                         <TableCell className="text-center border py-3">
                           {item.price.toFixed(2)} ج.م
                         </TableCell>
+
+                        <TableCell className="text-center border py-3">
+                          <Input
+                            placeholder="اختار الكميه"
+                            value={quantity}
+                            onChange={(e) =>
+                              setquantity(Number(e.target.value))
+                            }
+                            type="number"
+                            min={1}
+                          />{" "}
+                        </TableCell>
                         <TableCell className="text-center border py-3">
                           {item.stock}
                         </TableCell>
@@ -215,21 +231,24 @@ const Alert = ({
                         hover:shadow-lg
                       "
               onClick={() => {
-                if (selectedProductId) {
-                  const product = products.find(
-                    (p) => p.id === selectedProductId
-                  );
-                  if (product) {
-                    setSelectedProducts([
-                      ...selectedProducts,
-                      {
-                        ...product,
-                        amount: 1,
-                        buyPrice: product.price,
-                      },
-                    ]);
-                    toast.success("تم إضافة الصنف بنجاح.");
-                  }
+                if (!selectedProductId) return toast.error("يرجى اختيار صنف");
+                if (quantity <= 0) return toast.error("يرجى إدخال كمية صحيحة");
+
+                const product = products.find(
+                  (p) => p.id === selectedProductId
+                );
+                if (product) {
+                  setSelectedProducts([
+                    ...selectedProducts,
+                    {
+                      ...product,
+                      amount: quantity,
+                      buyPrice: product.price,
+                    },
+                  ]);
+                  toast.success("تم إضافة الصنف بنجاح.");
+                  // reset الكمية بعد الإضافة (اختياري)
+                  setquantity(1);
                 }
               }}
             >

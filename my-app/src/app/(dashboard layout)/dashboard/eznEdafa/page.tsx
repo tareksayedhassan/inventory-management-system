@@ -39,6 +39,8 @@ const Page = () => {
   const [selectedProductId, setSelectedProductId] = useState<number | null>(
     null
   );
+
+  const [quantity, setquantity] = useState(0);
   const [search, setSearch] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedSupplierId, setSelectedSupplierId] = useState<number | null>(
@@ -246,6 +248,8 @@ const Page = () => {
                 setSelectedProductId={setSelectedProductId}
                 selectedProducts={selectedProducts}
                 setSelectedProducts={setSelectedProducts}
+                quantity={quantity}
+                setquantity={setquantity}
               />
             </motion.div>
             <div className="w-full col-span-1 md:col-span-2 mt-8">

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
 import { z } from "zod";
 import { updateSupplierStatus } from "@/utils/supplierBalance";
+import { ProductMovementType } from "@prisma/client";
 
 const productSchema = z.array(
   z.object({
@@ -180,8 +181,26 @@ export async function POST(req: NextRequest) {
         redirectUrl: `/Supplier`,
       },
     });
+    for (const item of productsDetails) {
+      await prisma.productTransaction.create({
+        data: {
+          productCode: item.productCode,
+          name: item.productName,
+          price: item.itemTotal / item.amount,
+          lastBuyPrice: item.itemTotal / item.amount,
+          quantity: item.amount,
+          total: item.itemTotal,
+          type: ProductMovementType.EznEdafa,
+          note: `إذن إضافة رقم ${newEzn.id}`,
+          added_by_id: userId,
+          supplier: supplierId,
+        },
+        include: {
+          supplier: true,
+        },
+      });
+    }
 
-    // ✅ الإرجاع النهائي
     return NextResponse.json(
       {
         message: "تم إضافة الإذن بنجاح",
