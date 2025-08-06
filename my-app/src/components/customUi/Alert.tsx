@@ -37,7 +37,7 @@ type AlertProps = {
   setSearch: (value: string) => void;
   products: Product[];
   selectedProductId: number | null;
-  setSelectedProductId: (id: number) => void;
+  setSelectedProductId: (id: number | null) => void;
   selectedProducts: (Product & { amount: number; buyPrice: number })[];
   setSelectedProducts: (
     products: (Product & { amount: number; buyPrice: number })[]
@@ -45,7 +45,8 @@ type AlertProps = {
   quantity: number;
   setquantity: (value: number) => void;
 };
-const Alert = ({
+
+const ProductSelectionDialog = ({
   search,
   setSearch,
   products,
@@ -57,77 +58,78 @@ const Alert = ({
   setquantity,
 }: AlertProps) => {
   return (
-    <div>
+    <div className="container mx-auto">
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button
             variant="outline"
             className="
-                      bg-green-600 
-                      text-white 
-                      hover:bg-green-700 
-                      transition-colors 
-                      duration-200 
-                      rounded-lg 
-                      px-8 
-                      py-3 
-                      flex 
-                      items-center 
-                      gap-2 
-                      font-semibold
-                      shadow-md
-                      hover:shadow-lg
-                    "
+              bg-green-600 
+              text-white 
+              hover:bg-green-700 
+              transition-colors 
+              duration-200 
+              rounded-lg 
+              px-8 
+              py-3 
+              flex 
+              items-center 
+              gap-2 
+              font-semibold
+              shadow-md
+              hover:shadow-lg
+            "
           >
             إضافة صنف <FaSearch />
           </Button>
         </AlertDialogTrigger>
         <AlertDialogContent
           className="
-                    w-[95vw] 
-                    max-w-[90vw] 
-                    h-[70vh] 
-                    bg-white 
-                    rounded-2xl 
-                    shadow-xl 
-                    p-8 
-                    border 
-                    border-gray-100 
-                    transition-all 
-                    duration-300 
-                    ease-in-out
-                    flex 
-                    flex-col
-                    bg-gradient-to-br 
-                    from-gray-50 
-                    to-green-50
-                  "
+            w-[95vw] 
+            max-w-4xl 
+            max-h-[80vh] 
+            bg-white 
+            rounded-2xl 
+            shadow-xl 
+            p-6 
+            border 
+            border-gray-100 
+            transition-all 
+            duration-300 
+            flex 
+            flex-col
+            bg-gradient-to-br 
+            from-gray-50 
+            to-green-50
+          "
         >
           <AlertDialogHeader>
             <AlertDialogTitle className="text-2xl font-bold text-gray-800 mb-4 text-center">
               اختيار الأصناف
             </AlertDialogTitle>
-            <div className="w-full max-w-lg mx-auto mb-6">
+            <div className="relative w-full max-w-md mx-auto mb-6">
+              <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <Input
                 type="search"
                 placeholder="ابحث باسم الصنف..."
                 className="
-                          rounded-lg 
-                          border 
-                          border-gray-200 
-                          px-4 
-                          py-3 
-                          w-full 
-                          focus:ring-2 
-                          focus:ring-green-400 
-                          focus:outline-none 
-                          text-gray-700
-                          transition-all 
-                          duration-200
-                          bg-white
-                          shadow-sm
-                          hover:shadow-md
-                        "
+                  rounded-lg 
+                  border 
+                  border-gray-200 
+                  px-4 
+                  py-3 
+                  w-full 
+                  pr-10
+                  focus:ring-2 
+                  focus:ring-green-400 
+                  focus:outline-none 
+                  text-gray-700
+                  transition-all 
+                  duration-200
+                  bg-white
+                  shadow-sm
+                  hover:shadow-md
+                "
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -135,104 +137,120 @@ const Alert = ({
           </AlertDialogHeader>
 
           <AlertDialogDescription className="flex-1 overflow-auto">
-            <div className="w-full">
-              <Table className="w-full text-center border border-gray-100 rounded-lg bg-white shadow-sm">
-                <TableHeader>
-                  <TableRow className="bg-gray-50 text-gray-700 font-semibold">
-                    <TableHead className="w-1/4 text-center border py-3">
-                      تكلفة الشراء
-                    </TableHead>
-                    <TableHead className="w-1/4 text-center border py-3">
-                      الكمية
-                    </TableHead>
-                    <TableHead className="w-2/4 text-center border py-3">
-                      اسم الصنف
-                    </TableHead>
-                    <TableHead className="w-1/4 text-center border py-3">
-                      كود الصنف
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {products
-                    .filter((item) =>
-                      item.name.toLowerCase().includes(search.toLowerCase())
-                    )
-                    .map((item, key) => (
-                      <TableRow
-                        key={key}
-                        className="
-                                  hover:bg-green-100 
-                                  transition-colors 
-                                  duration-200 
-                                  cursor-pointer
-                                "
-                        onClick={() => setSelectedProductId(item.id)}
-                      >
-                        <TableCell className="text-center border py-3">
-                          {item.price.toFixed(2)} ج.م
-                        </TableCell>
+            <Table className="w-full border border-gray-100 rounded-lg bg-white shadow-sm">
+              <TableHeader>
+                <TableRow className="bg-gray-50 text-gray-700 font-semibold">
+                  <TableHead className="w-[15%] text-center border-b py-3">
+                    كود الصنف
+                  </TableHead>
+                  <TableHead className="w-[30%] text-center border-b py-3">
+                    اسم الصنف
+                  </TableHead>
 
-                        <TableCell className="text-center border py-3">
-                          <Input
-                            placeholder="اختار الكميه"
-                            value={quantity}
-                            onChange={(e) =>
-                              setquantity(Number(e.target.value))
-                            }
-                            type="number"
-                            min={1}
-                          />{" "}
-                        </TableCell>
-                        <TableCell className="text-center border py-3">
-                          {item.stock}
-                        </TableCell>
-                        <TableCell className="text-center border py-3">
-                          {item.name}
-                        </TableCell>
-                        <TableCell className="text-center border py-3">
-                          {item.productCode}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </div>
+                  <TableHead className="w-[20%] text-center border-b py-3">
+                    الكمية
+                  </TableHead>
+                  <TableHead className="w-[15%] text-center border-b py-3">
+                    تكلفة الشراء
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {products
+                  .filter((item) =>
+                    item.name.toLowerCase().includes(search.toLowerCase())
+                  )
+                  .map((item) => (
+                    <TableRow
+                      key={item.id}
+                      className={`
+                        hover:bg-green-50 
+                        transition-colors 
+                        duration-200 
+                        cursor-pointer
+                        ${selectedProductId === item.id ? "bg-green-100" : ""}
+                      `}
+                      onClick={() => setSelectedProductId(item.id)}
+                    >
+                      <TableCell className="text-center border-b py-3">
+                        {item.productCode}
+                      </TableCell>
+                      <TableCell className="text-center border-b py-3">
+                        {item.name}
+                      </TableCell>
+
+                      <TableCell className="text-center border-b py-3">
+                        <Input
+                          type="number"
+                          placeholder="الكمية"
+                          value={selectedProductId === item.id ? quantity : ""}
+                          onChange={(e) => setquantity(Number(e.target.value))}
+                          min={1}
+                          max={Number(item.stock)}
+                          className="
+                            w-20 mx-auto
+                            rounded-md 
+                            border 
+                            border-gray-200 
+                            px-2 
+                            py-1 
+                            text-center
+                            focus:ring-2 
+                            focus:ring-green-400 
+                            focus:outline-none
+                          "
+                        />
+                      </TableCell>
+                      <TableCell className="text-center border-b py-3">
+                        {item.price.toFixed(2)} ج.م
+                      </TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
           </AlertDialogDescription>
 
           <AlertDialogFooter className="mt-6 flex justify-end gap-4">
             <AlertDialogCancel
               className="
-                        bg-gray-200 
-                        text-gray-700 
-                        hover:bg-gray-300 
-                        transition-colors 
-                        duration-200 
-                        rounded-lg 
-                        px-6 
-                        py-2
-                        shadow-md
-                        hover:shadow-lg
-                      "
+                bg-gray-200 
+                text-gray-700 
+                hover:bg-gray-300 
+                transition-colors 
+                duration-200 
+                rounded-lg 
+                px-6 
+                py-2
+                shadow-md
+                hover:shadow-lg
+              "
             >
               إلغاء
             </AlertDialogCancel>
             <AlertDialogAction
               className="
-                        bg-green-600 
-                        text-white 
-                        hover:bg-green-700 
-                        transition-colors 
-                        duration-200 
-                        rounded-lg 
-                        px-6 
-                        py-2
-                        shadow-md
-                        hover:shadow-lg
-                      "
+                bg-green-600 
+                text-white 
+                hover:bg-green-700 
+                transition-colors 
+                duration-200 
+                rounded-lg 
+                px-6 
+                py-2
+                shadow-md
+                hover:shadow-lg
+              "
               onClick={() => {
                 if (!selectedProductId) return toast.error("يرجى اختيار صنف");
-                if (quantity <= 0) return toast.error("يرجى إدخال كمية صحيحة");
+                if (
+                  quantity <= 0 ||
+                  quantity >
+                    Number(
+                      products.find((p) => p.id === selectedProductId)?.stock
+                    )
+                ) {
+                  return toast.error("يرجى إدخال كمية صحيحة");
+                }
 
                 const product = products.find(
                   (p) => p.id === selectedProductId
@@ -247,8 +265,8 @@ const Alert = ({
                     },
                   ]);
                   toast.success("تم إضافة الصنف بنجاح.");
-                  // reset الكمية بعد الإضافة (اختياري)
                   setquantity(1);
+                  setSelectedProductId(null);
                 }
               }}
             >
@@ -261,4 +279,4 @@ const Alert = ({
   );
 };
 
-export default Alert;
+export default ProductSelectionDialog;

@@ -38,3 +38,7 @@ export const TreasuryTransaction = "TreasuryTransaction";
 export const SupplierTransaction = "SupplierTransaction";
 // clients
 export const clients = "clients";
+// productTransaction
+export const productTransaction = "productTransaction";
+// EznEdafaProduct
+export const EznEdafaProduct = "EznEdafaProduct";

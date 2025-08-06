@@ -103,13 +103,7 @@ const SideBar = () => {
           <FaAddressCard className="text-xl" />
           <span>العملاء</span>
         </Link>
-        <Link
-          href="/dashboard"
-          className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
-        >
-          <FaChartBar className="text-xl" />
-          <span>التقارير</span>
-        </Link>
+
         <Link
           href="/dashboard"
           className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
@@ -175,6 +169,13 @@ const SideBar = () => {
         >
           <MdOutlineDashboard className="text-xl" />
           <span>المصروفات</span>
+        </Link>
+        <Link
+          href="/dashboard/taqareer"
+          className="flex items-center gap-4 px-3 py-2 rounded-md hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition duration-200"
+        >
+          <FaChartBar className="text-xl" />
+          <span>التقارير</span>
         </Link>
         <Link
           href="/dashboard/users"

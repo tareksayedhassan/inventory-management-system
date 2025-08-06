@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
 import { z } from "zod";
 import { updateSupplierStatus } from "@/utils/supplierBalance";
-import { ProductMovementType } from "@prisma/client";
 
 const productSchema = z.array(
   z.object({
@@ -10,6 +9,54 @@ const productSchema = z.array(
     amount: z.number().positive(),
   })
 );
+
+export async function GET(req: NextRequest) {
+  // date filter
+  const { searchParams } = new URL(req.url);
+
+  const page = parseInt(searchParams.get("page") || "1");
+  const pageSize = parseInt(searchParams.get("pageSize") || "5");
+  const searchQuery = searchParams.get("search") || "";
+  let filters = {};
+
+  if (searchQuery.trim() !== "") {
+    const date = new Date(searchQuery);
+    const nextDay = new Date(date);
+    nextDay.setDate(date.getDate() + 1);
+
+    filters = {
+      createdAt: {
+        gte: date,
+        lt: nextDay,
+      },
+    };
+  }
+
+  const total = await prisma.eznEdafa.count({ where: filters });
+
+  const eznEdafa = await prisma.eznEdafa.findMany({
+    where: filters,
+    skip: (page - 1) * pageSize,
+    take: pageSize,
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      supplier: true,
+      user: true,
+      products: true,
+    },
+  });
+  return NextResponse.json(
+    {
+      data: eznEdafa,
+      total,
+      totalPages: Math.ceil(total / pageSize),
+      currentPage: page,
+    },
+    { status: 200 }
+  );
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -98,7 +145,11 @@ export async function POST(req: NextRequest) {
       include: {
         supplier: true,
         user: true,
-        products: true,
+        products: {
+          include: {
+            product: true,
+          },
+        },
       },
     });
 
@@ -190,13 +241,28 @@ export async function POST(req: NextRequest) {
           lastBuyPrice: item.itemTotal / item.amount,
           quantity: item.amount,
           total: item.itemTotal,
-          type: ProductMovementType.EznEdafa,
-          note: `إذن إضافة رقم ${newEzn.id}`,
-          added_by_id: userId,
-          supplier: supplierId,
-        },
-        include: {
-          supplier: true,
+          type: `إذن إضافة رقم ${newEzn.id}`,
+          redirctURL: `/dashboard/eznEdafa/${newEzn.id}`,
+          added_by: userId
+            ? {
+                connect: { id: userId },
+              }
+            : undefined,
+          supplier: supplierId
+            ? {
+                connect: { id: supplierId },
+              }
+            : undefined,
+          Stock: stockId
+            ? {
+                connect: { id: stockId },
+              }
+            : undefined,
+          StockWithoutTax: stockWithoutTaxId
+            ? {
+                connect: { id: stockWithoutTaxId },
+              }
+            : undefined,
         },
       });
     }

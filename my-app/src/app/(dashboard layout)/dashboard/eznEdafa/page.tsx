@@ -23,16 +23,23 @@ import Alert from "@/components/customUi/Alert";
 import SelectedData from "@/components/customUi/SelctedData";
 import { useReactToPrint } from "react-to-print";
 import PrintableComponent from "@/components/customUi/PrintComponent";
+import { fetcher } from "@/apiCaild/fetcher";
+import Loading from "@/components/customUi/loading";
+import useSWR from "swr";
+import EditEznEdafa from "@/components/customUi/EditEznEdafa";
 
 // ========== Types ==========
 type Supplier = { id: number; name: string };
 const Page = () => {
-  const [totalAmount, settotalAmount] = useState(0);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [isTaxed, setIsTaxed] = useState<boolean>(false);
   const [products, setProducts] = useState<Product[]>([]);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [currentEznId, setCurrentEznId] = useState<number | null>(null);
+
   const [isTaxChecked, setIsTaxChecked] = useState(false);
-  const [description, setdescription] = useState("");
+  const [page, setPage] = useState(1);
+
   const [selectedProducts, setSelectedProducts] = useState<
     (Product & { amount: number; buyPrice: number })[]
   >([]);
@@ -169,8 +176,38 @@ const Page = () => {
   const taxx = isTaxChecked ? totalAmountBeforeSubmit * 0.14 : 0;
   const deduction = totalAmountBeforeSubmit * 0.01;
   const finalTotal = totalAmountBeforeSubmit + taxx - deduction;
-
   const selectedSupplier = suppliers.find((s) => s.id === selectedSupplierId);
+  const { data, error, isLoading, mutate } = useSWR(
+    `${BASE_URL}/${EznEdafa}?page=${page}&pageSize=${rowsPerPage}&search=${search}`,
+    fetcher
+  );
+  useEffect(() => {
+    if (data?.data?.length > 0 && currentEznId === null) {
+      setCurrentEznId(data.data[0].id); // نبدأ بأول إذن في الصفحة
+    }
+  }, [data]);
+  const handleNextEzn = () => {
+    if (!data?.data) return;
+    const index = data.data.findIndex((item: any) => item.id === currentEznId);
+    if (index < data.data.length - 1) {
+      setCurrentEznId(data.data[index + 1].id);
+    }
+  };
+
+  const handlePrevEzn = () => {
+    if (!data?.data) return;
+    const index = data.data.findIndex((item: any) => item.id === currentEznId);
+    if (index > 0) {
+      setCurrentEznId(data.data[index - 1].id);
+    }
+  };
+
+  if (isLoading)
+    return (
+      <div>
+        <Loading />
+      </div>
+    );
 
   return (
     <div dir="rtl">
@@ -188,6 +225,9 @@ const Page = () => {
           <IoIosAddCircleOutline className="ml-2" />
           إذن إضافة جديد
         </Button>
+
+        <Button onClick={handlePrevEzn}>السابق</Button>
+        <Button onClick={handleNextEzn}>التالي</Button>
       </div>
 
       <Card className="shadow-md border rounded-xl p-6 space-y-8 w-full max-w-6xl mx-auto bg-white">
@@ -361,6 +401,7 @@ const Page = () => {
           isTaxChecked={isTaxChecked}
         />
       </div>
+      {currentEznId && <EditEznEdafa id={currentEznId} />}
     </div>
   );
 };
