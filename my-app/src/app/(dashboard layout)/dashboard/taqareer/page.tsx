@@ -11,30 +11,20 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
+import { fetcher } from "@/apiCaild/fetcher";
+import { BASE_URL, Products } from "@/apiCaild/API";
+import useSWR from "swr";
+import ProductMovement from "@/components/taqareer/ProductMovement";
 
-interface Item {
-  id: string;
-  name: string;
-}
-
-interface ReportsComponentProps {
-  reportType: string;
-  dateFrom: string;
-  dateTo: string;
-  selectedItemId: string;
-  store: {
-    items: Item[];
-  };
-}
-
-export default function ReportsComponent({
-  reportType,
-  dateFrom,
-  dateTo,
-  selectedItemId,
-  store,
-}: ReportsComponentProps) {
+export default function ReportsComponent() {
   const [mode, setMode] = useState<"item-movement" | "create">("create");
+  const [selectedItemId, setSelectedItemId] = useState<string>("");
+
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+
+  const { data, isLoading } = useSWR(`${BASE_URL}/${Products}`, fetcher);
+  const product = data?.data || [];
 
   return (
     <div className="space-y-6 mt-5" dir="rtl">
@@ -44,53 +34,74 @@ export default function ReportsComponent({
             التقارير
           </CardTitle>
         </CardHeader>
-        <CardContent className="" dir="ltr">
+        <CardContent dir="ltr">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t dark:border-gray-600">
             <div>
               <Label className="mb-1 text-sm font-medium">اختر التقرير</Label>
-              <Select value={reportType}>
+              <Select
+                value={mode}
+                onValueChange={(value) =>
+                  setMode(value as "item-movement" | "create")
+                }
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="-- اختر --" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="select-report">-- اختر --</SelectItem>
-                  <SelectItem
-                    value="item-movement"
-                    onClick={() => setMode("item-movement")}
-                  >
-                    حركة صنف
-                  </SelectItem>
+                  <SelectItem value="create">-- اختر --</SelectItem>
+                  <SelectItem value="item-movement">حركة صنف</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
               <Label className="mb-1 text-sm font-medium">من تاريخ</Label>
-              <Input type="date" value={dateFrom} className="w-full" />
+              <Input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="w-full"
+              />
             </div>
 
             <div>
               <Label className="mb-1 text-sm font-medium">إلى تاريخ</Label>
-              <Input type="date" value={dateTo} className="w-full" />
+              <Input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="w-full"
+              />
             </div>
 
             {mode === "item-movement" && (
-              <div>
-                <Label className="mb-1 text-sm font-medium">الصنف</Label>
-                <Select value={selectedItemId}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="اختر صنف..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="select-item">اختر صنف...</SelectItem>
-                    {store.items.map((i) => (
-                      <SelectItem key={i.id} value={i.id}>
-                        {i.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <>
+                <div>
+                  <Label className="mb-1 text-sm font-medium">الصنف</Label>
+                  <Select
+                    value={selectedItemId}
+                    onValueChange={(value) => setSelectedItemId(value)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="اختر صنف..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {product.length > 0 ? (
+                        product.map((i: any) => (
+                          <SelectItem key={i.id} value={i.id}>
+                            {i.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no-items" disabled>
+                          لا يوجد اصناف لعرضها
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {selectedItemId && <ProductMovement id={selectedItemId} />}
+              </>
             )}
           </div>
         </CardContent>

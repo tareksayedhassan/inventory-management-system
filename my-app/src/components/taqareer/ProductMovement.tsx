@@ -15,10 +15,19 @@ import { BASE_URL, productTransaction } from "@/apiCaild/API";
 import { fetcher } from "@/apiCaild/fetcher";
 import Loading from "../customUi/loading";
 import { useParams } from "next/navigation";
+import { Button } from "../ui/button";
+import { MdDeleteForever } from "react-icons/md";
+import axios from "axios";
+import Cookie from "cookie-universal";
+import { toast } from "sonner";
+import Link from "next/link";
+
 interface DataProps {
-  id: number;
+  id: string;
 }
 const ProductMovement = ({ id }: DataProps) => {
+  const cookie = Cookie();
+  const token = cookie.get("Bearer");
   const { data, error, isLoading, mutate } = useSWR(
     `${BASE_URL}/${productTransaction}/${id}`,
     fetcher
@@ -30,8 +39,25 @@ const ProductMovement = ({ id }: DataProps) => {
         <Loading />
       </div>
     );
+  const product = data?.data
+    ? Array.isArray(data.data)
+      ? data.data
+      : [data.data]
+    : [];
+  console.log(product);
 
-  const product = data?.data || [];
+  const DeleteRecord = async (id: number) => {
+    try {
+      await axios.delete(`${BASE_URL}/${productTransaction}/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      mutate();
+      toast.info("تم حذف حركه المنتج بنجاح");
+    } catch (error) {
+      toast.error("فشل في حذف حركه المنتج");
+    }
+  };
+
   return (
     <div className="space-y-6 mt-5" dir="rtl">
       <Card className="border dark:border-gray-600">
@@ -74,60 +100,41 @@ const ProductMovement = ({ id }: DataProps) => {
                 </TableHeader>
 
                 <TableBody>
-                  {/* {supplier.map((tra: any, index: number) => (
+                  {product.map((tra: any, index: number) => (
                     <TableRow
                       key={`${tra.id}-${index}`}
                       className="hover:bg-gray-50 transition"
                     >
                       <TableCell className="px-4 py-2 text-center">
-                        {tra.name || "--"}
+                        {tra.id}
                       </TableCell>
 
                       <TableCell className="px-4 py-2 text-center">
-                        {tra.phone || "--"}
-                      </TableCell>
-                      <TableCell className="px-4 py-2 text-center hidden sm:table-cell">
-                        {tra.balance || "--"}
-                      </TableCell>
-                      <TableCell
-                        className={`px-4 py-2 text-center hidden md:table-cell font-medium`}
-                      >
-                        {tra.status === SupplierStatus.creditBalance ? (
-                          <Badge className="bg-green-500 text-white">له</Badge>
-                        ) : tra.status === SupplierStatus.debitBalance ? (
-                          <Badge className="bg-red-500 text-white">عليه</Badge>
-                        ) : tra.status === SupplierStatus.neutral ? (
-                          <Badge className="bg-blue-400 text-white">
-                            صافي حساب
-                          </Badge>
+                        {tra.Stock ? (
+                          <div>
+                            <span>مخزن بضريبه </span>
+                          </div>
+                        ) : tra.StockWithoutTax ? (
+                          <div>
+                            <span>مخزن بدون ضريبه </span>
+                          </div>
                         ) : (
-                          <Badge className="bg-gray-500 text-white">معلق</Badge>
+                          <span>لا يوجد مخزون</span>
                         )}
                       </TableCell>
-                      <TableCell className="px-4 py-2 text-center">
-                        {format(
-                          toZonedTime(tra.createdAt, "Africa/Cairo"),
-                          "dd/MM/yyyy hh:mm a"
-                        )}
+
+                      <TableCell className="px-4 py-2 text-center hidden sm:table-cell">
+                        <Link href={tra.redirctURL || "#"}>
+                          <span className="text-blue-600 hover:underline">
+                            {tra.type || "--"}
+                          </span>
+                        </Link>
                       </TableCell>
 
                       <TableCell className="px-4 py-2 text-center">
                         <div className="flex justify-center items-center gap-2">
-                          <Button
-                            className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 text-xs cursor-pointer "
-                            onClick={() => showSuppiler(tra.id)}
-                          >
-                            كشف حساب
-                          </Button>
-
-                          <Button
-                            className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 text-xs"
-                            onClick={() => {
-                              setSelectedSupplier(tra);
-                              setIsDialogOpen(true);
-                            }}
-                          >
-                            تفاصيل
+                          <Button className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 text-xs">
+                            تعديل
                           </Button>
                           <button
                             onClick={() => DeleteRecord(tra.id)}
@@ -139,7 +146,7 @@ const ProductMovement = ({ id }: DataProps) => {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))} */}
+                  ))}
                 </TableBody>
               </Table>
             </div>

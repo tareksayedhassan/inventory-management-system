@@ -32,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ClientSchema, supplierSchema } from "@/utils/ValidationSchemas";
+import { ClientSchema } from "@/utils/ValidationSchemas";
 import SupplierDialog from "@/components/customUi/SupplierDialog";
 import { jwtDecode } from "jwt-decode";
 import { DecodedToken } from "@/Types/CustomJWTDecoded";
