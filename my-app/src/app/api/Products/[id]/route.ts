@@ -25,6 +25,7 @@ export async function DELETE(
     );
   }
 }
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

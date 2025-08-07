@@ -4,7 +4,6 @@ import { BASE_URL, EznEdafa, EznEdafaProduct } from "@/apiCaild/API";
 import useSWR from "swr";
 import { fetcher } from "@/apiCaild/fetcher";
 import Loading from "./loading";
-import { Label } from "../ui/label";
 import {
   Select,
   SelectContent,
@@ -21,15 +20,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "../ui/button";
+import EditDialogEznEdafa from "./EditDialogEznEdafa";
+import { Label } from "../ui/label";
+import { toast } from "sonner";
+
 interface dataProps {
   id: number;
 }
+
 const EditEznEdafa = ({ id }: dataProps) => {
   const { data, isLoading, mutate } = useSWR(
     `${BASE_URL}/${EznEdafa}/${id}`,
     fetcher
   );
-
+  console.log(id);
   if (isLoading)
     return (
       <div>
@@ -38,7 +42,6 @@ const EditEznEdafa = ({ id }: dataProps) => {
     );
 
   const EditEznEdafaData = data?.data || {};
-  console.log(EditEznEdafaData.products);
 
   const deleteRecord = async (id: string) => {
     try {
@@ -50,9 +53,31 @@ const EditEznEdafa = ({ id }: dataProps) => {
       console.error("Error deleting record:", error);
     }
   };
+
+  const deleteEzn = async () => {
+    try {
+      await fetch(`${BASE_URL}/${EznEdafa}/${id}`, {
+        method: "DELETE",
+      });
+      mutate();
+      toast.success("تم حذف الاذن بنجاح");
+    } catch (error) {
+      console.error("Error deleting record:", error);
+    }
+  };
   return (
     <div dir="rtl">
       <Card>
+        <div className="left-0 w-fit">
+          <Button
+            variant="destructive"
+            className="bg-red-400 hover:bg-red-700 text-white px-3 py-1 text-sm rounded-md cursor-pointer"
+            onClick={() => deleteEzn()}
+          >
+            x
+          </Button>
+        </div>
+
         <CardContent>
           <CardTitle className="text-center">
             اذن اضافه رقم {EditEznEdafaData.id}
@@ -79,84 +104,68 @@ const EditEznEdafa = ({ id }: dataProps) => {
                     <TableHeader className="bg-gray-100 sticky top-0 z-10">
                       <TableRow>
                         <TableHead className="px-4 py-3 text-center min-w-[120px]">
-                          التسلسل{" "}
+                          التسلسل
                         </TableHead>
-
                         <TableHead className="px-4 py-3 text-center min-w-[110px]">
-                          كود الصنف{" "}
+                          كود الصنف
                         </TableHead>
                         <TableHead className="px-4 py-3 text-center min-w-[110px]">
                           اسم الصنف
                         </TableHead>
                         <TableHead className="px-4 py-3 text-center min-w-[90px] hidden sm:table-cell">
-                          الكميه{" "}
+                          الكميه
                         </TableHead>
                         <TableHead className="px-4 py-3 text-center min-w-[130px] hidden md:table-cell">
-                          السعر{" "}
+                          السعر
                         </TableHead>
                         <TableHead className="px-4 py-3 text-center min-w-[100px]">
-                          الخصم{" "}
-                        </TableHead>
-                        <TableHead className="px-4 py-3 text-center min-w-[100px]">
-                          الاجمالي{" "}
+                          الاجمالي
                         </TableHead>
                         <TableHead className="px-4 py-3 text-center min-w-[130px]">
-                          اجراء{" "}
+                          اجراء
                         </TableHead>
                       </TableRow>
                     </TableHeader>
-
                     <TableBody>
-                      {EditEznEdafaData.products &&
-                        EditEznEdafaData.products.map(
-                          (tra: any, index: number) => (
-                            <TableRow
-                              key={`${tra.id}-${index}`}
-                              className="hover:bg-gray-50 transition"
-                            >
-                              <TableCell className="px-4 py-2 text-center">
-                                {index + 1}
-                              </TableCell>
-
-                              <TableCell className="px-4 py-2 text-center">
-                                {tra.product.productCode || "--"}
-                              </TableCell>
-                              <TableCell className="px-4 py-2 text-center">
-                                {tra.product.name || "--"}
-                              </TableCell>
-                              <TableCell className="px-4 py-2 text-center hidden sm:table-cell">
-                                {tra.amount || "--"}
-                              </TableCell>
-                              <TableCell className="px-4 py-2 text-center hidden sm:table-cell">
-                                {tra.product.price || "--"}
-                              </TableCell>
-                              <TableCell className="px-4 py-2 text-center hidden sm:table-cell">
-                                {tra.s || "--"}
-                              </TableCell>
-                              <TableCell className="px-4 py-2 text-center hidden sm:table-cell">
-                                {tra.itemTotal || "--"}
-                              </TableCell>
-                              <TableCell className="px-4 py-2 text-center hidden sm:table-cell">
-                                <div className="flex justify-center items-center gap-2 flex-wrap">
-                                  <Button
-                                    variant="secondary"
-                                    className="bg-red-300 px-3 py-1 text-sm"
-                                    onClick={() => deleteRecord(tra.id)}
-                                  >
-                                    الحذف
-                                  </Button>
-                                  <Button
-                                    variant="secondary"
-                                    className="bg-yellow-100 px-3 py-1 text-sm"
-                                  >
-                                    التعديل
-                                  </Button>
-                                </div>
-                              </TableCell>
-                              <TableCell className="px-4 py-2 text-center"></TableCell>
-                            </TableRow>
-                          )
-                        )}
+                      {EditEznEdafaData?.products?.map(
+                        (tra: any, index: number) => (
+                          <TableRow
+                            key={`${tra.id}-${index}`}
+                            className="hover:bg-gray-50 transition"
+                          >
+                            <TableCell className="px-4 py-2 text-center">
+                              {index + 1}
+                            </TableCell>
+                            <TableCell className="px-4 py-2 text-center">
+                              {tra.product?.productCode || "--"}
+                            </TableCell>
+                            <TableCell className="px-4 py-2 text-center">
+                              {tra.product?.name || "--"}
+                            </TableCell>
+                            <TableCell className="px-4 py-2 text-center hidden sm:table-cell">
+                              {tra.amount || "--"}
+                            </TableCell>
+                            <TableCell className="px-4 py-2 text-center hidden sm:table-cell">
+                              {tra.product?.price || "--"}
+                            </TableCell>
+                            <TableCell className="px-4 py-2 text-center hidden sm:table-cell">
+                              {tra.itemTotal || "--"}
+                            </TableCell>
+                            <TableCell className="px-4 py-2 text-center hidden sm:table-cell">
+                              <div className="flex justify-center items-center gap-2 flex-wrap">
+                                <Button
+                                  variant="secondary"
+                                  className="bg-red-300 px-3 py-1 text-sm"
+                                  onClick={() => deleteRecord(tra.id)}
+                                >
+                                  الحذف
+                                </Button>
+                                <EditDialogEznEdafa id={tra.id} tra={tra} />
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      )}
                     </TableBody>
                   </Table>
                 </div>

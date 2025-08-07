@@ -106,16 +106,30 @@ export async function POST(req: NextRequest) {
         { status: 404 }
       );
     }
-
     // ✅ حساب الإجمالي وتفاصيل المنتجات
     let totalAmount = 0;
     let totalQuantity = 0;
+
     const productsDetails = products.map(
       (item: { productId: number; amount: number }) => {
         const product = dbProducts.find((p) => p.id === item.productId)!;
-        const itemTotal = item.amount * product.price;
+
+        // الكمية × سعر القطعة
+        const baseTotal = item.amount * product.price;
+
+        // حساب الضريبة لو فيه
+        const taxAmount = isTaxed && tax ? baseTotal * (tax / 100) : 0;
+
+        // الخصم الثابت (1%)
+        const deduction = (baseTotal + taxAmount) * 0.01;
+
+        // الإجمالي النهائي بعد الضريبة والخصم
+        const itemTotal = baseTotal + taxAmount - deduction;
+
+        // تحديث الإجماليات
         totalAmount += itemTotal;
         totalQuantity += item.amount;
+
         return {
           productId: item.productId,
           amount: item.amount,

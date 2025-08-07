@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useState } from "react";
 
 interface Item {
   id: string;
@@ -33,6 +34,8 @@ export default function ReportsComponent({
   selectedItemId,
   store,
 }: ReportsComponentProps) {
+  const [mode, setMode] = useState<"item-movement" | "create">("create");
+
   return (
     <div className="space-y-6 mt-5" dir="rtl">
       <Card className="border dark:border-gray-600">
@@ -51,7 +54,12 @@ export default function ReportsComponent({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="select-report">-- اختر --</SelectItem>
-                  <SelectItem value="item-movement">حركة صنف</SelectItem>
+                  <SelectItem
+                    value="item-movement"
+                    onClick={() => setMode("item-movement")}
+                  >
+                    حركة صنف
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -66,7 +74,7 @@ export default function ReportsComponent({
               <Input type="date" value={dateTo} className="w-full" />
             </div>
 
-            {reportType === "item-movement" && (
+            {mode === "item-movement" && (
               <div>
                 <Label className="mb-1 text-sm font-medium">الصنف</Label>
                 <Select value={selectedItemId}>
