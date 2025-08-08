@@ -29,7 +29,7 @@ const ProductMovement = ({ id }: DataProps) => {
   const cookie = Cookie();
   const token = cookie.get("Bearer");
   const { data, error, isLoading, mutate } = useSWR(
-    `${BASE_URL}/${productTransaction}/${id}`,
+    `${BASE_URL}/${productTransaction}`,
     fetcher
   );
 

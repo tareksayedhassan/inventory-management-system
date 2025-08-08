@@ -42,38 +42,61 @@ export async function GET(
     { status: 200 }
   );
 }
-
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
-    const eznEdafaId = parseInt(id);
+    const transactionId = parseInt(id);
 
-    if (isNaN(eznEdafaId)) {
+    if (isNaN(transactionId)) {
       return NextResponse.json({ message: "Invalid ID" }, { status: 400 });
     }
 
-    // تحقق من وجود الإذن
-    const eznEdafaExists = await prisma.productTransaction.findUnique({
-      where: { id: eznEdafaId },
+    // نجيب الحركة
+    const transaction = await prisma.productTransaction.findUnique({
+      where: { id: transactionId },
+      include: {
+        eznEdafaProduct: {
+          select: { eznEdafaId: true },
+        },
+      },
     });
 
-    if (!eznEdafaExists) {
+    if (!transaction) {
       return NextResponse.json(
-        { message: "إذن الإضافة غير موجود" },
+        { message: "حركة المنتج غير موجودة" },
         { status: 404 }
       );
     }
 
-    const eznEdafa = await prisma.eznEdafa.delete({
-      where: { id: eznEdafaId },
+    const eznEdafaId = transaction.eznEdafaProduct?.eznEdafaId;
+
+    // نمسح الحركة
+    await prisma.productTransaction.delete({
+      where: { id: transactionId },
     });
 
-    return NextResponse.json({ data: eznEdafa }, { status: 200 });
+    // لو مفيش حركات مرتبطة بنفس الإذن، نمسحه
+    if (eznEdafaId) {
+      const remaining = await prisma.eznEdafaProduct.count({
+        where: { eznEdafaId },
+      });
+
+      if (remaining === 0) {
+        await prisma.eznEdafa.delete({
+          where: { id: eznEdafaId },
+        });
+      }
+    }
+
+    return NextResponse.json(
+      { message: "تم حذف حركة المنتج بنجاح" },
+      { status: 200 }
+    );
   } catch (error) {
-    console.error("Error deleting Ezn Edafa:", error);
+    console.error("Error deleting product transaction:", error);
     return NextResponse.json(
       { message: "500 Internal Server Error", error },
       { status: 500 }

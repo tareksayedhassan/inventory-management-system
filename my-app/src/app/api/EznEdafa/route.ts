@@ -60,10 +60,11 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    // Parse request body
     const body = await req.json();
     const { supplierId, userId, isTaxed, tax, products } = body;
 
-    // ✅ تحقق من وجود منتجات وصحة البيانات
+    // Validate products array
     if (!products || products.length === 0) {
       return NextResponse.json(
         { message: "لم يتم إدخال أي منتجات" },
@@ -71,6 +72,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Validate products schema
     const validation = productSchema.safeParse(products);
     if (!validation.success) {
       return NextResponse.json(
@@ -79,7 +81,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ✅ تحقق من وجود المورد
+    // Check if supplier exists
     const supplier = await prisma.supplier.findUnique({
       where: { id: supplierId },
     });
@@ -90,7 +92,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ✅ تحقق من وجود المنتجات
+    // Verify products existence
     const productIds = products.map((p: { productId: number }) => p.productId);
     const dbProducts = await prisma.product.findMany({
       where: { id: { in: productIds } },
@@ -106,27 +108,19 @@ export async function POST(req: NextRequest) {
         { status: 404 }
       );
     }
-    // ✅ حساب الإجمالي وتفاصيل المنتجات
+
+    // Calculate totals and prepare product details
     let totalAmount = 0;
     let totalQuantity = 0;
 
     const productsDetails = products.map(
       (item: { productId: number; amount: number }) => {
         const product = dbProducts.find((p) => p.id === item.productId)!;
-
-        // الكمية × سعر القطعة
         const baseTotal = item.amount * product.price;
-
-        // حساب الضريبة لو فيه
         const taxAmount = isTaxed && tax ? baseTotal * (tax / 100) : 0;
-
-        // الخصم الثابت (1%)
         const deduction = (baseTotal + taxAmount) * 0.01;
-
-        // الإجمالي النهائي بعد الضريبة والخصم
         const itemTotal = baseTotal + taxAmount - deduction;
 
-        // تحديث الإجماليات
         totalAmount += itemTotal;
         totalQuantity += item.amount;
 
@@ -142,6 +136,8 @@ export async function POST(req: NextRequest) {
 
     const deductionRate = 0.01;
     const finalAmount = totalAmount - totalAmount * deductionRate;
+
+    // Create new Ezn Edafa
     const newEzn = await prisma.eznEdafa.create({
       data: {
         totalAmount: finalAmount,
@@ -167,6 +163,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Create stock entry based on tax status
     let stockId: number | null = null;
     let stockWithoutTaxId: number | null = null;
 
@@ -193,7 +190,7 @@ export async function POST(req: NextRequest) {
       stockWithoutTaxId = stockWithoutTax.id;
     }
 
-    // ✅ تحديث الإذن بعد إنشاء المخازن
+    // Update Ezn Edafa with stock IDs
     await prisma.eznEdafa.update({
       where: { id: newEzn.id },
       data: {
@@ -202,7 +199,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // ✅ تحديث السعر الأخير للشراء لكل منتج
+    // Update last buy price for each product
     for (const item of products) {
       const product = dbProducts.find((p) => p.id === item.productId)!;
       await prisma.product.update({
@@ -210,20 +207,23 @@ export async function POST(req: NextRequest) {
         data: { lastBuyPrice: item.amount * product.price },
       });
     }
-    const createdAt = new Date();
-    const finalDescription = `إذن إضافة رقم ${newEzn.id}`;
 
+    // Create supplier transaction
+    const createdAt = new Date();
     await prisma.supplierTransaction.create({
       data: {
         creditBalance: finalAmount,
-        description: finalDescription,
+        description: `إذن إضافة رقم ${newEzn.id}`,
         supplierId,
         userId,
         createdAt,
       },
     });
+
+    // Update supplier status
     await updateSupplierStatus(supplierId, "supplier");
 
+    // Create notification
     const now = new Date();
     const dateStr = now.toLocaleDateString("ar-EG", {
       year: "numeric",
@@ -246,37 +246,32 @@ export async function POST(req: NextRequest) {
         redirectUrl: `/Supplier`,
       },
     });
-    for (const item of productsDetails) {
+    // بعد إنشاء newEzn
+    for (const eznProduct of newEzn.products) {
+      const productDetail = productsDetails.find(
+        (p: any) => p.productId === eznProduct.productId
+      );
+      if (!productDetail) continue;
+
       await prisma.productTransaction.create({
         data: {
-          productCode: item.productCode,
-          name: item.productName,
-          price: item.itemTotal / item.amount,
-          lastBuyPrice: item.itemTotal / item.amount,
-          quantity: item.amount,
-          total: item.itemTotal,
+          productCode: productDetail.productCode,
+          eznEdafaProductId: eznProduct.id, // ✅ هنا ID السطر من جدول EznEdafaProduct مش جدول EznEdafa
+          name: productDetail.productName,
+          price: productDetail.itemTotal / productDetail.amount,
+          lastBuyPrice: productDetail.itemTotal / productDetail.amount,
+          quantity: productDetail.amount,
+          total: productDetail.itemTotal,
           type: `إذن إضافة رقم ${newEzn.id}`,
           redirctURL: `/dashboard/eznEdafa/${newEzn.id}`,
-          added_by: userId
-            ? {
-                connect: { id: userId },
-              }
-            : undefined,
-          supplier: supplierId
-            ? {
-                connect: { id: supplierId },
-              }
-            : undefined,
-          Stock: stockId
-            ? {
-                connect: { id: stockId },
-              }
-            : undefined,
-          StockWithoutTax: stockWithoutTaxId
-            ? {
-                connect: { id: stockWithoutTaxId },
-              }
-            : undefined,
+          added_by_id: userId || null,
+          supplierId: supplierId || null,
+          StockId: stockId || null,
+          StockWithoutTaxId: stockWithoutTaxId || null,
+        },
+        include: {
+          Stock: true,
+          StockWithoutTax: true,
         },
       });
     }
