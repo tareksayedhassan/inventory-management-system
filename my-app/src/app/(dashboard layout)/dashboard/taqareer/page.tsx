@@ -26,6 +26,16 @@ export default function ReportsComponent() {
   const { data, isLoading } = useSWR(`${BASE_URL}/${EznEdafaProduct}`, fetcher);
   const products =
     data?.data?.filter((item: any) => !item.eznEdafaProductId) || [];
+  // افصل المنتجات حسب الاسم بحيث يبقى عندك فقط عنصر لكل اسم
+  const uniqueProductsByName = products.filter(
+    (product: any, index: number, self: any) =>
+      index ===
+      self.findIndex(
+        (p: any) =>
+          p.ProductTransaction[0]?.name === product.ProductTransaction[0]?.name
+      )
+  );
+
   return (
     <>
       <div className="space-y-6 mt-5" dir="rtl">
@@ -87,8 +97,8 @@ export default function ReportsComponent() {
                         <SelectValue placeholder="اختر صنف..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {products.length > 0 ? (
-                          products.map((i: any) => (
+                        {uniqueProductsByName.length > 0 ? (
+                          uniqueProductsByName.map((i: any) => (
                             <SelectItem
                               key={i.productId}
                               value={i.productId?.toString() || ""}

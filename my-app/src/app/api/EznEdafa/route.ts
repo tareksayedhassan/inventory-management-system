@@ -112,35 +112,25 @@ export async function POST(req: NextRequest) {
     // Calculate totals and prepare product details
     let totalAmount = 0;
     let totalQuantity = 0;
+    const productsDetails = products.map((item: any) => {
+      const product = dbProducts.find((p) => p.id === item.productId)!;
+      const itemTotal = item.amount * product.price;
+      totalAmount += itemTotal;
+      totalQuantity += item.amount;
 
-    const productsDetails = products.map(
-      (item: { productId: number; amount: number }) => {
-        const product = dbProducts.find((p) => p.id === item.productId)!;
-        const baseTotal = item.amount * product.price;
-        const taxAmount = isTaxed && tax ? baseTotal * (tax / 100) : 0;
-        const deduction = (baseTotal + taxAmount) * 0.01;
-        const itemTotal = baseTotal + taxAmount - deduction;
-
-        totalAmount += itemTotal;
-        totalQuantity += item.amount;
-
-        return {
-          productId: item.productId,
-          amount: item.amount,
-          productName: product.name,
-          productCode: product.productCode,
-          itemTotal,
-        };
-      }
-    );
-
-    const deductionRate = 0.01;
-    const finalAmount = totalAmount - totalAmount * deductionRate;
+      return {
+        productId: item.productId,
+        amount: item.amount,
+        itemTotal,
+        productName: product.name,
+        productCode: product.productCode,
+      };
+    });
 
     // Create new Ezn Edafa
     const newEzn = await prisma.eznEdafa.create({
       data: {
-        totalAmount: finalAmount,
+        totalAmount: totalAmount,
         tax: tax || 0,
         supplier: { connect: { id: supplierId } },
         user: userId ? { connect: { id: userId } } : undefined,
@@ -212,7 +202,7 @@ export async function POST(req: NextRequest) {
     const createdAt = new Date();
     await prisma.supplierTransaction.create({
       data: {
-        creditBalance: finalAmount,
+        creditBalance: totalAmount,
         description: `إذن إضافة رقم ${newEzn.id}`,
         supplierId,
         userId,

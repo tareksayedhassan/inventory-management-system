@@ -37,7 +37,6 @@ const EditEznEdafa = () => {
     `${BASE_URL}/${EznEdafa}/${id}`,
     fetcher
   );
-  console.log(id);
   if (isLoading)
     return (
       <div>
@@ -46,7 +45,7 @@ const EditEznEdafa = () => {
     );
 
   const EditEznEdafaData = data?.data || {};
-
+  console.log(EditEznEdafaData);
   const deleteRecord = async (id: string) => {
     try {
       await fetch(`${BASE_URL}/${EznEdafaProduct}/${id}`, {

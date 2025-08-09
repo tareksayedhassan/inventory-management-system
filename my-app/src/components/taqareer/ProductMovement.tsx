@@ -114,13 +114,25 @@ const ProductMovement = ({ id }: DataProps) => {
                       <TableCell className="px-2 py-2 text-center">
                         {tra.id}
                       </TableCell>
-                      <TableCell className="px-2 py-2 text-center">
+                      <TableCell
+                        className="px-2 py-2 text-center w-[150px] truncate"
+                        title={tra.name}
+                      >
                         {tra.name}
                       </TableCell>
-                      <TableCell className="px-2 py-2 text-center">
-                        {tra.Stock ? (
+                      <TableCell
+                        className="px-2 py-2 text-center truncate"
+                        title={
+                          tra.StockId
+                            ? "مخزن بضريبه"
+                            : tra.StockWithoutTaxId
+                            ? "مخزن بدون ضريبه"
+                            : "لا يوجد مخزون"
+                        }
+                      >
+                        {tra.StockId ? (
                           <span>مخزن بضريبه</span>
-                        ) : tra.StockWithoutTax ? (
+                        ) : tra.StockWithoutTaxId ? (
                           <span>مخزن بدون ضريبه</span>
                         ) : (
                           <span>لا يوجد مخزون</span>
@@ -156,7 +168,7 @@ const ProductMovement = ({ id }: DataProps) => {
                           <button
                             onClick={() => DeleteRecord(tra.id)}
                             className="text-red-600 hover:text-red-800 cursor-pointer font-extrabold text-4xl"
-                            title="حذف المورد"
+                            title="حذف الحركه"
                           >
                             <MdDeleteForever />
                           </button>

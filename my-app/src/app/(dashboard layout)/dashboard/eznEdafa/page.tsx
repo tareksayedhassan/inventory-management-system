@@ -26,7 +26,6 @@ import PrintableComponent from "@/components/customUi/PrintComponent";
 import { fetcher } from "@/apiCaild/fetcher";
 import Loading from "@/components/customUi/loading";
 import useSWR from "swr";
-import EditEznEdafa from "@/app/(dashboard layout)/dashboard/eznEdafa/[id]/page";
 
 // ========== Types ==========
 type Supplier = { id: number; name: string };
