@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { fetcher } from "@/apiCaild/fetcher";
-import { BASE_URL, Products } from "@/apiCaild/API";
+import { BASE_URL, EznEdafaProduct, Products } from "@/apiCaild/API";
 import useSWR from "swr";
 import ProductMovement from "@/components/taqareer/ProductMovement";
 
@@ -23,10 +23,9 @@ export default function ReportsComponent() {
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
 
-  const { data, isLoading } = useSWR(`${BASE_URL}/${Products}`, fetcher);
-  const product = data?.data || [];
-  console.log("product Data:", product);
-
+  const { data, isLoading } = useSWR(`${BASE_URL}/${EznEdafaProduct}`, fetcher);
+  const products =
+    data?.data?.filter((item: any) => !item.eznEdafaProductId) || [];
   return (
     <>
       <div className="space-y-6 mt-5" dir="rtl">
@@ -88,15 +87,19 @@ export default function ReportsComponent() {
                         <SelectValue placeholder="اختر صنف..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {product.length > 0 ? (
-                          product.map((i: any) => (
-                            <SelectItem key={i.id} value={i.id}>
-                              {i.name}
+                        {products.length > 0 ? (
+                          products.map((i: any) => (
+                            <SelectItem
+                              key={i.productId}
+                              value={i.productId?.toString() || ""}
+                            >
+                              {i.ProductTransaction[0]?.name || "غير معروف"}{" "}
+                              {/* استخدم اسم المنتج من العلاقة */}
                             </SelectItem>
                           ))
                         ) : (
                           <SelectItem value="no-items" disabled>
-                            لا يوجد اصناف لعرضها
+                            لا يوجد أصناف لعرضها
                           </SelectItem>
                         )}
                       </SelectContent>

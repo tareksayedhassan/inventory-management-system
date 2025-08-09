@@ -88,7 +88,7 @@ model Supplier {
   updated_by_id        Int?
   updated_by           User?                 @relation("UpdatedBy", fields: [updated_by_id], references: [id])
 
-  ProductTransaction ProductTransaction[] @relation("addedProductBy")
+  ProductTransaction ProductTransaction[] @relation("SupplierProductTransactions")
 
   @@index([added_by_id], map: "Supplier_added_by_id_fkey")
 }
@@ -131,7 +131,7 @@ model Client {
   updated_by           User?                 @relation("UpdatedClientBy", fields: [updated_by_id], references: [id])
   clientTransactions   ClientTransaction[]   @relation("ClientTransactions")
   treasuryTransactions TreasuryTransaction[] @relation("ClientTreasuryTransactions")
-  productTransaction   ProductTransaction[]  @relation("addedProductBy")
+  productTransaction   ProductTransaction[]  @relation("ClientProductTransactions")
 
   @@index([added_by_id], map: "Client_added_by_id_fkey")
 }
@@ -248,9 +248,9 @@ model ProductTransaction {
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
   supplierId   Int?
-  supplier     Supplier?           @relation("addedProductBy", fields: [supplierId], references: [id])
   ClientId     Int?
-  Client       Client?             @relation("addedProductBy", fields: [ClientId], references: [id])
+supplier     Supplier?           @relation("SupplierProductTransactions", fields: [supplierId], references: [id])
+Client       Client?             @relation("ClientProductTransactions", fields: [ClientId], references: [id])
 
   added_by_id Int?
   added_by    User? @relation("AddedProductTransactionBy", fields: [added_by_id], references: [id])

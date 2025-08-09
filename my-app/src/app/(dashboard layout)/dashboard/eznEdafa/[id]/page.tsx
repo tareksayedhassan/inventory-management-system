@@ -1,16 +1,21 @@
+"use client";
 import React from "react";
-import { Card, CardContent, CardTitle } from "../ui/card";
+import {
+  Card,
+  CardContent,
+  CardTitle,
+} from "../../../../../components/ui/card";
 import { BASE_URL, EznEdafa, EznEdafaProduct } from "@/apiCaild/API";
 import useSWR from "swr";
 import { fetcher } from "@/apiCaild/fetcher";
-import Loading from "./loading";
+import Loading from "../../../../../components/customUi/loading";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
+} from "../../../../../components/ui/select";
 import {
   Table,
   TableBody,
@@ -19,16 +24,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "../ui/button";
-import EditDialogEznEdafa from "./EditDialogEznEdafa";
-import { Label } from "../ui/label";
+import { Button } from "../../../../../components/ui/button";
+import EditDialogEznEdafa from "../../../../../components/customUi/EditDialogEznEdafa";
+import { Label } from "../../../../../components/ui/label";
 import { toast } from "sonner";
+import { useParams } from "next/navigation";
 
-interface dataProps {
-  id: number;
-}
+const EditEznEdafa = () => {
+  const { id } = useParams();
 
-const EditEznEdafa = ({ id }: dataProps) => {
   const { data, isLoading, mutate } = useSWR(
     `${BASE_URL}/${EznEdafa}/${id}`,
     fetcher

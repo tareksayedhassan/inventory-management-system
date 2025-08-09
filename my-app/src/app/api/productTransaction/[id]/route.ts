@@ -1,26 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
 
-  const transactionId = parseInt(id);
-
-  const transaction = await prisma.productTransaction.findUnique({
+  const productId = parseInt(id);
+  const transaction = await prisma.productTransaction.findMany({
     where: {
-      id: transactionId,
+      eznEdafaProduct: {
+        is: { productId: productId },
+      },
     },
     include: {
       supplier: true,
-      Client: true,
-      added_by: true,
-      Stock: true,
-      StockWithoutTax: true,
       eznEdafaProduct: {
         include: {
           product: true,
+          eznEdafa: {
+            select: { id: true },
+          },
         },
       },
     },
@@ -77,18 +78,11 @@ export async function DELETE(
     await prisma.productTransaction.delete({
       where: { id: transactionId },
     });
-
-    // لو مفيش حركات مرتبطة بنفس الإذن، نمسحه
-    if (eznEdafaId) {
-      const remaining = await prisma.eznEdafaProduct.count({
-        where: { eznEdafaId },
-      });
-
-      if (remaining === 0) {
-        await prisma.eznEdafa.delete({
-          where: { id: eznEdafaId },
-        });
-      }
+    const remaining = await prisma.eznEdafaProduct.findFirst({
+      where: { eznEdafaId },
+    });
+    if (!remaining) {
+      await prisma.eznEdafa.delete({ where: { id: eznEdafaId } });
     }
 
     return NextResponse.json(

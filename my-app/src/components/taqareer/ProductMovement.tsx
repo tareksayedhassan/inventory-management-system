@@ -29,7 +29,7 @@ const ProductMovement = ({ id }: DataProps) => {
   const cookie = Cookie();
   const token = cookie.get("Bearer");
   const { data, error, isLoading, mutate } = useSWR(
-    `${BASE_URL}/${productTransaction}`,
+    `${BASE_URL}/${productTransaction}/${id}`,
     fetcher
   );
 
@@ -63,39 +63,45 @@ const ProductMovement = ({ id }: DataProps) => {
       <Card className="border dark:border-gray-600">
         <CardHeader>
           <CardTitle className="text-2xl font-semibold border-b border-blue-200 text-start pb-2 mb-4 pr-3.5">
-            تقرير حركه صنف{" "}
+            تقرير حركه صنف
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="w-full overflow-x-hidden">
+          <div className="w-full">
             <div className="overflow-hidden rounded-lg shadow">
-              <Table className="min-w-full divide-y divide-gray-300 text-sm text-gray-700">
+              <Table className="w-full table-fixed divide-y divide-gray-300 text-sm text-gray-700">
                 <TableHeader className="bg-gray-100 sticky top-0 z-10">
                   <TableRow>
-                    <TableHead className="px-4 py-3 text-center min-w-[120px]">
+                    <TableHead className="px-2 py-3 text-center">
                       التسلسل
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-center min-w-[110px]">
-                      المخزن{" "}
+                    <TableHead className="px-2 py-3 text-center">
+                      اسم المنتج
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-center min-w-[90px] hidden sm:table-cell">
-                      نوع الحركه{" "}
+                    <TableHead className="px-2 py-3 text-center">
+                      المخزن
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-center min-w-[130px] hidden md:table-cell">
-                      كود المنتج{" "}
+                    <TableHead className="px-2 py-3 text-center hidden sm:table-cell">
+                      نوع الحركه
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-center min-w-[100px]">
-                      المورد{" "}
+                    <TableHead className="px-2 py-3 text-center">
+                      كود المنتج
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-center min-w-[130px]">
-                      الكميه{" "}
-                    </TableHead>{" "}
-                    <TableHead className="px-4 py-3 text-center min-w-[130px]">
-                      السعر الكلي{" "}
-                    </TableHead>{" "}
-                    <TableHead className="px-4 py-3 text-center min-w-[130px]">
-                      سعر القطعه{" "}
-                    </TableHead>{" "}
+                    <TableHead className="px-2 py-3 text-center">
+                      المورد
+                    </TableHead>
+                    <TableHead className="px-2 py-3 text-center">
+                      الكميه
+                    </TableHead>
+                    <TableHead className="px-2 py-3 text-center">
+                      سعر القطعه
+                    </TableHead>
+                    <TableHead className="px-2 py-3 text-center">
+                      السعر الكلي
+                    </TableHead>
+                    <TableHead className="px-2 py-3 text-center">
+                      إجراءات
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
 
@@ -105,40 +111,51 @@ const ProductMovement = ({ id }: DataProps) => {
                       key={`${tra.id}-${index}`}
                       className="hover:bg-gray-50 transition"
                     >
-                      <TableCell className="px-4 py-2 text-center">
+                      <TableCell className="px-2 py-2 text-center">
                         {tra.id}
                       </TableCell>
-
-                      <TableCell className="px-4 py-2 text-center">
+                      <TableCell className="px-2 py-2 text-center">
+                        {tra.name}
+                      </TableCell>
+                      <TableCell className="px-2 py-2 text-center">
                         {tra.Stock ? (
-                          <div>
-                            <span>مخزن بضريبه </span>
-                          </div>
+                          <span>مخزن بضريبه</span>
                         ) : tra.StockWithoutTax ? (
-                          <div>
-                            <span>مخزن بدون ضريبه </span>
-                          </div>
+                          <span>مخزن بدون ضريبه</span>
                         ) : (
                           <span>لا يوجد مخزون</span>
                         )}
                       </TableCell>
-
-                      <TableCell className="px-4 py-2 text-center hidden sm:table-cell">
+                      <TableCell className="px-2 py-2 text-center hidden sm:table-cell">
                         <Link href={tra.redirctURL || "#"}>
                           <span className="text-blue-600 hover:underline">
                             {tra.type || "--"}
                           </span>
                         </Link>
                       </TableCell>
-
-                      <TableCell className="px-4 py-2 text-center">
+                      <TableCell className="px-2 py-2 text-center">
+                        {tra.productCode}
+                      </TableCell>
+                      <TableCell className="px-2 py-2 text-center">
+                        {tra.supplier.name}
+                      </TableCell>
+                      <TableCell className="px-2 py-2 text-center">
+                        {tra.quantity}
+                      </TableCell>
+                      <TableCell className="px-2 py-2 text-center">
+                        {tra.price}
+                      </TableCell>
+                      <TableCell className="px-2 py-2 text-center">
+                        {tra.total}
+                      </TableCell>
+                      <TableCell className="px-2 py-2 text-center">
                         <div className="flex justify-center items-center gap-2">
                           <Button className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 text-xs">
                             تعديل
                           </Button>
                           <button
                             onClick={() => DeleteRecord(tra.id)}
-                            className="text-red-600 hover:text-red-800  cursor-pointer font-extrabold text-4xl"
+                            className="text-red-600 hover:text-red-800 cursor-pointer font-extrabold text-4xl"
                             title="حذف المورد"
                           >
                             <MdDeleteForever />
